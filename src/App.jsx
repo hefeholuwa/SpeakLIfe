@@ -197,7 +197,7 @@ function App() {
               
               <div className="mt-8 pt-6 border-t border-white/10">
                 <p className="text-indigo-200 text-sm">
-                  © 2025 The Pillars Prayer Network. All rights reserved.
+                  © 2024 The Pillars Prayer Network. All rights reserved.
                 </p>
               </div>
             </div>
