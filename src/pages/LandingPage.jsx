@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../supabaseClient.jsx'
-import AIPersonalizedVerses from '../components/AIPersonalizedVerses.jsx'
 import BibleReader from '../components/BibleReader.jsx'
 import Register from '../components/Register.jsx'
 import Login from '../components/Login.jsx'

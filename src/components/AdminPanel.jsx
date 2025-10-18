@@ -63,6 +63,31 @@ const AdminPanel = () => {
     addLog('✅ Tomorrow\'s content preloaded')
   }
 
+  const handleAddTestConfession = async () => {
+    addLog('📝 Adding test confession...')
+    try {
+      const { error } = await supabase
+        .from('user_confessions')
+        .insert({
+          user_id: null, // Demo user
+          note: 'Test confession for demo purposes',
+          confessed_at: new Date().toISOString(),
+          ai_suggested: false,
+          personalization_factors: {}
+        })
+
+      if (error) {
+        addLog('❌ Error adding test confession: ' + error.message)
+      } else {
+        addLog('✅ Test confession added successfully')
+        // Refresh the content
+        loadTodaysContent()
+      }
+    } catch (error) {
+      addLog('❌ Error: ' + error.message)
+    }
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -123,6 +148,13 @@ const AdminPanel = () => {
             className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
             📅 Preload Tomorrow
+          </button>
+          
+          <button
+            onClick={handleAddTestConfession}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            📝 Add Test Confession
           </button>
         </div>
 

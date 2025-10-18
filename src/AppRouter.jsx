@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import BibleSection from './components/BibleSection.jsx'
 
 const AppRouter = () => {
   const [currentRoute, setCurrentRoute] = useState('landing')
@@ -11,6 +12,8 @@ const AppRouter = () => {
     const path = window.location.pathname
     if (path === '/dashboard') {
       setCurrentRoute('dashboard')
+    } else if (path === '/bible') {
+      setCurrentRoute('bible')
     } else {
       setCurrentRoute('landing')
     }
@@ -20,6 +23,8 @@ const AppRouter = () => {
       const path = window.location.pathname
       if (path === '/dashboard') {
         setCurrentRoute('dashboard')
+      } else if (path === '/bible') {
+        setCurrentRoute('bible')
       } else {
         setCurrentRoute('landing')
       }
@@ -44,6 +49,9 @@ const AppRouter = () => {
     if (route === 'dashboard') {
       window.history.pushState({}, '', '/dashboard')
       setCurrentRoute('dashboard')
+    } else if (route === 'bible') {
+      window.history.pushState({}, '', '/bible')
+      setCurrentRoute('bible')
     } else {
       window.history.pushState({}, '', '/')
       setCurrentRoute('landing')
@@ -51,12 +59,17 @@ const AppRouter = () => {
   }
 
   // Pass navigation function to components
+  
   if (currentRoute === 'dashboard') {
     return (
       <AuthProvider>
         <Dashboard onNavigate={navigateTo} />
       </AuthProvider>
     )
+  }
+
+  if (currentRoute === 'bible') {
+    return <BibleSection />
   }
 
   return (

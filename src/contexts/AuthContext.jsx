@@ -49,12 +49,14 @@ export const AuthProvider = ({ children }) => {
 
     getInitialSession()
 
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id)
         setUser(session?.user || null)
         setLoading(false)
+        
         
         // If user just verified their email, dispatch a custom event
         if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
@@ -99,6 +101,7 @@ export const AuthProvider = ({ children }) => {
         setError(error.message)
         return { success: false, error: error.message }
       }
+
 
       // Check if email confirmation is required
       if (data.user && !data.session) {
@@ -148,22 +151,25 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setError(null)
-      const { error } = await supabase.auth.signOut()
       
-      if (error) {
-        setError(error.message)
-        return { success: false, error: error.message }
-      }
-
+      // Clear user state immediately
       setUser(null)
+      
+      // Try Supabase logout but don't wait for it
+      supabase.auth.signOut().catch(err => {
+        console.log('Supabase logout failed, but continuing with local logout:', err)
+      })
       
       // Dispatch custom event to notify components of logout
       window.dispatchEvent(new CustomEvent('userLoggedOut'))
       
       return { success: true }
     } catch (error) {
-      setError(error.message)
-      return { success: false, error: error.message }
+      console.error('Error in signOut:', error)
+      // Even if there's an error, clear the user and logout locally
+      setUser(null)
+      window.dispatchEvent(new CustomEvent('userLoggedOut'))
+      return { success: true }
     }
   }
 

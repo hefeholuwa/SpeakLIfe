@@ -1,7 +1,9 @@
-// Notification Service for Push Notifications
+// Push Notification Service
+// Handles browser notifications, service worker registration, and notification management
+
 class NotificationService {
   constructor() {
-    this.isSupported = 'Notification' in window && 'serviceWorker' in navigator;
+    this.isSupported = 'Notification' in window;
     this.permission = this.isSupported ? Notification.permission : 'denied';
     this.registration = null;
   }
@@ -9,7 +11,8 @@ class NotificationService {
   // Request notification permission
   async requestPermission() {
     if (!this.isSupported) {
-      throw new Error('Notifications not supported in this browser');
+      console.warn('Notifications are not supported in this browser');
+      return false;
     }
 
     if (this.permission === 'granted') {
@@ -17,7 +20,8 @@ class NotificationService {
     }
 
     if (this.permission === 'denied') {
-      throw new Error('Notification permission denied');
+      console.warn('Notification permission has been denied');
+      return false;
     }
 
     try {
@@ -26,172 +30,230 @@ class NotificationService {
       return permission === 'granted';
     } catch (error) {
       console.error('Error requesting notification permission:', error);
-      throw error;
+      return false;
     }
   }
 
-  // Register service worker
+  // Register service worker for background notifications
   async registerServiceWorker() {
     if (!('serviceWorker' in navigator)) {
-      throw new Error('Service Worker not supported');
+      console.warn('Service workers are not supported');
+      return false;
     }
 
     try {
       this.registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', this.registration);
-      return this.registration;
+      console.log('Service worker registered successfully');
+      return true;
     } catch (error) {
-      console.error('Service Worker registration failed:', error);
-      throw error;
+      console.error('Service worker registration failed:', error);
+      return false;
     }
   }
 
-  // Subscribe to push notifications
-  async subscribeToPush() {
-    if (!this.registration) {
-      throw new Error('Service Worker not registered');
+  // Send immediate notification
+  async sendNotification(title, options = {}) {
+    if (!this.isSupported || this.permission !== 'granted') {
+      console.warn('Cannot send notification: permission not granted');
+      return false;
     }
 
     try {
-      const subscription = await this.registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(
-          'BEl62iUYgUivxIkv69yViEuiBIa40HI8F7X7h3P8b7w4c8y7n2x5Q1W8E9R6T3Y4U7I0O5P2A9S6D1F4G7H2J5K8L3M6N9Q2R5T8U1V4W7X0Y3Z6A9B2C5D8E1F4G7H2J5K8L3M6N9Q2R5T8U1V4W7X0Y3Z6'
-        )
+      const notification = new Notification(title, {
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        ...options
       });
 
-      console.log('Push subscription:', subscription);
-      return subscription;
+      // Auto-close after 5 seconds
+      setTimeout(() => {
+        notification.close();
+      }, 5000);
+
+      return notification;
     } catch (error) {
-      console.error('Push subscription failed:', error);
-      throw error;
+      console.error('Error sending notification:', error);
+      return false;
     }
   }
 
-  // Send local notification
-  async sendLocalNotification(title, options = {}) {
-    if (this.permission !== 'granted') {
-      throw new Error('Notification permission not granted');
+  // Schedule notification for later
+  async scheduleNotification(title, options = {}, scheduledTime) {
+    if (!this.isSupported || this.permission !== 'granted') {
+      console.warn('Cannot schedule notification: permission not granted');
+      return false;
     }
 
-    const defaultOptions = {
-      body: 'Time for your daily confession',
-      icon: '/logo192.png',
-      badge: '/logo192.png',
-      vibrate: [200, 100, 200],
+    try {
+      const delay = scheduledTime.getTime() - Date.now();
+      
+      if (delay <= 0) {
+        return await this.sendNotification(title, options);
+      }
+
+      setTimeout(() => {
+        this.sendNotification(title, options);
+      }, delay);
+
+      return true;
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+      return false;
+    }
+  }
+
+  // Send daily verse notification
+  async sendDailyVerseNotification(verse, confession) {
+    const title = '📖 Daily Verse - SpeakLife';
+    const options = {
+      body: `${verse}\n\n${confession}`,
+      tag: 'daily-verse',
       requireInteraction: true,
-      tag: 'speaklife-reminder',
       actions: [
         {
-          action: 'open',
-          title: 'Open SpeakLife',
-          icon: '/logo192.png'
+          action: 'read',
+          title: 'Read More',
+          icon: '/favicon.ico'
         },
         {
-          action: 'close',
-          title: 'Close',
-          icon: '/logo192.png'
+          action: 'confess',
+          title: 'Confess',
+          icon: '/favicon.ico'
         }
       ]
     };
 
-    const notification = new Notification(title, { ...defaultOptions, ...options });
-    
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
+    return await this.sendNotification(title, options);
+  }
+
+  // Send confession reminder
+  async sendConfessionReminder() {
+    const title = '🙏 Confession Reminder - SpeakLife';
+    const options = {
+      body: 'Take a moment to reflect and confess your thoughts to God.',
+      tag: 'confession-reminder',
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'confess',
+          title: 'Start Confessing',
+          icon: '/favicon.ico'
+        }
+      ]
     };
 
-    return notification;
+    return await this.sendNotification(title, options);
   }
 
-  // Schedule daily reminder
-  scheduleDailyReminder(time = '20:00') {
-    const [hours, minutes] = time.split(':').map(Number);
-    const now = new Date();
-    const reminderTime = new Date();
-    reminderTime.setHours(hours, minutes, 0, 0);
+  // Send reading plan reminder
+  async sendReadingPlanReminder(planName, reading) {
+    const title = '📚 Reading Plan Reminder - SpeakLife';
+    const options = {
+      body: `${planName}\n\nToday's reading: ${reading}`,
+      tag: 'reading-reminder',
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'read',
+          title: 'Start Reading',
+          icon: '/favicon.ico'
+        }
+      ]
+    };
 
-    // If time has passed today, schedule for tomorrow
-    if (reminderTime <= now) {
-      reminderTime.setDate(reminderTime.getDate() + 1);
+    return await this.sendNotification(title, options);
+  }
+
+  // Send achievement notification
+  async sendAchievementNotification(achievement) {
+    const title = '🎉 Achievement Unlocked - SpeakLife';
+    const options = {
+      body: achievement,
+      tag: 'achievement',
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'view',
+          title: 'View Achievement',
+          icon: '/favicon.ico'
+        }
+      ]
+    };
+
+    return await this.sendNotification(title, options);
+  }
+
+  // Set up daily notifications
+  async setupDailyNotifications() {
+    if (!this.isSupported || this.permission !== 'granted') {
+      return false;
     }
 
-    const timeUntilReminder = reminderTime.getTime() - now.getTime();
-
-    setTimeout(() => {
-      this.sendLocalNotification('Daily Confession Reminder', {
-        body: 'It\'s time for your daily spiritual reflection and confession.',
-        data: { type: 'daily-reminder' }
-      });
+    try {
+      // Schedule daily verse at 7 AM
+      const dailyVerseTime = new Date();
+      dailyVerseTime.setHours(7, 0, 0, 0);
       
-      // Schedule next day's reminder
-      this.scheduleDailyReminder(time);
-    }, timeUntilReminder);
+      if (dailyVerseTime.getTime() <= Date.now()) {
+        dailyVerseTime.setDate(dailyVerseTime.getDate() + 1);
+      }
 
-    console.log(`Daily reminder scheduled for ${reminderTime.toLocaleString()}`);
+      // Schedule confession reminder at 8 PM
+      const confessionTime = new Date();
+      confessionTime.setHours(20, 0, 0, 0);
+      
+      if (confessionTime.getTime() <= Date.now()) {
+        confessionTime.setDate(confessionTime.getDate() + 1);
+      }
+
+      // Schedule notifications
+      await this.scheduleNotification(
+        '📖 Daily Verse - SpeakLife',
+        {
+          body: 'Your daily verse and confession are ready!',
+          tag: 'daily-verse-scheduled'
+        },
+        dailyVerseTime
+      );
+
+      await this.scheduleNotification(
+        '🙏 Confession Reminder - SpeakLife',
+        {
+          body: 'Take a moment to reflect and confess your thoughts to God.',
+          tag: 'confession-reminder-scheduled'
+        },
+        confessionTime
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Error setting up daily notifications:', error);
+      return false;
+    }
   }
 
-  // Schedule weekly reflection reminder
-  scheduleWeeklyReminder(dayOfWeek = 0) { // 0 = Sunday
-    const now = new Date();
-    const daysUntilTarget = (dayOfWeek - now.getDay() + 7) % 7;
-    const targetDate = new Date(now);
-    targetDate.setDate(now.getDate() + daysUntilTarget);
-    targetDate.setHours(19, 0, 0, 0); // 7 PM
-
-    const timeUntilReminder = targetDate.getTime() - now.getTime();
-
-    setTimeout(() => {
-      this.sendLocalNotification('Weekly Spiritual Reflection', {
-        body: 'Time for your weekly spiritual review and growth assessment.',
-        data: { type: 'weekly-reflection' }
-      });
-      
-      // Schedule next week's reminder
-      this.scheduleWeeklyReminder(dayOfWeek);
-    }, timeUntilReminder);
-
-    console.log(`Weekly reminder scheduled for ${targetDate.toLocaleString()}`);
-  }
-
-  // Cancel all scheduled notifications
-  cancelAllNotifications() {
-    if (this.registration) {
-      this.registration.getNotifications().then(notifications => {
+  // Clear all notifications
+  async clearAllNotifications() {
+    if (this.registration && this.registration.getNotifications) {
+      try {
+        const notifications = await this.registration.getNotifications();
         notifications.forEach(notification => notification.close());
-      });
+        return true;
+      } catch (error) {
+        console.error('Error clearing notifications:', error);
+        return false;
+      }
     }
+    return false;
   }
 
-  // Check if notifications are supported and enabled
-  isNotificationEnabled() {
-    return this.isSupported && this.permission === 'granted';
-  }
-
-  // Get notification status
-  getStatus() {
+  // Get notification settings
+  getSettings() {
     return {
-      supported: this.isSupported,
+      isSupported: this.isSupported,
       permission: this.permission,
-      enabled: this.isNotificationEnabled()
+      hasServiceWorker: !!this.registration
     };
-  }
-
-  // Utility function to convert VAPID key
-  urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
   }
 }
 

@@ -1,18 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import DashboardHeader from './DashboardHeader'
 import DailyVerseHero from './DailyVerseHero'
-import StreakCounter from './StreakCounter'
 import ReadingProgress from './ReadingProgress'
 import QuickActions from './QuickActions'
 import TopicLibrary from './TopicLibrary'
 import RecentActivity from './RecentActivity'
 import UserProfile from './UserProfile'
+import BibleReader from './BibleReader'
+import BibleSection from './BibleSection'
+import ConfessionJournal from './ConfessionJournal'
+import ReadingPlans from './ReadingPlans'
+import notificationService from '../services/notificationService'
 
-const UserDashboard = () => {
+const UserDashboard = ({ onNavigate }) => {
   const { user, needsVerification } = useAuth()
   const [showProfile, setShowProfile] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
+
+  // Initialize notifications on component mount
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        // Request notification permission
+        await notificationService.requestPermission();
+        
+        // Register service worker
+        await notificationService.registerServiceWorker();
+        
+        // Set up daily notifications
+        await notificationService.setupDailyNotifications();
+      } catch (error) {
+        console.error('Failed to initialize notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
+
 
 
   return (
@@ -29,18 +54,32 @@ const UserDashboard = () => {
           </p>
         </div>
 
-        <DailyVerseHero />
-        
-        <StreakCounter />
+        {activeTab === 'home' && (
+          <>
+            <DailyVerseHero />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ReadingProgress />
-          <QuickActions />
-        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <ReadingProgress />
+              <QuickActions onNavigate={onNavigate} />
+            </div>
 
-        <TopicLibrary />
+            <TopicLibrary />
 
-        <RecentActivity />
+            <RecentActivity />
+          </>
+        )}
+
+        {activeTab === 'bible' && (
+          <BibleSection />
+        )}
+
+        {activeTab === 'confessions' && (
+          <ConfessionJournal />
+        )}
+
+        {activeTab === 'plans' && (
+          <ReadingPlans />
+        )}
 
       </main>
 

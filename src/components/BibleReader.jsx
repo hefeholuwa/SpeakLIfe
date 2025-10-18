@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-const BibleReader = ({ searchQuery = '' }) => {
+const BibleReader = ({ searchQuery = '', hideContent = false }) => {
   const [selectedBook, setSelectedBook] = useState(null)
   const [selectedChapter, setSelectedChapter] = useState(null)
   const [bibleContent, setBibleContent] = useState(null)
@@ -509,8 +509,6 @@ const BibleReader = ({ searchQuery = '' }) => {
               .replace(/\bor,\s+[^.]*\.?/g, '') // Remove "or, ..." annotations
               .replace(/¶\s*/g, '') // Remove paragraph symbols
               .replace(/\bseeding\s+seed\b/g, '') // Remove "seeding seed" annotations
-              .replace(/\bcreeping\b/g, '') // Remove "creeping" annotations
-              .replace(/\bcreepeth\b/g, '') // Remove "creepeth" annotations
               .replace(/\bgreen…:\s+Heb\.\s+[^.]*\.?/g, '') // Remove "green…: Heb. ..." annotations
               .replace(/\bstill…:\s+Heb\.\s+[^.]*\.?/g, '') // Remove "still…: Heb. ..." annotations
               .replace(/\banointest:\s+Heb\.\s+[^.]*\.?/g, '') // Remove "anointest: Heb. ..." annotations
@@ -919,7 +917,7 @@ const BibleReader = ({ searchQuery = '' }) => {
           </div>
 
           <div className="space-y-4 sm:space-y-6">
-            {bibleContent && (
+            {bibleContent && !hideContent && (
               <div className="space-y-3 sm:space-y-4">
                 {bibleContent.verses.map((verse, index) => (
                   <div 
