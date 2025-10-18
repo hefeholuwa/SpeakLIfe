@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import UserDashboard from '../components/UserDashboard.jsx'
+import PremiumLoader from '../components/PremiumLoader.jsx'
 
 const Dashboard = ({ onNavigate }) => {
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
+
+  useEffect(() => {
+    // Ensure minimum loading duration of 2 seconds
+    const minTimer = setTimeout(() => {
+      setMinLoadingComplete(true)
+    }, 2000)
+
+    return () => clearTimeout(minTimer)
+  }, [])
 
   useEffect(() => {
     // Check if user is authenticated
-    if (!authLoading) {
+    if (!authLoading && minLoadingComplete) {
       if (!user) {
         // User is not authenticated, redirect to landing page
         onNavigate('landing')
@@ -16,21 +27,14 @@ const Dashboard = ({ onNavigate }) => {
       }
       setLoading(false)
     }
-  }, [user, authLoading, onNavigate])
+  }, [user, authLoading, minLoadingComplete, onNavigate])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="text-6xl mb-6 animate-pulse">✨</div>
-          <p className="text-gray-600 text-xl font-light">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
+    return <PremiumLoader message="Loading your dashboard..." />
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Dashboard Content */}
       <UserDashboard />
     </div>

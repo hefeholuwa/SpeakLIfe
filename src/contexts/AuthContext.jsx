@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [hasDispatchedVerified, setHasDispatchedVerified] = useState(false)
 
   useEffect(() => {
     // Get initial session
@@ -28,11 +29,12 @@ export const AuthProvider = ({ children }) => {
           setUser(session?.user || null)
           
           // If user is already verified on initial load, dispatch event
-          if (session?.user?.email_confirmed_at) {
+          if (session?.user?.email_confirmed_at && !hasDispatchedVerified) {
             console.log('User already verified on initial load, dispatching navigation event')
+            setHasDispatchedVerified(true)
             setTimeout(() => {
               window.dispatchEvent(new CustomEvent('userVerified', { 
-                detail: { user: session.user } 
+                detail: { user: session.user, session } 
               }))
             }, 100) // Small delay to ensure components are ready
           }
@@ -50,23 +52,25 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session)
+        console.log('Auth state changed:', event, session?.user?.id)
         setUser(session?.user || null)
         setLoading(false)
         
         // If user just verified their email, dispatch a custom event
-        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
           console.log('User verified email, dispatching navigation event')
+          setHasDispatchedVerified(true)
           window.dispatchEvent(new CustomEvent('userVerified', { 
-            detail: { user: session.user } 
+            detail: { user: session.user, session } 
           }))
         }
         
         // Also check for TOKEN_REFRESHED event which happens after email verification
-        if (event === 'TOKEN_REFRESHED' && session?.user?.email_confirmed_at) {
+        if (event === 'TOKEN_REFRESHED' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
           console.log('Token refreshed for verified user, dispatching navigation event')
+          setHasDispatchedVerified(true)
           window.dispatchEvent(new CustomEvent('userVerified', { 
-            detail: { user: session.user } 
+            detail: { user: session.user, session } 
           }))
         }
       }

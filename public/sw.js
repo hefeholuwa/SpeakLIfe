@@ -1,101 +1,117 @@
-// Service Worker for Push Notifications
-const CACHE_NAME = 'speaklife-v1';
-const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
-];
+// Service Worker for automated daily content generation
+const CACHE_NAME = 'speaklife-v1'
+const DAILY_GENERATION_TIME = 7 * 60 * 60 * 1000 // 7 AM in milliseconds
 
 // Install event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
-});
+  console.log('🔧 Service Worker installing...')
+  self.skipWaiting()
+})
 
-// Fetch event
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        return response || fetch(event.request);
+// Activate event
+self.addEventListener('activate', (event) => {
+  console.log('🚀 Service Worker activated')
+  event.waitUntil(self.clients.claim())
+})
+
+// Background sync for daily generation
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'daily-generation') {
+    console.log('⏰ Daily generation sync triggered')
+    event.waitUntil(triggerDailyGeneration())
+  }
+})
+
+// Periodic background sync (if supported)
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'daily-content') {
+    console.log('📅 Periodic sync for daily content')
+    event.waitUntil(triggerDailyGeneration())
+  }
+})
+
+// Trigger daily generation
+async function triggerDailyGeneration() {
+  try {
+    console.log('🤖 Triggering daily content generation...')
+    
+    // Send message to main thread to trigger generation
+    const clients = await self.clients.matchAll()
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'TRIGGER_DAILY_GENERATION'
       })
-  );
-});
+    })
+    
+    console.log('✅ Daily generation triggered successfully')
+  } catch (error) {
+    console.error('❌ Error triggering daily generation:', error)
+  }
+}
 
-// Push event - Handle incoming push notifications
+// Handle messages from main thread
+self.addEventListener('message', (event) => {
+  if (event.data.type === 'START_DAILY_SCHEDULER') {
+    console.log('📅 Starting daily scheduler in service worker')
+    scheduleDailyGeneration()
+  }
+})
+
+// Schedule daily generation at 7 AM
+function scheduleDailyGeneration() {
+  const now = new Date()
+  const next7AM = new Date(now)
+  next7AM.setHours(7, 0, 0, 0)
+  
+  // If it's already past 7 AM today, schedule for tomorrow
+  if (now.getHours() >= 7) {
+    next7AM.setDate(next7AM.getDate() + 1)
+  }
+  
+  const timeUntil7AM = next7AM.getTime() - now.getTime()
+  
+  console.log(`⏰ Next daily generation scheduled for: ${next7AM.toLocaleString()}`)
+  
+  setTimeout(() => {
+    triggerDailyGeneration()
+    // Schedule next day
+    scheduleDailyGeneration()
+  }, timeUntil7AM)
+}
+
+// Push notification handling
 self.addEventListener('push', (event) => {
-  console.log('Push event received:', event);
-  
-  const options = {
-    body: event.data ? event.data.text() : 'Time for your daily confession',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    },
-    actions: [
-      {
-        action: 'open',
-        title: 'Open SpeakLife',
-        icon: '/logo192.png'
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/logo192.png'
-      }
-    ],
-    requireInteraction: true,
-    tag: 'speaklife-reminder'
-  };
+  if (event.data) {
+    const data = event.data.json()
+    console.log('📱 Push notification received:', data)
+    
+    const options = {
+      body: data.body || 'Your daily spiritual content is ready!',
+      icon: '/logo192.png',
+      badge: '/logo192.png',
+      tag: 'daily-content',
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'open',
+          title: 'Open App'
+        }
+      ]
+    }
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'SpeakLife', options)
+    )
+  }
+})
 
-  event.waitUntil(
-    self.registration.showNotification('SpeakLife Reminder', options)
-  );
-});
-
-// Notification click event
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event);
+  event.notification.close()
   
-  event.notification.close();
-
   if (event.action === 'open') {
     event.waitUntil(
-      clients.openWindow('/')
-    );
-  } else if (event.action === 'close') {
-    // Just close the notification
-    return;
-  } else {
-    // Default action - open the app
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+      self.clients.openWindow('/')
+    )
   }
-});
-
-// Background sync for offline functionality
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'confession-sync') {
-    event.waitUntil(
-      // Handle offline confession sync here
-      console.log('Background sync for confessions')
-    );
-  }
-});
-
-// Periodic background sync for reminders
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'daily-reminder') {
-    event.waitUntil(
-      // Schedule daily reminders
-      console.log('Periodic sync for daily reminders')
-    );
-  }
-});
+})
