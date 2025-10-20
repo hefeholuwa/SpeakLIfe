@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
+import Admin from './pages/Admin.jsx'
 
 const AppRouter = () => {
   const [currentRoute, setCurrentRoute] = useState('landing')
@@ -14,6 +15,8 @@ const AppRouter = () => {
       setCurrentRoute('dashboard')
     } else if (path === '/bible') {
       setCurrentRoute('bible')
+    } else if (path === '/admin') {
+      setCurrentRoute('admin')
     } else {
       setCurrentRoute('landing')
     }
@@ -25,6 +28,8 @@ const AppRouter = () => {
         setCurrentRoute('dashboard')
       } else if (path === '/bible') {
         setCurrentRoute('bible')
+      } else if (path === '/admin') {
+        setCurrentRoute('admin')
       } else {
         setCurrentRoute('landing')
       }
@@ -52,6 +57,9 @@ const AppRouter = () => {
     } else if (route === 'bible') {
       window.history.pushState({}, '', '/bible')
       setCurrentRoute('bible')
+    } else if (route === 'admin') {
+      window.history.pushState({}, '', '/admin')
+      setCurrentRoute('admin')
     } else {
       window.history.pushState({}, '', '/')
       setCurrentRoute('landing')
@@ -70,6 +78,14 @@ const AppRouter = () => {
 
   if (currentRoute === 'bible') {
     return <BibleSection />
+  }
+
+  if (currentRoute === 'admin') {
+    return (
+      <AuthProvider>
+        <Admin />
+      </AuthProvider>
+    )
   }
 
   return (
