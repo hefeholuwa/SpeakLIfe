@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
 import Admin from './pages/Admin.jsx'
+import TopicDetail from './components/TopicDetail.jsx'
 
 const AppRouter = () => {
   const [currentRoute, setCurrentRoute] = useState('landing')
@@ -17,6 +18,8 @@ const AppRouter = () => {
       setCurrentRoute('bible')
     } else if (path === '/admin') {
       setCurrentRoute('admin')
+    } else if (path.startsWith('/topic/')) {
+      setCurrentRoute('topic')
     } else {
       setCurrentRoute('landing')
     }
@@ -30,6 +33,8 @@ const AppRouter = () => {
         setCurrentRoute('bible')
       } else if (path === '/admin') {
         setCurrentRoute('admin')
+      } else if (path.startsWith('/topic/')) {
+        setCurrentRoute('topic')
       } else {
         setCurrentRoute('landing')
       }
@@ -84,6 +89,14 @@ const AppRouter = () => {
     return (
       <AuthProvider>
         <Admin />
+      </AuthProvider>
+    )
+  }
+
+  if (currentRoute === 'topic') {
+    return (
+      <AuthProvider>
+        <TopicDetail />
       </AuthProvider>
     )
   }

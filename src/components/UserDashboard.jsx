@@ -10,13 +10,17 @@ import UserProfile from './UserProfile'
 import BibleReader from './BibleReader'
 import BibleSection from './BibleSection'
 import ConfessionJournal from './ConfessionJournal'
-import ReadingPlans from './ReadingPlans'
 import notificationService from '../services/notificationService'
 
 const UserDashboard = ({ onNavigate }) => {
   const { user, needsVerification } = useAuth()
   const [showProfile, setShowProfile] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
+
+  // Handle navigation from QuickActions
+  const handleNavigate = (tab) => {
+    setActiveTab(tab)
+  }
 
   // Initialize notifications on component mount
   useEffect(() => {
@@ -44,6 +48,44 @@ const UserDashboard = ({ onNavigate }) => {
     <div className="min-h-screen bg-celestial-gradient" style={{ willChange: 'auto' }}>
       <DashboardHeader onShowProfile={setShowProfile} />
       
+      {/* Navigation Tabs */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-20 z-40">
+        <div className="container mx-auto px-4">
+          <nav className="flex space-x-1 py-2">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === 'home'
+                  ? 'bg-purple-100 text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              🏠 Home
+            </button>
+            <button
+              onClick={() => setActiveTab('bible')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === 'bible'
+                  ? 'bg-purple-100 text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              📖 Bible
+            </button>
+            <button
+              onClick={() => setActiveTab('confessions')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === 'confessions'
+                  ? 'bg-purple-100 text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              📝 Confession Journal
+            </button>
+          </nav>
+        </div>
+      </div>
+      
       <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="space-y-2">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -60,10 +102,10 @@ const UserDashboard = ({ onNavigate }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <ReadingProgress />
-              <QuickActions onNavigate={onNavigate} />
+              <QuickActions onNavigate={handleNavigate} />
             </div>
 
-            <TopicLibrary />
+            <TopicLibrary onNavigate={onNavigate} />
 
             <RecentActivity />
           </>
@@ -77,9 +119,7 @@ const UserDashboard = ({ onNavigate }) => {
           <ConfessionJournal />
         )}
 
-        {activeTab === 'plans' && (
-          <ReadingPlans />
-        )}
+
 
         {/* Admin Access */}
         <div className="fixed bottom-4 right-4 z-50">

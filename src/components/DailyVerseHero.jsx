@@ -3,7 +3,6 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../supabaseClient.jsx'
-import { instantContentLoader } from '../services/instantContentLoader.js'
 
 const DailyVerseHero = () => {
   const { user } = useAuth()
@@ -14,9 +13,7 @@ const DailyVerseHero = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [error, setError] = useState(null)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationStage, setGenerationStage] = useState('')
-  const [progressStage, setProgressStage] = useState(0)
+  // Removed AI generation states - now loading from database
 
   // Load today's verse and confession on component mount
   useEffect(() => {
@@ -32,93 +29,39 @@ const DailyVerseHero = () => {
       setIsLoading(true)
       setHasLoaded(true)
       
-      // First, try to get existing content
-      try {
-        const existingContent = await instantContentLoader.getTodaysContent()
-        
-        if (existingContent) {
-          // Content exists, display it immediately
-          setDailyVerse({
-            text: existingContent.verse_text,
-            reference: existingContent.reference
-          })
-          setDailyConfession(existingContent.confession_text)
-          setIsLoading(false)
-          return
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Fetch today's content from database
+      const { data, error } = await supabase
+        .from('daily_verses')
+        .select('*')
+        .eq('date', today)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No content found for today
+          console.log('No daily content found for today')
+          setDailyVerse(null)
+          setDailyConfession(null)
+        } else {
+          throw error
         }
-      } catch (fetchError) {
-        console.log('No existing content found, will generate new content')
+      } else if (data) {
+        // Set the daily verse and confession from database
+        setDailyVerse({
+          text: data.verse_text,
+          reference: data.reference
+        })
+        setDailyConfession(data.confession_text)
       }
       
-      // No content exists, start generation process
-      setIsGenerating(true)
+      setIsLoading(false)
       
-      // Simulate progress stages
-      const progressStages = [
-        'Connecting to AI...',
-        'Generating Bible verse...',
-        'Creating confession...',
-        'Saving to database...',
-        'Finalizing content...'
-      ]
-      
-      setProgressStage(0)
-      const stageInterval = setInterval(() => {
-        setProgressStage(prev => {
-          const nextStage = prev + 1
-          if (nextStage < progressStages.length) {
-            setGenerationStage(progressStages[nextStage])
-            return nextStage
-          }
-          return prev
-        })
-      }, 3000) // Change stage every 3 seconds
-      
-      // Start generation in background
-      instantContentLoader.generateAndCache().catch(error => {
-        console.error('Background generation failed:', error)
-        clearInterval(stageInterval)
-      })
-      
-      // Poll for content updates every 2 seconds during generation
-      const pollInterval = setInterval(async () => {
-        try {
-          const content = await instantContentLoader.getTodaysContent()
-          if (content) {
-            setDailyVerse({
-              text: content.verse_text,
-              reference: content.reference
-            })
-            setDailyConfession(content.confession_text)
-            clearInterval(pollInterval)
-            clearInterval(stageInterval)
-            setIsGenerating(false)
-            setIsLoading(false)
-            setGenerationStage('')
-            setProgressStage(0)
-          }
-        } catch (error) {
-          // Content not ready yet, continue polling
-        }
-      }, 2000)
-      
-      // Stop polling after 30 seconds
-      setTimeout(() => {
-        clearInterval(pollInterval)
-        clearInterval(stageInterval)
-        if (isGenerating) {
-          setError('Generation is taking longer than expected. Please try again.')
-          setIsGenerating(false)
-          setIsLoading(false)
-          setGenerationStage('')
-          setProgressStage(0)
-        }
-      }, 30000)
     } catch (error) {
-      console.error('Error loading today\'s content:', error)
-      setError('Failed to load today\'s content. Please try again later.')
-    } finally {
-      setIsGenerating(false)
+      console.error('Error loading content:', error)
+      setError('Failed to load content.')
       setIsLoading(false)
     }
   }
@@ -203,28 +146,8 @@ const DailyVerseHero = () => {
                   <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <div className="text-center">
                     <span className="text-white/80 text-lg font-medium">
-                      {isGenerating ? 'Generating today\'s scripture...' : 'Loading today\'s scripture...'}
+                      Loading today's scripture...
                     </span>
-                    {isGenerating && (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-center justify-center space-x-1">
-                          <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                        <p className="text-white/60 text-sm">
-                          {generationStage || 'AI is crafting your personalized verse...'}
-                        </p>
-                        <div className="w-48 bg-white/20 rounded-full h-1 mt-2">
-                          <div 
-                            className="bg-white/60 h-1 rounded-full transition-all duration-500" 
-                            style={{
-                              width: progressStage > 0 ? `${(progressStage / 5) * 100}%` : '20%'
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : error ? (
@@ -248,14 +171,27 @@ const DailyVerseHero = () => {
                 <p className="text-white text-xl md:text-2xl leading-relaxed font-medium">
                   "{dailyVerse.text}"
                 </p>
-              ) : null}
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-white/60 mb-4">
+                    <span className="text-4xl">📖</span>
+                  </div>
+                  <p className="text-white/60 text-lg">No verse available for today</p>
+                  <p className="text-white/40 text-sm mt-2">Check back later or contact admin</p>
+                </div>
+              )}
             </div>
             {dailyVerse && (
               <div className="flex items-center gap-3 text-white/80">
                 <div className="p-2 rounded-lg bg-white/20">
                   <span className="text-white text-lg">📖</span>
                 </div>
-                <span className="font-semibold">{dailyVerse.reference}</span>
+                <span className="font-semibold">
+                  {dailyVerse.reference}
+                  {dailyVerse.translation && (
+                    <span className="text-white/60 text-sm ml-2">({dailyVerse.translation})</span>
+                  )}
+                </span>
               </div>
             )}
           </div>
@@ -273,7 +209,7 @@ const DailyVerseHero = () => {
               <div className="flex items-center justify-center py-4">
                 <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
                 <span className="ml-3 text-purple-600">
-                  {isGenerating ? 'Generating confession...' : 'Loading confession...'}
+                  Loading confession...
                 </span>
               </div>
             ) : error ? (
@@ -296,7 +232,14 @@ const DailyVerseHero = () => {
               <p className="text-gray-800 leading-relaxed text-lg">
                 {dailyConfession}
               </p>
-            ) : null}
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-gray-400 mb-2">
+                  <span className="text-2xl">💭</span>
+                </div>
+                <p className="text-gray-500">No confession available for today</p>
+              </div>
+            )}
           </div>
 
                  {dailyVerse && dailyConfession && (

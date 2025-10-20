@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const ConfessionJournal = () => {
+  const { user } = useAuth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,9 +27,15 @@ const ConfessionJournal = () => {
   const loadEntries = async () => {
     try {
       setLoading(true);
+      if (!user) {
+        setEntries([]);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('confession_journal')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -41,20 +49,31 @@ const ConfessionJournal = () => {
 
   const saveEntry = async (e) => {
     e.preventDefault();
+    if (!user) {
+      alert('Please log in to save your confession journal entries.');
+      return;
+    }
+    
     try {
+      const entryData = {
+        ...formData,
+        user_id: user.id
+      };
+      
       if (editingEntry) {
         // Update existing entry
         const { error } = await supabase
           .from('confession_journal')
-          .update(formData)
-          .eq('id', editingEntry.id);
+          .update(entryData)
+          .eq('id', editingEntry.id)
+          .eq('user_id', user.id); // Ensure user can only update their own entries
         
         if (error) throw error;
       } else {
         // Create new entry
         const { error } = await supabase
           .from('confession_journal')
-          .insert([formData]);
+          .insert([entryData]);
         
         if (error) throw error;
       }
@@ -63,22 +82,30 @@ const ConfessionJournal = () => {
       resetForm();
     } catch (error) {
       console.error('Error saving entry:', error);
+      alert('Failed to save entry. Please try again.');
     }
   };
 
   const deleteEntry = async (entryId) => {
+    if (!user) {
+      alert('Please log in to delete entries.');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this entry?')) return;
     
     try {
       const { error } = await supabase
         .from('confession_journal')
         .delete()
-        .eq('id', entryId);
+        .eq('id', entryId)
+        .eq('user_id', user.id); // Ensure user can only delete their own entries
       
       if (error) throw error;
       await loadEntries();
     } catch (error) {
       console.error('Error deleting entry:', error);
+      alert('Failed to delete entry. Please try again.');
     }
   };
 
@@ -147,6 +174,26 @@ const ConfessionJournal = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your journal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🔒</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600 mb-6">Please log in to access your confession journal.</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );

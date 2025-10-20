@@ -13,7 +13,7 @@ const actions = [
   },
   {
     name: "Confession Journal",
-    icon: "💭",
+    icon: "📝",
     description: "Write your thoughts",
     gradient: "from-purple-500 to-pink-500",
     textColor: "text-white",
@@ -133,8 +133,12 @@ const QuickActions = ({ onNavigate }) => {
           break
           
         case 'confessions':
-          // Show coming soon alert
-          showComingSoonPopup('Confession Journal', '💭', 'Write your thoughts, prayers, and spiritual reflections. Your personal space for growth and connection with God.')
+          // Navigate to confession journal section
+          if (onNavigate) {
+            onNavigate('confessions')
+          } else {
+            window.location.href = '/confessions'
+          }
           break
           
         case 'plans':

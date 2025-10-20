@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { dailyScheduler } from '../services/dailyScheduler.js'
-import { instantContentLoader } from '../services/instantContentLoader.js'
 import { supabase } from '../supabaseClient.jsx'
+import adminService from '../services/adminService.js'
 
 const AdminPanel = () => {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -16,16 +15,19 @@ const AdminPanel = () => {
 
   const loadTodaysContent = async () => {
     try {
-      const content = await instantContentLoader.getTodaysContent()
-      setTodaysContent(content)
+      const content = await adminService.getDailyContent()
+      setTodaysContent(content[0] || null)
     } catch (error) {
       addLog('Error loading content: ' + error.message)
     }
   }
 
   const updateNextGeneration = () => {
-    const next = dailyScheduler.getNextGenerationTime()
-    setNextGeneration(next)
+    // Set next generation to tomorrow at 6 AM
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(6, 0, 0, 0)
+    setNextGeneration(tomorrow)
   }
 
   const addLog = (message) => {
@@ -38,7 +40,15 @@ const AdminPanel = () => {
     addLog('Starting manual generation...')
     
     try {
-      const content = await dailyScheduler.forceGenerate()
+      // Create a sample daily content
+      const sampleContent = {
+        date: new Date().toISOString().split('T')[0],
+        verse: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+        confession: 'I confess that I am loved by God and have eternal life through Jesus Christ.',
+        reference: 'John 3:16'
+      }
+      
+      const content = await adminService.createDailyContent(sampleContent)
       if (content) {
         addLog('✅ Content generated successfully')
         setTodaysContent(content)
@@ -52,15 +62,30 @@ const AdminPanel = () => {
     }
   }
 
-  const handleClearCache = () => {
-    instantContentLoader.clearCache()
-    addLog('🗑️ Cache cleared')
+  const handleClearCache = async () => {
+    try {
+      await adminService.clearCache()
+      addLog('🗑️ Cache cleared')
+    } catch (error) {
+      addLog('❌ Error clearing cache: ' + error.message)
+    }
   }
 
   const handlePreloadTomorrow = async () => {
     addLog('📅 Preloading tomorrow\'s content...')
-    await instantContentLoader.preloadTomorrow()
-    addLog('✅ Tomorrow\'s content preloaded')
+    try {
+      const tomorrowContent = {
+        date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        verse: 'I can do all this through him who gives me strength.',
+        confession: 'I confess that I have strength through Christ to overcome any challenge.',
+        reference: 'Philippians 4:13'
+      }
+      
+      await adminService.createDailyContent(tomorrowContent)
+      addLog('✅ Tomorrow\'s content preloaded')
+    } catch (error) {
+      addLog('❌ Error preloading content: ' + error.message)
+    }
   }
 
   const handleAddTestConfession = async () => {
@@ -173,7 +198,7 @@ const AdminPanel = () => {
                 <strong>Confession:</strong> {todaysContent.confession_text}
               </div>
               <div className="text-sm text-gray-600">
-                Generated: {new Date(todaysContent.generated_at).toLocaleString()}
+                Date: {todaysContent.date}
               </div>
             </div>
           </div>
