@@ -3,7 +3,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
-import Admin from './pages/Admin.jsx'
+import AdminRouter from './AdminRouter.jsx'
 import TopicDetail from './components/TopicDetail.jsx'
 
 const AppRouter = () => {
@@ -86,11 +86,8 @@ const AppRouter = () => {
   }
 
   if (currentRoute === 'admin') {
-    return (
-      <AuthProvider>
-        <Admin />
-      </AuthProvider>
-    )
+    console.log('🔧 AppRouter: Rendering AdminRouter for admin route')
+    return <AdminRouter />
   }
 
   if (currentRoute === 'topic') {

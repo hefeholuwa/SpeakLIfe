@@ -63,29 +63,75 @@ class AdminService {
       this.addLog('Loading system statistics...', 'info')
       
       const [
-        { count: verseCount },
+        { count: dailyVerseCount },
+        { count: topicVerseCount },
+        { count: topicConfessionCount },
         { count: bookmarkCount },
         { count: highlightCount }
       ] = await Promise.all([
         supabase.from('daily_verses').select('*', { count: 'exact', head: true }),
+        supabase.from('topic_verses').select('*', { count: 'exact', head: true }),
+        supabase.from('topic_confessions').select('*', { count: 'exact', head: true }),
         supabase.from('bible_bookmarks').select('*', { count: 'exact', head: true }),
         supabase.from('bible_highlights').select('*', { count: 'exact', head: true })
       ])
 
+      const totalVerses = (dailyVerseCount || 0) + (topicVerseCount || 0)
+      const totalConfessions = topicConfessionCount || 0
+
       const stats = {
         totalUsers: 'N/A', // Cannot access auth.users directly from client
-        totalVerses: verseCount || 0,
-        totalConfessions: 'Private', // User confession journals are private
+        totalVerses: totalVerses,
+        totalConfessions: totalConfessions,
         totalBookmarks: bookmarkCount || 0,
         totalHighlights: highlightCount || 0,
         lastUpdated: new Date().toISOString()
       }
 
-      this.addLog(`System stats loaded: ${stats.totalVerses} verses, ${stats.totalConfessions} confessions`, 'success')
+      this.addLog(`System stats loaded: ${stats.totalVerses} verses (${dailyVerseCount} daily + ${topicVerseCount} topic), ${stats.totalConfessions} confessions`, 'success')
       return stats
     } catch (error) {
       this.addLog(`Error loading system stats: ${error.message}`, 'error')
       throw error
+    }
+  }
+
+  // Get system logs
+  getSystemLogs() {
+    return this.getLogs()
+  }
+
+  // Get topic verses
+  async getTopicVerses(topicId) {
+    try {
+      const { data, error } = await supabase
+        .from('topic_verses')
+        .select('*')
+        .eq('topic_id', topicId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      this.addLog(`Error fetching topic verses: ${error.message}`, 'error')
+      return []
+    }
+  }
+
+  // Get topic confessions
+  async getTopicConfessions(topicId) {
+    try {
+      const { data, error } = await supabase
+        .from('topic_confessions')
+        .select('*')
+        .eq('topic_id', topicId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      this.addLog(`Error fetching topic confessions: ${error.message}`, 'error')
+      return []
     }
   }
 
@@ -98,8 +144,8 @@ class AdminService {
         .from('daily_verses')
         .insert({
           date: content.date,
-          verse_text: content.verse,
-          confession_text: content.confession,
+          verse: content.verse_text || content.verse,
+          confession: content.confession_text || content.confession,
           reference: content.reference || ''
         })
         .select()
@@ -492,6 +538,23 @@ class AdminService {
     }
   }
 
+  async createTopicVerse(verseData) {
+    try {
+      this.addLog(`Creating topic verse...`, 'info')
+      const { data, error } = await supabase
+        .from('topic_verses')
+        .insert([verseData])
+        .select()
+
+      if (error) throw error
+      this.addLog(`Topic verse created successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error creating topic verse: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
   async updateTopicVerse(verseId, updates) {
     try {
       this.addLog(`Updating verse ${verseId}...`, 'info')
@@ -506,6 +569,23 @@ class AdminService {
       return data[0]
     } catch (error) {
       this.addLog(`Error updating verse: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async createTopicConfession(confessionData) {
+    try {
+      this.addLog(`Creating topic confession...`, 'info')
+      const { data, error } = await supabase
+        .from('topic_confessions')
+        .insert([confessionData])
+        .select()
+
+      if (error) throw error
+      this.addLog(`Topic confession created successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error creating topic confession: ${error.message}`, 'error')
       throw error
     }
   }
@@ -1447,6 +1527,398 @@ class AdminService {
     })
 
     return stats
+  }
+
+  // Get all existing verses to check for duplicates
+  async getAllExistingVerses() {
+    try {
+      this.addLog('Fetching existing verses for duplicate check...', 'info')
+      
+      const { data: dailyVerses, error: dailyError } = await supabase
+        .from('daily_verses')
+        .select('verse_text, reference')
+      
+      if (dailyError) throw dailyError
+
+      const { data: topicVerses, error: topicError } = await supabase
+        .from('topic_verses')
+        .select('verse_text, reference, book, chapter, verse')
+      
+      if (topicError) throw topicError
+
+      const allVerses = [...(dailyVerses || []), ...(topicVerses || [])]
+      this.addLog(`Found ${allVerses.length} existing verses`, 'info')
+      return allVerses
+    } catch (error) {
+      this.addLog(`Error fetching existing verses: ${error.message}`, 'error')
+      return []
+    }
+  }
+
+  // Get all existing confessions to check for duplicates
+  async getAllExistingConfessions() {
+    try {
+      this.addLog('Fetching existing confessions for duplicate check...', 'info')
+      
+      const { data: topicConfessions, error: topicError } = await supabase
+        .from('topic_confessions')
+        .select('title, confession_text')
+      
+      if (topicError) throw topicError
+
+      this.addLog(`Found ${topicConfessions?.length || 0} existing confessions`, 'info')
+      return topicConfessions || []
+    } catch (error) {
+      this.addLog(`Error fetching existing confessions: ${error.message}`, 'error')
+      return []
+    }
+  }
+
+  // Track topic usage (increment view count)
+  async trackTopicUsage(topicId) {
+    try {
+      this.addLog(`Tracking usage for topic ${topicId}...`, 'info')
+      
+      const { data, error } = await supabase
+        .from('topics')
+        .select('usage_count')
+        .eq('id', topicId)
+        .single()
+
+      if (error) throw error
+
+      const currentCount = data?.usage_count || 0
+      const newCount = currentCount + 1
+
+      const { error: updateError } = await supabase
+        .from('topics')
+        .update({ usage_count: newCount })
+        .eq('id', topicId)
+
+      if (updateError) throw updateError
+
+      this.addLog(`Topic usage updated: ${newCount} views`, 'success')
+      return newCount
+    } catch (error) {
+      this.addLog(`Error tracking topic usage: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  // Get content counts for a specific topic
+  async getTopicContentCounts(topicId) {
+    try {
+      this.addLog(`Getting content counts for topic ${topicId}...`, 'info')
+      
+      const [
+        { count: verseCount },
+        { count: confessionCount }
+      ] = await Promise.all([
+        supabase.from('topic_verses').select('*', { count: 'exact', head: true }).eq('topic_id', topicId),
+        supabase.from('topic_confessions').select('*', { count: 'exact', head: true }).eq('topic_id', topicId)
+      ])
+
+      const counts = {
+        verses: verseCount || 0,
+        confessions: confessionCount || 0,
+        total: (verseCount || 0) + (confessionCount || 0)
+      }
+
+      this.addLog(`Topic ${topicId} content: ${counts.verses} verses, ${counts.confessions} confessions`, 'info')
+      return counts
+    } catch (error) {
+      this.addLog(`Error getting topic content counts: ${error.message}`, 'error')
+      return { verses: 0, confessions: 0, total: 0 }
+    }
+  }
+
+  // Get content counts for all topics
+  async getAllTopicsWithCounts() {
+    try {
+      this.addLog('Getting all topics with content counts...', 'info')
+      
+      const { data: topics, error: topicsError } = await supabase
+        .from('topics')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (topicsError) throw topicsError
+
+      // Get counts for each topic
+      const topicsWithCounts = await Promise.all(
+        topics.map(async (topic) => {
+          const counts = await this.getTopicContentCounts(topic.id)
+          return {
+            ...topic,
+            verse_count: counts.verses,
+            confession_count: counts.confessions,
+            total_content: counts.total
+          }
+        })
+      )
+
+      this.addLog(`Loaded ${topicsWithCounts.length} topics with content counts`, 'success')
+      return topicsWithCounts
+    } catch (error) {
+      this.addLog(`Error getting topics with counts: ${error.message}`, 'error')
+      return []
+    }
+  }
+
+  // User Management Functions
+  async getAllUsers() {
+    try {
+      this.addLog('Fetching all users...', 'info')
+      
+      const { data: users, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          email,
+          full_name,
+          avatar_url,
+          created_at,
+          updated_at,
+          streak_count,
+          total_confessions,
+          spiritual_maturity_level,
+          confession_style,
+          preferred_ai_model,
+          ai_interaction_count,
+          ai_satisfaction_score,
+          last_ai_interaction,
+          spiritual_focus,
+          timezone,
+          ai_preferences,
+          last_confession_date,
+          preferred_confession_times,
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      this.addLog(`Loaded ${users?.length || 0} users`, 'success')
+      return users || []
+    } catch (error) {
+      this.addLog(`Error fetching users: ${error.message}`, 'error')
+      return []
+    }
+  }
+
+  async getUserStats() {
+    try {
+      this.addLog('Getting user statistics...', 'info')
+      
+      const { data: users, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          created_at,
+          updated_at,
+          last_confession_date,
+          total_confessions,
+          streak_count
+        `)
+
+      if (error) throw error
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+      // Simple active users based on recent confession activity
+      const activeUsers = users?.filter(u => {
+        return u.last_confession_date && new Date(u.last_confession_date) > oneDayAgo;
+      }) || []
+
+      const stats = {
+        totalUsers: users?.length || 0,
+        activeUsers: activeUsers.length,
+        newUsersToday: users?.filter(u => new Date(u.created_at) > oneDayAgo).length || 0,
+        newUsersThisWeek: users?.filter(u => new Date(u.created_at) > oneWeekAgo).length || 0,
+        newUsersThisMonth: users?.filter(u => new Date(u.created_at) > oneMonthAgo).length || 0,
+        totalConfessions: users?.reduce((sum, u) => sum + (u.total_confessions || 0), 0) || 0,
+        totalStreaks: users?.reduce((sum, u) => sum + (u.streak_count || 0), 0) || 0,
+        avgStreak: users?.length > 0 ? users.reduce((sum, u) => sum + (u.streak_count || 0), 0) / users.length : 0
+      }
+
+      this.addLog(`User stats: ${stats.totalUsers} total, ${stats.activeUsers} active`, 'success')
+      return stats
+    } catch (error) {
+      this.addLog(`Error getting user stats: ${error.message}`, 'error')
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        newUsersToday: 0,
+        newUsersThisWeek: 0,
+        newUsersThisMonth: 0,
+        totalConfessions: 0,
+        totalStreaks: 0,
+        avgStreak: 0
+      }
+    }
+  }
+
+  async updateUserStatus(userId, updates) {
+    try {
+      this.addLog(`Updating user ${userId}...`, 'info')
+      
+      const { data, error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+
+      if (error) throw error
+
+      this.addLog(`User ${userId} updated successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error updating user: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async deleteUser(userId) {
+    try {
+      this.addLog(`Soft deleting user ${userId}...`, 'warning')
+      
+      // Soft delete by setting deleted_at timestamp
+      const { data, error } = await supabase
+        .from('users')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select()
+
+      if (error) throw error
+
+      this.addLog(`User ${userId} soft deleted successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error deleting user: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  // Generate daily content with AI
+  async generateDailyContent() {
+    try {
+      this.addLog('Starting AI content generation...', 'info')
+      
+      const aiContent = await aiGenerationService.generateDailyContent()
+      console.log('🔍 AI Content received:', JSON.stringify(aiContent, null, 2))
+      
+      if (aiContent && aiContent.verse && aiContent.confession) {
+        // Save the generated content to database
+        const contentData = {
+          date: new Date().toISOString().split('T')[0],
+          verse_text: aiContent.verse.verse_text || aiContent.verse.text || '',
+          reference: aiContent.verse.reference || '',
+          confession_text: aiContent.confession.confession_text || aiContent.confession.text || '',
+          translation: aiContent.verse.translation || 'KJV'
+        }
+        
+        console.log('🔍 Content data to save:', contentData)
+        
+        // Validate required fields
+        if (!contentData.verse_text || !contentData.reference) {
+          throw new Error('AI generated content is missing required fields (verse_text or reference)')
+        }
+        
+        await this.createDailyContent(contentData)
+        this.addLog('AI content generated and saved successfully', 'success')
+        return contentData
+      } else {
+        console.error('❌ AI content structure issue:', aiContent)
+        this.addLog('AI generation failed, using fallback content', 'warning')
+        
+        // Use fallback content
+        const fallbackContent = this.getFallbackDailyContent()
+        const contentData = {
+          date: new Date().toISOString().split('T')[0],
+          verse_text: fallbackContent.verse_text,
+          reference: fallbackContent.reference,
+          confession_text: fallbackContent.confession_text,
+          translation: fallbackContent.translation
+        }
+        
+        await this.createDailyContent(contentData)
+        this.addLog('Fallback content saved successfully', 'success')
+        return contentData
+      }
+    } catch (error) {
+      this.addLog(`Error generating daily content: ${error.message}`, 'error')
+      
+      // Try fallback content as last resort
+      try {
+        this.addLog('Attempting fallback content generation', 'info')
+        const fallbackContent = this.getFallbackDailyContent()
+        const contentData = {
+          date: new Date().toISOString().split('T')[0],
+          verse_text: fallbackContent.verse_text,
+          reference: fallbackContent.reference,
+          confession_text: fallbackContent.confession_text,
+          translation: fallbackContent.translation
+        }
+        
+        await this.createDailyContent(contentData)
+        this.addLog('Fallback content saved successfully', 'success')
+        return contentData
+      } catch (fallbackError) {
+        this.addLog(`Fallback content also failed: ${fallbackError.message}`, 'error')
+        throw error
+      }
+    }
+  }
+
+  // Fallback content when AI generation fails
+  getFallbackDailyContent() {
+    const fallbackVerses = [
+      {
+        verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
+        reference: "Jeremiah 29:11",
+        translation: "NIV"
+      },
+      {
+        verse_text: "But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.",
+        reference: "Isaiah 40:31",
+        translation: "KJV"
+      },
+      {
+        verse_text: "I can do all things through Christ who strengthens me.",
+        reference: "Philippians 4:13",
+        translation: "NKJV"
+      },
+      {
+        verse_text: "And we know that all things work together for good to them that love God, to them who are the called according to his purpose.",
+        reference: "Romans 8:28",
+        translation: "KJV"
+      },
+      {
+        verse_text: "Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.",
+        reference: "Proverbs 3:5-6",
+        translation: "NIV"
+      }
+    ]
+
+    const fallbackConfessions = [
+      "I declare that God's plans for me are good, and I walk in His perfect will for my life.",
+      "I confess that I am strengthened by the Lord and I soar above every challenge.",
+      "I believe that through Christ, I can accomplish all things according to His purpose.",
+      "I declare that all things are working together for my good because I love God.",
+      "I confess that I trust in the Lord completely and He directs my paths."
+    ]
+
+    const randomVerse = fallbackVerses[Math.floor(Math.random() * fallbackVerses.length)]
+    const randomConfession = fallbackConfessions[Math.floor(Math.random() * fallbackConfessions.length)]
+
+    return {
+      verse_text: randomVerse.verse_text,
+      reference: randomVerse.reference,
+      confession_text: randomConfession,
+      translation: randomVerse.translation
+    }
   }
 }
 

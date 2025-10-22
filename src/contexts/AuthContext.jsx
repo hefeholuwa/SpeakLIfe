@@ -138,6 +138,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: error.message }
       }
 
+
       return { success: true, data }
     } catch (error) {
       setError(error.message)
@@ -151,6 +152,7 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setError(null)
+      
       
       // Clear user state immediately
       setUser(null)

@@ -50,9 +50,19 @@ const DailyVerseHero = () => {
         }
       } else if (data) {
         // Set the daily verse and confession from database
+        // Extract translation from reference if it exists (format: "John 3:16 (KJV)")
+        console.log('🔍 Raw reference from database:', data.reference)
+        const translationMatch = data.reference.match(/\(([^)]+)\)$/)
+        const translation = translationMatch ? translationMatch[1] : null
+        const cleanReference = data.reference.replace(/ \(.*\)$/, '')
+        
+        console.log('🔍 Extracted translation:', translation)
+        console.log('🔍 Clean reference:', cleanReference)
+        
         setDailyVerse({
           text: data.verse_text,
-          reference: data.reference
+          reference: cleanReference,
+          translation: translation
         })
         setDailyConfession(data.confession_text)
       }

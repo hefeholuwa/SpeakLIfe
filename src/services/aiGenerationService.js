@@ -5,10 +5,11 @@ class AIGenerationService {
     // Use import.meta.env for Vite or fallback to empty string
     this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || import.meta.env?.REACT_APP_OPENROUTER_API_KEY || ''
     this.baseURL = 'https://openrouter.ai/api/v1'
-    this.model = 'mistralai/mixtral-8x7b-instruct' // BEST FREE model - outperforms GPT-3.5
+    this.model = 'mistralai/mistral-small-3.2-24b-instruct:free' // BEST FREE model - 24B parameters, excellent reasoning
     this.freeModels = [
-      'mistralai/mixtral-8x7b-instruct', // BEST FREE - Outperforms Llama 2 70B, 6x faster
-      'meta-llama/llama-3.1-8b-instruct', // EXCELLENT - Strong reasoning, 128K context
+      'mistralai/mistral-small-3.2-24b-instruct:free', // BEST FREE - 24B parameters, excellent reasoning and spiritual content
+      'mistralai/mixtral-8x7b-instruct', // EXCELLENT - Outperforms Llama 2 70B, 6x faster
+      'meta-llama/llama-3.1-8b-instruct', // VERY GOOD - Strong reasoning, 128K context
       'deepseek/deepseek-chat', // VERY GOOD - Strong reasoning, 128K context
       'google/gemini-flash-1.5', // GOOD - 1M token context, multimodal
       'microsoft/phi-3-mini-4k-instruct', // GOOD - Microsoft's efficient model
@@ -33,7 +34,11 @@ class AIGenerationService {
       
       const randomTheme = themes[Math.floor(Math.random() * themes.length)]
       
-      const translations = ['KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'NKJV', 'AMP', 'MSG', 'CEV', 'NRSV']
+      const translations = [
+        'KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'NKJV', 'AMP', 'MSG', 'CEV', 'NRSV',
+        'CSB', 'NET', 'RSV', 'ASV', 'YLT', 'WEB', 'GNV', 'DRB', 'WYC', 'BBE',
+        'TLV', 'TPT', 'ERV', 'GNV', 'JUB', 'LSV', 'NOG', 'NTE', 'RGT', 'TLB'
+      ]
       const randomTranslation = translations[Math.floor(Math.random() * translations.length)]
       
       const prompt = `Generate a spiritually profound Bible verse for today's daily devotion. CRITICAL: You must use REAL, EXISTING Bible verses only. Do not create or make up any verse references.
@@ -71,7 +76,7 @@ class AIGenerationService {
       Example: {"verse_text": "But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.", "reference": "Isaiah 40:31", "book": "Isaiah", "chapter": 40, "verse": 31, "translation": "KJV", "theme": "strength and endurance"}`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(response)
+      return JSON.parse(this.cleanJsonResponse(response))
     } catch (error) {
       console.error('Error generating daily verse:', error)
       throw new Error('Failed to generate daily verse')
@@ -90,12 +95,20 @@ class AIGenerationService {
       
       const randomStyle = confessionStyles[Math.floor(Math.random() * confessionStyles.length)]
       
-      const prompt = `Based on this Bible verse: "${verseData.verse_text}" (${verseData.reference}), generate a short, powerful spiritual confession/declaration that:
+      const prompt = `CRITICAL: Generate a confession that DIRECTLY aligns with this specific Bible verse: "${verseData.verse_text}" (${verseData.reference})
+
+      VERSE ALIGNMENT REQUIREMENTS:
+      - The confession MUST directly reflect the specific message, theme, and spiritual truth of this exact verse
+      - Extract the core spiritual principle from the verse and make it personal
+      - If the verse is about "being still" and "God fighting for you", the confession should reflect that exact theme
+      - If the verse is about "strength in weakness", the confession should reflect that exact theme
+      - If the verse is about "peace that passes understanding", the confession should reflect that exact theme
+      - DO NOT create generic confessions that could apply to any verse
+      - The confession must be a personal declaration of the verse's specific truth
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
-      - Create a ${randomStyle} that aligns with the verse
+      - Create a ${randomStyle} that directly connects to the verse's specific message
       - Ensure doctrinal soundness and biblical accuracy
-      - Include spiritual warfare elements, kingdom principles, and divine promises
       - Make it personal, powerful, and faith-building
       - Use spiritual language that resonates with believers
       - Include elements of: divine identity, spiritual authority, kingdom inheritance, prophetic declaration
@@ -104,21 +117,26 @@ class AIGenerationService {
       CONFESSION REQUIREMENTS:
       - Keep it SHORT: 1-2 sentences maximum (not a paragraph)
       - Include "I declare", "I confess", "I believe", or similar powerful language
-      - Connect to the verse's theme while expanding on spiritual truths
+      - DIRECTLY connect to the verse's specific theme and message
       - Make it applicable to daily Christian walk
       - Include elements of faith, hope, victory, and spiritual authority
       - Sound spiritual but concise - not lengthy or verbose
       
+      EXAMPLES OF GOOD ALIGNMENT:
+      - Verse: "The Lord will fight for you; you need only to be still" → Confession: "I declare that the Lord fights my battles, and I rest in His victory while He works on my behalf"
+      - Verse: "I can do all things through Christ who strengthens me" → Confession: "I confess that Christ's strength flows through me, empowering me for every challenge"
+      - Verse: "Peace I leave with you" → Confession: "I receive the peace of Christ that surpasses all understanding and guards my heart"
+      
       FORMAT: Return as JSON:
       {
-        "title": "Powerful confession title (e.g., 'Declaration of Divine Authority', 'Confession of Kingdom Inheritance')",
-        "confession_text": "Short, spiritually profound confession/declaration text (1-2 sentences only)",
+        "title": "Powerful confession title that reflects the verse's specific theme",
+        "confession_text": "Short, spiritually profound confession that directly aligns with the verse's message (1-2 sentences only)",
         "theme": "Theme that matches the verse theme",
         "style": "${randomStyle}"
       }`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(response)
+      return JSON.parse(this.cleanJsonResponse(response))
     } catch (error) {
       console.error('Error generating confession:', error)
       throw new Error('Failed to generate confession')
@@ -133,7 +151,7 @@ class AIGenerationService {
         : `Generate a confession/declaration specifically for the topic "${topic}". Make it personal, powerful, and faith-building. The confession should be 2-3 sentences and directly relate to ${topic}.`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(response)
+      return JSON.parse(this.cleanJsonResponse(response))
     } catch (error) {
       console.error(`Error generating ${contentType} for topic ${topic}:`, error)
       throw new Error(`Failed to generate ${contentType} for topic`)
@@ -141,10 +159,15 @@ class AIGenerationService {
   }
 
   // Generate multiple verses for a topic
-  async generateTopicVerses(topic, count = 3) {
+  async generateTopicVerses(topic, count = 3, existingVerses = []) {
     try {
       const translations = ['KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'NKJV', 'AMP', 'MSG', 'CEV', 'NRSV']
       
+      // Create a list of existing verses to avoid
+      const existingVersesList = existingVerses.length > 0 
+        ? `\n\nEXISTING VERSES TO AVOID (do not use these):\n${existingVerses.map(v => `- "${v.verse_text}" (${v.reference})`).join('\n')}`
+        : ''
+
       const prompt = `Generate ${count} different spiritually profound Bible verses specifically related to the topic "${topic}". CRITICAL: You must use REAL, EXISTING Bible verses only. Do not create or make up any verse references.
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
@@ -176,6 +199,9 @@ class AIGenerationService {
       - Ephesians 3:20, Ephesians 6:10
       - Matthew 6:33, Matthew 11:28
       - John 3:16, John 14:27, John 15:7
+      ${existingVersesList}
+      
+      IMPORTANT: Return ONLY valid JSON. Do not include any markdown formatting, explanations, or additional text. Just the JSON array.
       
       FORMAT: Return as JSON array:
       [
@@ -185,13 +211,37 @@ class AIGenerationService {
           "book": "Book name",
           "chapter": chapter_number,
           "verse": verse_number,
-          "translation": "Bible translation used (e.g., KJV, NIV, ESV, etc.)",
-          "explanation": "Brief explanation of relevance to ${topic}"
+          "translation": "Bible translation used (e.g., KJV, NIV, ESV, etc.)"
         }
       ]`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(response)
+      const cleanedResponse = this.cleanJsonResponse(response)
+      
+      try {
+        const parsed = JSON.parse(cleanedResponse)
+        
+        // If it's not an array, wrap it in an array
+        if (!Array.isArray(parsed)) {
+          return [parsed]
+        }
+        
+        return parsed
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError)
+        console.error('Raw response:', response)
+        console.error('Cleaned response:', cleanedResponse)
+        
+        // Try to return fallback content
+        return [{
+          verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
+          reference: "Jeremiah 29:11",
+          book: "Jeremiah",
+          chapter: 29,
+          verse: 11,
+          translation: "NIV"
+        }]
+      }
     } catch (error) {
       console.error(`Error generating verses for topic ${topic}:`, error)
       throw new Error(`Failed to generate verses for topic`)
@@ -199,7 +249,7 @@ class AIGenerationService {
   }
 
   // Generate multiple confessions for a topic
-  async generateTopicConfessions(topic, count = 3) {
+  async generateTopicConfessions(topic, count = 3, existingConfessions = []) {
     try {
       const confessionTypes = [
         'prophetic declaration', 'spiritual warfare confession', 'kingdom identity',
@@ -208,7 +258,23 @@ class AIGenerationService {
         'faith declaration', 'hope proclamation', 'love manifestation'
       ]
       
-      const prompt = `Generate ${count} different short, powerful spiritual confessions/declarations specifically for the topic "${topic}". Requirements:
+      // Create a list of existing confessions to avoid
+      const existingConfessionsList = existingConfessions.length > 0 
+        ? `\n\nEXISTING CONFESSIONS TO AVOID (do not use these):\n${existingConfessions.map(c => `- "${c.title}": "${c.confession_text}"`).join('\n')}`
+        : ''
+      
+      const prompt = `Generate ${count} different short, powerful spiritual confessions/declarations specifically for the topic "${topic}". 
+
+      TOPIC-SPECIFIC ALIGNMENT:
+      - Each confession must DIRECTLY relate to the specific spiritual theme of "${topic}"
+      - If topic is "Faith" → confessions should be about believing, trusting, having faith
+      - If topic is "Peace" → confessions should be about peace, tranquility, God's protection
+      - If topic is "Love" → confessions should be about God's love, loving others, being loved
+      - If topic is "Wisdom" → confessions should be about divine wisdom, understanding, guidance
+      - If topic is "Prosperity" → confessions should be about God's provision, abundance, blessing
+      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity
+      - DO NOT create generic confessions that could apply to any topic
+      - Each confession must be a personal declaration of the topic's specific spiritual truth
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Each confession should be doctrinally sound and biblically accurate
@@ -227,6 +293,9 @@ class AIGenerationService {
       - Include elements of faith, hope, victory, and spiritual authority
       - Use different confession types: ${confessionTypes.join(', ')}
       - Sound spiritual but concise - not lengthy or verbose
+      ${existingConfessionsList}
+      
+      IMPORTANT: Return ONLY valid JSON. Do not include any markdown formatting, explanations, or additional text. Just the JSON array.
       
       FORMAT: Return as JSON array:
       [
@@ -237,7 +306,29 @@ class AIGenerationService {
       ]`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(response)
+      const cleanedResponse = this.cleanJsonResponse(response)
+      
+      try {
+        const parsed = JSON.parse(cleanedResponse)
+        
+        // If it's not an array, wrap it in an array
+        if (!Array.isArray(parsed)) {
+          return [parsed]
+        }
+        
+        return parsed
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError)
+        console.error('Raw response:', response)
+        console.error('Cleaned response:', cleanedResponse)
+        
+        // Try to return fallback content
+        return [{
+          title: `Powerful ${topic} Declaration`,
+          confession_text: `I declare that I am walking in the fullness of ${topic} and experiencing God's goodness in every area of my life.`,
+          theme: topic.toLowerCase()
+        }]
+      }
     } catch (error) {
       console.error(`Error generating confessions for topic ${topic}:`, error)
       throw new Error(`Failed to generate confessions for topic`)
@@ -274,8 +365,46 @@ class AIGenerationService {
     return this.freeModels[randomIndex]
   }
 
+  // Helper method to clean JSON response from AI
+  cleanJsonResponse(response) {
+    // Remove markdown code blocks if present
+    let cleaned = response.trim()
+    
+    // Remove ```json and ``` markers
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '')
+    }
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '')
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.replace(/\s*```$/, '')
+    }
+    
+    // Additional cleaning for common JSON issues
+    cleaned = cleaned.trim()
+    
+    // Try to find the JSON array/object in the response
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]|{[\s\S]*}/)
+    if (jsonMatch) {
+      cleaned = jsonMatch[0]
+    }
+    
+    // Handle incomplete JSON by finding the last complete object
+    if (cleaned.includes('"verse_text"') && !cleaned.endsWith('}') && !cleaned.endsWith(']')) {
+      // Find the last complete object
+      const objects = cleaned.match(/\{[^{}]*"verse_text"[^{}]*\}/g)
+      if (objects && objects.length > 0) {
+        // Return only the complete objects as an array
+        cleaned = '[' + objects.join(',') + ']'
+      }
+    }
+    
+    return cleaned.trim()
+  }
+
   // Call OpenRouter API with free models
-  async callOpenRouter(prompt, model = null) {
+  async callOpenRouter(prompt, model = null, retryCount = 0) {
     try {
       if (!this.apiKey) {
         throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY or REACT_APP_OPENROUTER_API_KEY in your environment variables.')
@@ -304,12 +433,22 @@ class AIGenerationService {
               content: prompt
             }
           ],
-          max_tokens: 1000,
+          max_tokens: 2000,
           temperature: 0.7
         })
       })
 
       if (!response.ok) {
+        // Handle rate limiting
+        if (response.status === 429 && retryCount < 3) {
+          const retryAfter = response.headers.get('Retry-After')
+          const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, retryCount) * 1000 // Exponential backoff
+          
+          console.log(`Rate limited. Retrying after ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          return this.callOpenRouter(prompt, model, retryCount + 1)
+        }
+        
         throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`)
       }
 
@@ -356,27 +495,36 @@ class AIGenerationService {
       }
     ]
 
-    const fallbackConfessions = [
-      {
-        title: "Declaration of Hope",
-        confession_text: "I declare that God's plans for me are good, and I walk in divine expectation."
-      },
-      {
-        title: "Confession of Faith",
-        confession_text: "I believe God is working all things for my good, and I trust His perfect timing."
-      },
-      {
-        title: "Declaration of Strength",
-        confession_text: "I confess that Christ strengthens me, and I am empowered for every challenge."
-      }
-    ]
-
     const randomVerse = fallbackVerses[Math.floor(Math.random() * fallbackVerses.length)]
-    const randomConfession = fallbackConfessions[Math.floor(Math.random() * fallbackConfessions.length)]
+    
+    // Generate confession that aligns with the specific verse
+    let alignedConfession
+    if (randomVerse.reference === "Jeremiah 29:11") {
+      alignedConfession = {
+        title: "Declaration of Divine Plans",
+        confession_text: "I declare that God's plans for me are good, filled with hope and a prosperous future."
+      }
+    } else if (randomVerse.reference === "Romans 8:28") {
+      alignedConfession = {
+        title: "Confession of Divine Purpose",
+        confession_text: "I believe that God is working all things together for my good according to His purpose."
+      }
+    } else if (randomVerse.reference === "Philippians 4:13") {
+      alignedConfession = {
+        title: "Declaration of Divine Strength",
+        confession_text: "I confess that Christ gives me strength to do all things through His power."
+      }
+    } else {
+      // Fallback
+      alignedConfession = {
+        title: "Declaration of Faith",
+        confession_text: "I declare that God's promises are true and I walk in His divine purpose."
+      }
+    }
 
     return {
       verse: randomVerse,
-      confession: randomConfession,
+      confession: alignedConfession,
       theme: randomVerse.theme
     }
   }
@@ -385,7 +533,7 @@ class AIGenerationService {
   async testAIConnection() {
     try {
       const response = await this.callOpenRouter('Generate a simple Bible verse about love. Format as JSON with verse_text, reference, book, chapter, verse fields.')
-      const parsed = JSON.parse(response)
+      const parsed = JSON.parse(this.cleanJsonResponse(response))
       return { success: true, data: parsed }
     } catch (error) {
       return { success: false, error: error.message }

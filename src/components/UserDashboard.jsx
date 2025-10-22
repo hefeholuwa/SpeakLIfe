@@ -121,16 +121,6 @@ const UserDashboard = ({ onNavigate }) => {
 
 
 
-        {/* Admin Access */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            onClick={() => window.location.href = '/admin'}
-            className="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-900 transition-colors"
-            title="Admin Dashboard"
-          >
-            🔧
-          </button>
-        </div>
 
       </main>
 

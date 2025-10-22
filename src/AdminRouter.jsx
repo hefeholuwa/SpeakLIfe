@@ -1,8 +1,7 @@
-import React from 'react';
-import AdminDashboard from '../components/AdminDashboard';
+import React from 'react'
+import AdminDashboard from './components/AdminDashboard.jsx'
 
-const Admin = () => {
-
+const AdminRouter = () => {
   const navigateTo = (route) => {
     if (route === 'dashboard') {
       window.history.pushState({}, '', '/dashboard')
@@ -14,9 +13,9 @@ const Admin = () => {
       window.history.pushState({}, '', '/')
       window.location.reload()
     }
-  };
+  }
 
-  return <AdminDashboard onNavigate={navigateTo} />;
-};
+  return <AdminDashboard onNavigate={navigateTo} />
+}
 
-export default Admin;
+export default AdminRouter

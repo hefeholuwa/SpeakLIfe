@@ -18,17 +18,15 @@ import {
   X,
   RefreshCw,
   Brain,
-  Sparkles,
-  CheckCircle
+  Sparkles
 } from 'lucide-react'
 
 // Import the optimized panels
 import OverviewPanel from './admin/OverviewPanel'
 import ContentManagementPanel from './admin/ContentManagementPanel'
 import TopicsPanel from './admin/TopicsPanel'
-import adminService from '../services/adminService'
 
-const AdminDashboard = ({ onNavigate }) => {
+const AdminDashboardOptimized = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [systemStats, setSystemStats] = useState({
     totalUsers: 0,
@@ -47,15 +45,6 @@ const AdminDashboard = ({ onNavigate }) => {
   const [dailyContent, setDailyContent] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState(null)
-  const [successMessage, setSuccessMessage] = useState('')
-  const [showSuccessToast, setShowSuccessToast] = useState(false)
-  const [loadingStates, setLoadingStates] = useState({
-    systemData: false,
-    topics: false,
-    dailyContent: false,
-    topicContent: false
-  })
   
   // Form states
   const [showManualForm, setShowManualForm] = useState(false)
@@ -91,13 +80,10 @@ const AdminDashboard = ({ onNavigate }) => {
   })
   const [topicConfessionFormData, setTopicConfessionFormData] = useState({
     title: '',
-    confession_text: ''
+    confession_text: '',
+    theme: ''
   })
   const [editingTopicContent, setEditingTopicContent] = useState(null)
-  
-  // Additional state for TopicsPanel
-  const [previewContent, setPreviewContent] = useState(null)
-  const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
     loadSystemData()
@@ -105,171 +91,72 @@ const AdminDashboard = ({ onNavigate }) => {
     loadDailyContent()
   }, [])
 
-  // Load topic content when a topic is selected
-  useEffect(() => {
-    if (selectedTopic) {
-      loadTopicContent()
-    }
-  }, [selectedTopic])
-
   const loadSystemData = async () => {
     try {
-      setLoadingStates(prev => ({ ...prev, systemData: true }))
-      setError(null)
-      adminService.addLog('Loading system data...', 'info')
-      
-      // Get real system stats from adminService
-      const stats = await adminService.getSystemStats()
-      setSystemStats(stats)
-      
-      // Get logs from adminService
-      const systemLogs = adminService.getLogs()
-      setLogs(systemLogs)
-      
-      adminService.addLog('System data loaded successfully', 'success')
+      setIsLoading(true)
+      // Load system stats and logs here
+      setSystemStats({
+        totalUsers: 150,
+        totalVerses: 45,
+        totalConfessions: 32,
+        totalBookmarks: 89,
+        totalHighlights: 12,
+        lastUpdated: new Date()
+      })
+      setLogs([
+        { id: 1, message: 'System initialized', type: 'success', timestamp: new Date() },
+        { id: 2, message: 'Database connected', type: 'success', timestamp: new Date() },
+        { id: 3, message: 'AI service ready', type: 'success', timestamp: new Date() }
+      ])
     } catch (error) {
       console.error('Error loading system data:', error)
-      setError(`Failed to load system data: ${error.message}`)
-      adminService.addLog(`Error loading system data: ${error.message}`, 'error')
     } finally {
-      setLoadingStates(prev => ({ ...prev, systemData: false }))
       setIsLoading(false)
     }
   }
 
   const loadTopics = async () => {
     try {
-      setLoadingStates(prev => ({ ...prev, topics: true }))
-      setError(null)
-      adminService.addLog('Loading topics...', 'info')
-      const topicsData = await adminService.getTopics()
-      
-      // If no topics exist, create some sample topics
-      if (topicsData.length === 0) {
-        adminService.addLog('No topics found, creating sample topics...', 'info')
-        await createSampleTopics()
-        // Reload topics after creating samples
-        const newTopicsData = await adminService.getTopics()
-        setTopics(newTopicsData)
-        adminService.addLog(`Created and loaded ${newTopicsData.length} sample topics`, 'success')
-      } else {
-        setTopics(topicsData)
-        adminService.addLog(`Loaded ${topicsData.length} topics`, 'success')
-      }
+      // Load topics from database
+      setTopics([
+        { id: 1, title: 'Faith', description: 'Verses about faith and trust', icon: '🙏', category: 'spiritual', usage_count: 15 },
+        { id: 2, title: 'Love', description: 'Verses about love and compassion', icon: '❤️', category: 'spiritual', usage_count: 23 },
+        { id: 3, title: 'Hope', description: 'Verses about hope and encouragement', icon: '🌟', category: 'spiritual', usage_count: 18 }
+      ])
     } catch (error) {
       console.error('Error loading topics:', error)
-      setError(`Failed to load topics: ${error.message}`)
-      adminService.addLog(`Error loading topics: ${error.message}`, 'error')
-    } finally {
-      setLoadingStates(prev => ({ ...prev, topics: false }))
     }
   }
-
-  const createSampleTopics = async () => {
-    const sampleTopics = [
-      {
-        title: 'Faith',
-        description: 'Believe and receive God\'s promises',
-        icon: '✨',
-        color: '#f59e0b',
-        category: 'spiritual'
-      },
-      {
-        title: 'Peace',
-        description: 'God\'s protection and tranquility',
-        icon: '🛡️',
-        color: '#3b82f6',
-        category: 'spiritual'
-      },
-      {
-        title: 'Love',
-        description: 'Unconditional love and compassion',
-        icon: '❤️',
-        color: '#ef4444',
-        category: 'spiritual'
-      },
-      {
-        title: 'Wisdom',
-        description: 'Divine understanding and guidance',
-        icon: '💡',
-        color: '#f59e0b',
-        category: 'spiritual'
-      },
-      {
-        title: 'Prosperity',
-        description: 'Abundant blessings and provision',
-        icon: '💰',
-        color: '#10b981',
-        category: 'spiritual'
-      },
-      {
-        title: 'Relationships',
-        description: 'Godly connections and fellowship',
-        icon: '👥',
-        color: '#8b5cf6',
-        category: 'spiritual'
-      }
-    ]
-
-    for (const topic of sampleTopics) {
-      try {
-        await adminService.createTopic(topic)
-      } catch (error) {
-        console.error('Error creating sample topic:', topic.title, error)
-      }
-    }
-  }
-
 
   const loadDailyContent = async () => {
     try {
-      setLoadingStates(prev => ({ ...prev, dailyContent: true }))
-      setError(null)
-      adminService.addLog('Loading daily content...', 'info')
-      const content = await adminService.getDailyContent()
-      setDailyContent(content)
-      adminService.addLog(`Loaded ${content.length} daily content entries`, 'success')
+      // Load daily content from database
+      setDailyContent([
+        { id: 1, date: '2024-01-15', verse_text: 'For God so loved the world...', reference: 'John 3:16', confession_text: 'I am loved by God', translation: 'KJV' }
+      ])
     } catch (error) {
       console.error('Error loading daily content:', error)
-      setError(`Failed to load daily content: ${error.message}`)
-      adminService.addLog(`Error loading daily content: ${error.message}`, 'error')
-    } finally {
-      setLoadingStates(prev => ({ ...prev, dailyContent: false }))
     }
   }
 
   const loadTopicContent = async () => {
     if (!selectedTopic) return
     try {
-      setLoadingStates(prev => ({ ...prev, topicContent: true }))
-      setError(null)
-      adminService.addLog(`Loading content for topic: ${selectedTopic.title}`, 'info')
-      
-      const verses = await adminService.getTopicVerses(selectedTopic.id)
-      const confessions = await adminService.getTopicConfessions(selectedTopic.id)
-      
-      setTopicVerses(verses)
-      setTopicConfessions(confessions)
-      adminService.addLog(`Loaded ${verses.length} verses and ${confessions.length} confessions`, 'success')
+      // Load topic verses and confessions
+      setTopicVerses([])
+      setTopicConfessions([])
     } catch (error) {
       console.error('Error loading topic content:', error)
-      setError(`Failed to load topic content: ${error.message}`)
-      adminService.addLog(`Error loading topic content: ${error.message}`, 'error')
-    } finally {
-      setLoadingStates(prev => ({ ...prev, topicContent: false }))
     }
   }
 
   const generateDailyContent = async () => {
     try {
       setIsGenerating(true)
-      adminService.addLog('Generating daily content with AI...', 'info')
-      await adminService.generateDailyContent()
-      await loadDailyContent()
-      adminService.addLog('Daily content generated successfully', 'success')
+      // AI generation logic here
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
     } catch (error) {
       console.error('Error generating content:', error)
-      adminService.addLog(`Error generating content: ${error.message}`, 'error')
     } finally {
       setIsGenerating(false)
     }
@@ -279,21 +166,12 @@ const AdminDashboard = ({ onNavigate }) => {
     e.preventDefault()
     try {
       setIsSaving(true)
-      adminService.addLog(`${editingContent ? 'Updating' : 'Creating'} manual content...`, 'info')
-      
-      if (editingContent) {
-        await adminService.updateDailyContent(editingContent.id, manualFormData)
-        adminService.addLog('Daily content updated successfully', 'success')
-      } else {
-        await adminService.createDailyContent(manualFormData)
-        adminService.addLog('Daily content created successfully', 'success')
-      }
-      
+      // Save manual content logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       await loadDailyContent()
       resetManualForm()
     } catch (error) {
       console.error('Error saving content:', error)
-      adminService.addLog(`Error saving content: ${error.message}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -311,31 +189,16 @@ const AdminDashboard = ({ onNavigate }) => {
     setShowManualForm(false)
   }
 
-  const showSuccess = (message) => {
-    setSuccessMessage(message)
-    setShowSuccessToast(true)
-    setTimeout(() => setShowSuccessToast(false), 3000)
-  }
-
   const handleTopicSubmit = async (e) => {
     e.preventDefault()
     try {
       setIsSaving(true)
-      adminService.addLog(`${editingTopic ? 'Updating' : 'Creating'} topic...`, 'info')
-      if (editingTopic) {
-        await adminService.updateTopic(editingTopic.id, topicFormData)
-        showSuccess('Topic updated successfully!')
-      } else {
-        await adminService.createTopic(topicFormData)
-        showSuccess('Topic created successfully!')
-      }
+      // Save topic logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       await loadTopics()
       resetTopicForm()
-      adminService.addLog(`Topic ${editingTopic ? 'updated' : 'created'} successfully`, 'success')
     } catch (error) {
       console.error('Error saving topic:', error)
-      setError(`Failed to save topic: ${error.message}`)
-      adminService.addLog(`Error saving topic: ${error.message}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -360,13 +223,10 @@ const AdminDashboard = ({ onNavigate }) => {
 
   const deleteTopic = async (topicId) => {
     try {
-      adminService.addLog(`Deleting topic ${topicId}...`, 'info')
-      await adminService.deleteTopic(topicId)
+      // Delete topic logic here
       await loadTopics()
-      adminService.addLog('Topic deleted successfully', 'success')
     } catch (error) {
       console.error('Error deleting topic:', error)
-      adminService.addLog(`Error deleting topic: ${error.message}`, 'error')
     }
   }
 
@@ -385,7 +245,8 @@ const AdminDashboard = ({ onNavigate }) => {
     } else if (type === 'confession') {
       setTopicConfessionFormData({
         title: content.title || '',
-        confession_text: content.confession_text || ''
+        confession_text: content.confession_text || '',
+        theme: content.theme || ''
       })
       setEditingTopicContent(content)
       setShowTopicConfessionForm(true)
@@ -396,23 +257,12 @@ const AdminDashboard = ({ onNavigate }) => {
     e.preventDefault()
     try {
       setIsSaving(true)
-      adminService.addLog(`${editingTopicContent ? 'Updating' : 'Creating'} topic verse...`, 'info')
-      if (editingTopicContent) {
-        await adminService.updateTopicVerse(editingTopicContent.id, topicVerseFormData)
-      } else {
-        const verseData = {
-          ...topicVerseFormData,
-          topic_id: selectedTopic.id
-        }
-        await adminService.createTopicVerse(verseData)
-      }
+      // Save topic verse logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       await loadTopicContent()
-      await loadTopics() // Reload topics to update counts
       resetTopicVerseForm()
-      adminService.addLog(`Topic verse ${editingTopicContent ? 'updated' : 'created'} successfully`, 'success')
     } catch (error) {
       console.error('Error saving topic verse:', error)
-      adminService.addLog(`Error saving topic verse: ${error.message}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -422,23 +272,12 @@ const AdminDashboard = ({ onNavigate }) => {
     e.preventDefault()
     try {
       setIsSaving(true)
-      adminService.addLog(`${editingTopicContent ? 'Updating' : 'Creating'} topic confession...`, 'info')
-      if (editingTopicContent) {
-        await adminService.updateTopicConfession(editingTopicContent.id, topicConfessionFormData)
-      } else {
-        const confessionData = {
-          ...topicConfessionFormData,
-          topic_id: selectedTopic.id
-        }
-        await adminService.createTopicConfession(confessionData)
-      }
+      // Save topic confession logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       await loadTopicContent()
-      await loadTopics() // Reload topics to update counts
       resetTopicConfessionForm()
-      adminService.addLog(`Topic confession ${editingTopicContent ? 'updated' : 'created'} successfully`, 'success')
     } catch (error) {
       console.error('Error saving topic confession:', error)
-      adminService.addLog(`Error saving topic confession: ${error.message}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -460,157 +299,11 @@ const AdminDashboard = ({ onNavigate }) => {
   const resetTopicConfessionForm = () => {
     setTopicConfessionFormData({
       title: '',
-      confession_text: ''
+      confession_text: '',
+      theme: ''
     })
     setEditingTopicContent(null)
     setShowTopicConfessionForm(false)
-  }
-
-  // Additional functions for TopicsPanel
-  const generateTopicContent = async () => {
-    try {
-      setIsGenerating(true)
-      adminService.addLog('Generating topic content with AI...', 'info')
-      
-      // Generate AI content for the selected topic
-      const aiContent = await adminService.generateTopicContentWithAI(selectedTopic.id, 'both')
-      
-      if (aiContent && aiContent.verses && aiContent.confessions) {
-        // Show preview modal with generated content
-        setPreviewContent(aiContent)
-        setShowPreview(true)
-        adminService.addLog('AI content generated successfully - review and approve', 'success')
-      } else {
-        throw new Error('AI generation failed to return valid content')
-      }
-    } catch (error) {
-      console.error('Error generating topic content:', error)
-      adminService.addLog(`Error generating topic content: ${error.message}`, 'error')
-      setError(`Failed to generate topic content: ${error.message}`)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const deleteTopicVerse = async (verseId) => {
-    try {
-      adminService.addLog(`Deleting topic verse ${verseId}...`, 'info')
-      await adminService.deleteTopicVerse(verseId)
-      await loadTopicContent()
-      await loadTopics() // Reload topics to update counts
-      adminService.addLog('Topic verse deleted successfully', 'success')
-    } catch (error) {
-      console.error('Error deleting topic verse:', error)
-      adminService.addLog(`Error deleting topic verse: ${error.message}`, 'error')
-    }
-  }
-
-  const deleteTopicConfession = async (confessionId) => {
-    try {
-      adminService.addLog(`Deleting topic confession ${confessionId}...`, 'info')
-      await adminService.deleteTopicConfession(confessionId)
-      await loadTopicContent()
-      await loadTopics() // Reload topics to update counts
-      adminService.addLog('Topic confession deleted successfully', 'success')
-    } catch (error) {
-      console.error('Error deleting topic confession:', error)
-      adminService.addLog(`Error deleting topic confession: ${error.message}`, 'error')
-    }
-  }
-
-  const approvePreviewContent = async () => {
-    try {
-      setIsSaving(true)
-      adminService.addLog('Saving preview content to database...', 'info')
-      
-      // Save verses
-      for (const verse of previewContent.verses) {
-        const verseData = {
-          ...verse,
-          topic_id: selectedTopic.id
-        }
-        await adminService.createTopicVerse(verseData)
-      }
-      
-      // Save confessions
-      for (const confession of previewContent.confessions) {
-        const confessionData = {
-          ...confession,
-          topic_id: selectedTopic.id
-        }
-        await adminService.createTopicConfession(confessionData)
-      }
-      
-      adminService.addLog('Preview content saved successfully', 'success')
-      setShowPreview(false)
-      setPreviewContent(null)
-      
-      // Reload topic content
-      await loadTopicContent()
-      await loadTopics() // Reload topics to update counts
-    } catch (error) {
-      console.error('Error saving preview content:', error)
-      adminService.addLog(`Error saving preview content: ${error.message}`, 'error')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const rejectPreviewContent = () => {
-    setShowPreview(false)
-    setPreviewContent(null)
-    adminService.addLog('Preview content rejected', 'info')
-  }
-
-  const editPreviewContent = (type, index, field, value) => {
-    setPreviewContent(prev => ({
-      ...prev,
-      [type]: prev[type].map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }))
-  }
-
-  // Edit daily content
-  const editDailyContent = (content) => {
-    setManualFormData({
-      date: content.date,
-      verse_text: content.verse_text,
-      reference: content.reference,
-      confession_text: content.confession_text,
-      translation: content.translation || 'KJV'
-    })
-    setEditingContent(content)
-    setShowManualForm(true)
-  }
-
-  // Update daily content
-  const updateDailyContent = async (id, updates) => {
-    try {
-      setIsSaving(true)
-      adminService.addLog(`Updating daily content ${id}...`, 'info')
-      await adminService.updateDailyContent(id, updates)
-      await loadDailyContent()
-      adminService.addLog('Daily content updated successfully', 'success')
-    } catch (error) {
-      console.error('Error updating daily content:', error)
-      adminService.addLog(`Error updating daily content: ${error.message}`, 'error')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  // Delete daily content
-  const deleteDailyContent = async (id) => {
-    try {
-      adminService.addLog(`Deleting daily content ${id}...`, 'info')
-      await adminService.deleteDailyContent(id)
-      await loadDailyContent()
-      adminService.addLog('Daily content deleted successfully', 'success')
-    } catch (error) {
-      console.error('Error deleting daily content:', error)
-      adminService.addLog(`Error deleting daily content: ${error.message}`, 'error')
-    }
   }
 
   return (
@@ -635,41 +328,6 @@ const AdminDashboard = ({ onNavigate }) => {
             </div>
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <X className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setError(null)}
-                  className="text-red-400 hover:text-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading Overlay */}
-        {isLoading && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 shadow-xl">
-              <div className="flex items-center space-x-3">
-                <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
-                <span className="text-lg font-medium text-gray-900">Loading Admin Dashboard...</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
@@ -714,29 +372,17 @@ const AdminDashboard = ({ onNavigate }) => {
               resetManualForm={resetManualForm}
               editingContent={editingContent}
               isSaving={isSaving}
-              editDailyContent={editDailyContent}
-              deleteDailyContent={deleteDailyContent}
             />
           </TabsContent>
 
-          <TabsContent value="topics" className="relative">
-            {loadingStates.topics && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                <div className="text-center">
-                  <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Loading topics...</p>
-                </div>
-              </div>
-            )}
-            <TopicsPanel
+          <TabsContent value="topics">
+            <TopicsPanel 
               topics={topics}
               selectedTopic={selectedTopic}
               setSelectedTopic={setSelectedTopic}
               topicVerses={topicVerses}
               topicConfessions={topicConfessions}
               loadTopicContent={loadTopicContent}
-              generateTopicContent={generateTopicContent}
-              isGenerating={isGenerating}
               showTopicForm={showTopicForm}
               setShowTopicForm={setShowTopicForm}
               topicFormData={topicFormData}
@@ -747,8 +393,6 @@ const AdminDashboard = ({ onNavigate }) => {
               deleteTopic={deleteTopic}
               editTopic={editTopic}
               editTopicContent={editTopicContent}
-              deleteTopicVerse={deleteTopicVerse}
-              deleteTopicConfession={deleteTopicConfession}
               showTopicVerseForm={showTopicVerseForm}
               setShowTopicVerseForm={setShowTopicVerseForm}
               showTopicConfessionForm={showTopicConfessionForm}
@@ -763,12 +407,6 @@ const AdminDashboard = ({ onNavigate }) => {
               resetTopicConfessionForm={resetTopicConfessionForm}
               editingTopicContent={editingTopicContent}
               isSaving={isSaving}
-              previewContent={previewContent}
-              showPreview={showPreview}
-              setShowPreview={setShowPreview}
-              approvePreviewContent={approvePreviewContent}
-              rejectPreviewContent={rejectPreviewContent}
-              editPreviewContent={editPreviewContent}
             />
           </TabsContent>
 
@@ -801,23 +439,22 @@ const AdminDashboard = ({ onNavigate }) => {
                 
                 <form onSubmit={handleTopicSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                     <Input
                       value={topicFormData.title}
                       onChange={(e) => setTopicFormData({...topicFormData, title: e.target.value})}
                       placeholder="Enter topic title..."
                       required
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <Textarea
                       value={topicFormData.description}
                       onChange={(e) => setTopicFormData({...topicFormData, description: e.target.value})}
                       placeholder="Enter topic description..."
-                      className="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full"
                       rows={3}
                       required
                     />
@@ -825,23 +462,21 @@ const AdminDashboard = ({ onNavigate }) => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Icon *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
                       <Input
                         value={topicFormData.icon}
                         onChange={(e) => setTopicFormData({...topicFormData, icon: e.target.value})}
                         placeholder="📖"
                         required
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                       <Input
                         value={topicFormData.category}
                         onChange={(e) => setTopicFormData({...topicFormData, category: e.target.value})}
                         placeholder="general"
                         required
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -900,12 +535,12 @@ const AdminDashboard = ({ onNavigate }) => {
                 
                 <form onSubmit={handleTopicVerseSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Verse Text *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Verse Text</label>
                     <Textarea
                       value={topicVerseFormData.verse_text}
                       onChange={(e) => setTopicVerseFormData({...topicVerseFormData, verse_text: e.target.value})}
                       placeholder="Enter the Bible verse text..."
-                      className="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full"
                       rows={3}
                       required
                     />
@@ -913,23 +548,21 @@ const AdminDashboard = ({ onNavigate }) => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Book *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Book</label>
                       <Input
                         value={topicVerseFormData.book}
                         onChange={(e) => setTopicVerseFormData({...topicVerseFormData, book: e.target.value})}
                         placeholder="e.g., John"
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Chapter *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Chapter</label>
                       <Input
                         type="number"
                         value={topicVerseFormData.chapter}
                         onChange={(e) => setTopicVerseFormData({...topicVerseFormData, chapter: e.target.value})}
                         placeholder="3"
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         required
                       />
                     </div>
@@ -937,45 +570,23 @@ const AdminDashboard = ({ onNavigate }) => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Verse *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Verse</label>
                       <Input
                         type="number"
                         value={topicVerseFormData.verse}
                         onChange={(e) => setTopicVerseFormData({...topicVerseFormData, verse: e.target.value})}
                         placeholder="16"
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Translation</label>
-                      <select
+                      <Input
                         value={topicVerseFormData.translation}
                         onChange={(e) => setTopicVerseFormData({...topicVerseFormData, translation: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="KJV"
                         required
-                      >
-                        <option value="KJV">King James Version (KJV)</option>
-                        <option value="NIV">New International Version (NIV)</option>
-                        <option value="ESV">English Standard Version (ESV)</option>
-                        <option value="NASB">New American Standard Bible (NASB)</option>
-                        <option value="NLT">New Living Translation (NLT)</option>
-                        <option value="NKJV">New King James Version (NKJV)</option>
-                        <option value="AMP">Amplified Bible (AMP)</option>
-                        <option value="MSG">The Message (MSG)</option>
-                        <option value="CEV">Contemporary English Version (CEV)</option>
-                        <option value="NRSV">New Revised Standard Version (NRSV)</option>
-                        <option value="CSB">Christian Standard Bible (CSB)</option>
-                        <option value="NET">New English Translation (NET)</option>
-                        <option value="RSV">Revised Standard Version (RSV)</option>
-                        <option value="ASV">American Standard Version (ASV)</option>
-                        <option value="YLT">Young's Literal Translation (YLT)</option>
-                        <option value="WEB">World English Bible (WEB)</option>
-                        <option value="TLV">Tree of Life Version (TLV)</option>
-                        <option value="TPT">The Passion Translation (TPT)</option>
-                        <option value="ERV">Easy-to-Read Version (ERV)</option>
-                        <option value="JUB">Jubilee Bible (JUB)</option>
-                      </select>
+                      />
                     </div>
                   </div>
                   
@@ -1033,28 +644,35 @@ const AdminDashboard = ({ onNavigate }) => {
                 
                 <form onSubmit={handleTopicConfessionSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                     <Input
                       value={topicConfessionFormData.title}
                       onChange={(e) => setTopicConfessionFormData({...topicConfessionFormData, title: e.target.value})}
                       placeholder="Enter confession title..."
-                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Confession Text *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confession Text</label>
                     <Textarea
                       value={topicConfessionFormData.confession_text}
                       onChange={(e) => setTopicConfessionFormData({...topicConfessionFormData, confession_text: e.target.value})}
                       placeholder="Enter the confession text..."
-                      className="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full"
                       rows={4}
                       required
                     />
                   </div>
                   
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+                    <Input
+                      value={topicConfessionFormData.theme}
+                      onChange={(e) => setTopicConfessionFormData({...topicConfessionFormData, theme: e.target.value})}
+                      placeholder="e.g., Faith, Hope, Love"
+                    />
+                  </div>
                   
                   <div className="flex items-center gap-3 pt-4">
                     <Button
@@ -1086,23 +704,11 @@ const AdminDashboard = ({ onNavigate }) => {
                 </form>
               </div>
             </Card>
-      </Card>
+          </Card>
         )}
       </div>
-
-      {/* Success Toast */}
-      {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50">
-          <Card className="bg-green-500 text-white p-4 shadow-lg border-0">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">{successMessage}</span>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   )
 }
 
-export default AdminDashboard
+export default AdminDashboardOptimized

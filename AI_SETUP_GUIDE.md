@@ -44,9 +44,10 @@ npm start
 - **Automatic Integration**: Content is automatically saved to the database
 
 ### Free AI Models Available (Ranked by Performance)
-- **🥇 Mixtral 8x7B**: BEST FREE - Outperforms GPT-3.5, 6x faster than similar models
-- **🥈 Meta Llama 3.1**: EXCELLENT - Strong reasoning, 128K context window
-- **🥉 DeepSeek Chat**: VERY GOOD - Strong reasoning capabilities, 128K context
+- **🥇 Mistral Small 3.2 24B**: BEST FREE - 24B parameters, excellent reasoning and spiritual content
+- **🥈 Mixtral 8x7B**: EXCELLENT - Outperforms GPT-3.5, 6x faster than similar models
+- **🥉 Meta Llama 3.1**: EXCELLENT - Strong reasoning, 128K context window
+- **DeepSeek Chat**: VERY GOOD - Strong reasoning capabilities, 128K context
 - **Google Gemini Flash**: GOOD - 1M token context, multimodal support
 - **Microsoft Phi-3 Mini**: GOOD - Fast and efficient for spiritual content
 - **Meta Llama 3.2**: GOOD - High-quality text generation
