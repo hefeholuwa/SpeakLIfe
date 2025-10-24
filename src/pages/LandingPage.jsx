@@ -110,10 +110,10 @@ const LandingPage = ({ onNavigate }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 overflow-x-hidden">
       {/* Enhanced Header with Glass Morphism */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           {/* Mobile Layout */}
           <div className="block md:hidden">
             {/* Top Row - Logo and Profile */}
@@ -317,7 +317,7 @@ const LandingPage = ({ onNavigate }) => {
       </header>
 
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
         {/* Landing Page */}
         {activeTab === 'home' && (
           <>
@@ -339,17 +339,17 @@ const LandingPage = ({ onNavigate }) => {
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white animate-pulse"></div>
                 </div>
                 
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-6 md:mb-8 animate-fade-in-up">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-6 md:mb-8 animate-fade-in-up">
                   Welcome to <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 bg-clip-text text-transparent">SpeakLife</span>
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-600 mb-8 md:mb-12 max-w-3xl mx-auto px-4 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 md:mb-12 max-w-3xl mx-auto px-4 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                   Transform your spiritual journey with personalized confessions, divine verses, and guidance that speaks directly to your heart.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                   <button 
                     onClick={() => setShowRegistration(true)}
-                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
+                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
                   >
                     <span className="flex items-center justify-center gap-3">
                       <span className="text-2xl">✨</span>
@@ -357,7 +357,7 @@ const LandingPage = ({ onNavigate }) => {
                       <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
                     </span>
                   </button>
-                  <button className="group border-2 border-purple-600 text-purple-600 px-8 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <button className="group border-2 border-purple-600 text-purple-600 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
                     <span className="flex items-center justify-center gap-3">
                       <span className="text-2xl">📚</span>
                       <span>Learn More</span>
@@ -369,8 +369,8 @@ const LandingPage = ({ onNavigate }) => {
             </div>
 
             {/* Enhanced Features Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-16 md:mb-24">
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mb-12 sm:mb-16 md:mb-24">
+              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                   <span className="text-white text-3xl md:text-4xl">🙏</span>
                 </div>
@@ -381,7 +381,7 @@ const LandingPage = ({ onNavigate }) => {
                 <div className="mt-6 w-12 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto group-hover:w-16 transition-all duration-300"></div>
               </div>
               
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                   <span className="text-white text-3xl md:text-4xl">📖</span>
                 </div>
@@ -392,7 +392,7 @@ const LandingPage = ({ onNavigate }) => {
                 <div className="mt-6 w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mx-auto group-hover:w-16 transition-all duration-300"></div>
               </div>
               
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
                   <span className="text-white text-3xl md:text-4xl">✨</span>
                 </div>
