@@ -141,13 +141,11 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
                   })
                 }
               } catch (error) {
-                console.log(`Error searching ${book} chapter ${chapter}:`, error)
               }
             }
             
             return bookResults
           } catch (error) {
-            console.log(`Error searching book ${book}:`, error)
             return []
           }
         })
@@ -231,7 +229,6 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
       const bookCode = bookNameMap[bookName] || bookName.toLowerCase().replace(/\s+/g, '')
       const apiUrl = `https://raw.githubusercontent.com/wldeh/bible-api/main/bibles/en-kjv/books/${bookCode}/chapters/${chapterNumber}.json`
       
-      console.log('Fetching chapter:', bookName, chapterNumber, 'URL:', apiUrl)
       
       const response = await fetch(apiUrl)
       if (!response.ok) {
@@ -475,16 +472,10 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
 
       const bookCode = bookNameMap[selectedBook.name] || selectedBook.name.toLowerCase().replace(/\s+/g, '')
       
-      console.log('Bible API request (KJV):', {
-        book: selectedBook.name,
-        bookCode,
-        chapter: chapterNumber
-      })
 
       // Use the GitHub Bible API with KJV
       const apiUrl = `https://raw.githubusercontent.com/wldeh/bible-api/main/bibles/en-kjv/books/${bookCode}/chapters/${chapterNumber}.json`
       
-      console.log('Trying API URL:', apiUrl)
       const response = await fetch(apiUrl)
       
       if (!response.ok) {
@@ -492,7 +483,6 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
       }
 
       const data = await response.json()
-      console.log('Bible API response:', data)
 
       if (data.data && Array.isArray(data.data)) {
         // Filter out duplicate verses by using a Map to track unique verse numbers
@@ -624,14 +614,12 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
                              )
                              
                              if (bookKey) {
-                               console.log('Found book key:', bookKey, 'for book:', result.book)
                                // Set the selected book
                                const bookData = {
                                  name: result.book,
                                  chapters: bookChapterCounts[bookKey] || 1,
                                  category: allBibleBooks.indexOf(bookKey) < 39 ? 'Old Testament' : 'New Testament'
                                }
-                               console.log('Setting book data:', bookData)
                                setSelectedBook(bookData)
                                setSelectedChapter(result.chapter)
                                setBibleContent(null)
@@ -660,14 +648,12 @@ const BibleReader = ({ searchQuery = '', hideContent = false }) => {
                                  }
                                }, 200)
                              } else {
-                               console.log('Book not found:', result.book, 'Available books:', Object.values(bookNameMap))
                                // Try to find a close match
                                const closeMatch = Object.keys(bookNameMap).find(key => 
                                  bookNameMap[key].toLowerCase().includes(result.book.toLowerCase()) ||
                                  result.book.toLowerCase().includes(bookNameMap[key].toLowerCase())
                                )
                                if (closeMatch) {
-                                 console.log('Found close match:', closeMatch, 'for book:', result.book)
                                  const bookData = {
                                    name: result.book,
                                    chapters: bookChapterCounts[closeMatch] || 1,

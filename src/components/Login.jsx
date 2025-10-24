@@ -3,6 +3,11 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 
 const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
   const { signIn, resetPassword, loading, error, setError } = useAuth()
+  
+  // Fallbacks for functions if not available
+  const safeSetError = setError || (() => {})
+  const safeSignIn = signIn || (() => Promise.resolve({ success: false, error: 'Authentication service not available' }))
+  const safeResetPassword = resetPassword || (() => Promise.resolve({ success: false, error: 'Password reset service not available' }))
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -49,14 +54,14 @@ const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
       return
     }
 
-    setError(null)
-    const result = await signIn(formData.email, formData.password)
+    safeSetError(null)
+    const result = await safeSignIn(formData.email, formData.password)
     
     if (result.success) {
       onSuccess?.()
       onClose()
     } else if (result.error && result.error.includes('email not confirmed')) {
-      setError('Please verify your email address before signing in. Check your inbox for a verification link.')
+      safeSetError('Please verify your email address before signing in. Check your inbox for a verification link.')
     }
   }
 
@@ -66,8 +71,8 @@ const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
       return
     }
 
-    setError(null)
-    const result = await resetPassword(formData.email)
+    safeSetError(null)
+    const result = await safeResetPassword(formData.email)
     
     if (result.success) {
       alert('Password reset email sent! Please check your inbox.')

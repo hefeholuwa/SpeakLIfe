@@ -35,14 +35,6 @@ const DashboardHeader = ({ onShowProfile }) => {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Notification Bell */}
-          <div className="relative p-3 rounded-2xl bg-gray-100 hover:bg-purple-100 transition-all duration-300 cursor-pointer group">
-            <span className="text-xl group-hover:scale-110 transition-transform duration-300">🔔</span>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">3</span>
-            </div>
-          </div>
-
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -77,11 +69,6 @@ const DashboardHeader = ({ onShowProfile }) => {
               <DropdownMenuItem className="cursor-pointer p-3 rounded-xl hover:bg-purple-50 transition-all duration-300">
                 <span className="mr-3 text-lg">⚙️</span>
                 <span className="font-medium">Settings</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="cursor-pointer p-3 rounded-xl hover:bg-purple-50 transition-all duration-300">
-                <span className="mr-3 text-lg">💎</span>
-                <span className="font-medium">Premium</span>
               </DropdownMenuItem>
               
               <div className="border-t border-gray-100 my-2"></div>

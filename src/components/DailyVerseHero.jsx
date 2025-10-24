@@ -42,7 +42,6 @@ const DailyVerseHero = () => {
       if (error) {
         if (error.code === 'PGRST116') {
           // No content found for today
-          console.log('No daily content found for today')
           setDailyVerse(null)
           setDailyConfession(null)
         } else {
@@ -51,13 +50,10 @@ const DailyVerseHero = () => {
       } else if (data) {
         // Set the daily verse and confession from database
         // Extract translation from reference if it exists (format: "John 3:16 (KJV)")
-        console.log('🔍 Raw reference from database:', data.reference)
         const translationMatch = data.reference.match(/\(([^)]+)\)$/)
         const translation = translationMatch ? translationMatch[1] : null
         const cleanReference = data.reference.replace(/ \(.*\)$/, '')
         
-        console.log('🔍 Extracted translation:', translation)
-        console.log('🔍 Clean reference:', cleanReference)
         
         setDailyVerse({
           text: data.verse_text,
@@ -122,103 +118,143 @@ const DailyVerseHero = () => {
   }
 
   return (
-    <Card className="relative overflow-hidden border-0 shadow-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/20" />
+    <div className="relative overflow-hidden">
+      {/* Premium Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.1),transparent_50%)]"></div>
       
-      {/* Simplified background effect */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-2 h-2 bg-white/20 rounded-full"></div>
-        <div className="absolute top-20 right-20 w-1 h-1 bg-white/30 rounded-full"></div>
-        <div className="absolute bottom-20 left-20 w-1.5 h-1.5 bg-white/15 rounded-full"></div>
-        <div className="absolute bottom-10 right-10 w-1 h-1 bg-white/25 rounded-full"></div>
-      </div>
-      
-      <div className="relative p-8 md:p-12">
-        <div className="flex items-center gap-3 mb-8 animate-fade-in">
-          <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
+      <Card className="relative p-4 sm:p-6 border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
+        {/* Premium Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6">
+          <div className="flex items-center gap-4 mb-4 lg:mb-0">
+            <div className="relative">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
             <span className="text-white text-2xl">✨</span>
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
           </div>
           <div>
-            <span className="text-white/90 text-sm font-bold tracking-wider uppercase">
+              <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
               Today's Scripture
-            </span>
-            <p className="text-white/70 text-xs">Divine Word for Today</p>
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">Divine Word for Today</p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-8 animate-fade-in-up">
-          <div className="space-y-4">
-            <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Scripture Section */}
+          <Card className="group relative p-4 cursor-pointer bg-white/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 rounded-2xl overflow-hidden">
+            {/* Premium Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-700"></div>
+            
+            <div className="relative z-10 space-y-4">
+              {/* Premium Icon */}
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-2xl bg-gradient-to-br from-blue-500 to-purple-500">
+                  <span className="text-2xl group-hover:scale-110 transition-transform duration-300">📖</span>
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+              </div>
+              
+              {/* Premium Content */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
+                    Today's Scripture
+                  </h3>
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="flex flex-col items-center justify-center py-4 space-y-3">
+                      <div className="w-6 h-6 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
                   <div className="text-center">
-                    <span className="text-white/80 text-lg font-medium">
+                        <span className="text-gray-600 text-sm font-medium">
                       Loading today's scripture...
                     </span>
                   </div>
                 </div>
               ) : error ? (
-                <div className="text-center py-8">
-                  <div className="text-white/80 mb-4">
-                    <span className="text-4xl">⚠️</span>
+                    <div className="text-center py-4">
+                      <div className="text-gray-400 mb-3">
+                        <span className="text-2xl">⚠️</span>
                   </div>
-                  <p className="text-white/80 mb-4">{error}</p>
+                      <p className="text-gray-600 mb-3 text-sm">{error}</p>
                   <Button 
                     onClick={() => {
                       setError(null)
                       setIsLoading(true)
                       loadTodaysContent()
                     }}
-                    className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                        className="bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-4"
                   >
                     Try Again
                   </Button>
                 </div>
               ) : dailyVerse ? (
-                <p className="text-white text-xl md:text-2xl leading-relaxed font-medium">
+                    <p className="text-gray-800 text-sm leading-relaxed font-medium">
                   "{dailyVerse.text}"
                 </p>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-white/60 mb-4">
-                    <span className="text-4xl">📖</span>
+                    <div className="text-center py-4">
+                      <div className="text-gray-400 mb-3">
+                        <span className="text-2xl">📖</span>
                   </div>
-                  <p className="text-white/60 text-lg">No verse available for today</p>
-                  <p className="text-white/40 text-sm mt-2">Check back later or contact admin</p>
+                      <p className="text-gray-600 text-sm">No verse available for today</p>
+                      <p className="text-gray-400 text-xs mt-1">Check back later or contact admin</p>
                 </div>
               )}
-            </div>
-            {dailyVerse && (
-              <div className="flex items-center gap-3 text-white/80">
-                <div className="p-2 rounded-lg bg-white/20">
-                  <span className="text-white text-lg">📖</span>
                 </div>
-                <span className="font-semibold">
+                
+                {dailyVerse && (
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-purple-600">
                   {dailyVerse.reference}
                   {dailyVerse.translation && (
-                    <span className="text-white/60 text-sm ml-2">({dailyVerse.translation})</span>
+                          <span className="text-gray-500 text-sm ml-2">({dailyVerse.translation})</span>
                   )}
                 </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>Scripture</span>
+                      <div className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">→</div>
+                    </div>
               </div>
             )}
           </div>
-
-          <div className="p-8 rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl border border-white/30">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-purple-100">
-                <span className="text-purple-600 text-lg">💭</span>
-              </div>
-              <p className="text-sm text-purple-600 font-bold uppercase tracking-wide">
-                Today's Confession
-              </p>
             </div>
+            
+            {/* Hover Effect Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+          </Card>
+
+          {/* Confession Section */}
+          <Card className="group relative p-4 cursor-pointer bg-white/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 rounded-2xl overflow-hidden">
+            {/* Premium Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-700"></div>
+            
+            <div className="relative z-10 space-y-4">
+              {/* Premium Icon */}
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-2xl bg-gradient-to-br from-pink-500 to-purple-500">
+                  <span className="text-2xl group-hover:scale-110 transition-transform duration-300">💭</span>
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+              </div>
+              
+              {/* Premium Content */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
+                Today's Confession
+                  </h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
-                <span className="ml-3 text-purple-600">
+                      <span className="ml-3 text-gray-600">
                   Loading confession...
                 </span>
               </div>
@@ -247,43 +283,79 @@ const DailyVerseHero = () => {
                 <div className="text-gray-400 mb-2">
                   <span className="text-2xl">💭</span>
                 </div>
-                <p className="text-gray-500">No confession available for today</p>
+                      <p className="text-gray-600">No confession available for today</p>
+                      <p className="text-gray-400 text-sm mt-1">Check back later or contact admin</p>
               </div>
             )}
           </div>
 
-                 {dailyVerse && dailyConfession && (
-                   <div className="flex flex-wrap gap-4">
-                     <Button
-                       size="lg"
-                       onClick={saveToFavorites}
-                       disabled={!user || isSaved}
-                       variant="outline"
-                       className="gap-3 bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 disabled:opacity-50"
-                     >
-                       <span className="text-xl">{isSaved ? '✅' : '❤️'}</span>
-                       <span className="font-semibold">
-                         {isSaved ? 'Saved!' : 'Save to Favorites'}
-                       </span>
-                     </Button>
-
-                     <Button
-                       size="lg"
-                       onClick={shareVerse}
-                       disabled={isSharing}
-                       variant="outline"
-                       className="gap-3 bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 disabled:opacity-50"
-                     >
-                       <span className="text-xl">{isSharing ? '⏳' : '📤'}</span>
-                       <span className="font-semibold">
-                         {isSharing ? 'Sharing...' : 'Share Verse'}
-                       </span>
-                     </Button>
-                   </div>
-                 )}
+                {dailyConfession && (
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-purple-600">
+                        Spiritual Declaration
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>Confession</span>
+                      <div className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">→</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Hover Effect Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+          </Card>
         </div>
+
+        {/* Action Buttons */}
+        {dailyVerse && dailyConfession && (
+          <div className="flex flex-wrap gap-3 mt-6">
+            <Button
+              size="sm"
+              onClick={saveToFavorites}
+              disabled={!user || isSaved}
+              variant="outline"
+              className="gap-2 bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 disabled:opacity-50 text-sm"
+            >
+              <span className="text-lg">{isSaved ? '✅' : '❤️'}</span>
+              <span className="font-semibold">
+                {isSaved ? 'Saved!' : 'Save'}
+              </span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={shareVerse}
+              disabled={isSharing}
+              variant="outline"
+              className="gap-2 bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30 shadow-xl hover:shadow-2xl transition-all duration-200 disabled:opacity-50 text-sm"
+            >
+              <span className="text-lg">{isSharing ? '⏳' : '📤'}</span>
+              <span className="font-semibold">
+                {isSharing ? 'Sharing...' : 'Share'}
+              </span>
+            </Button>
+          </div>
+        )}
+      </Card>
+      
+      <style jsx="true">{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
       </div>
-    </Card>
   )
 }
 

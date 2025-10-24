@@ -33,7 +33,6 @@ const TopicDetail = () => {
         const { data: { user } } = await supabase.auth.getUser()
         await adminService.trackTopicView(id, user?.id || null)
       } catch (error) {
-        console.log('View tracking failed (non-critical):', error)
       }
       
       // Load topic details

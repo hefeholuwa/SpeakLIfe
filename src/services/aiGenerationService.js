@@ -19,7 +19,7 @@ class AIGenerationService {
     ]
   }
 
-  // Generate daily verse with AI
+  // Generate daily verse with AI as the main source
   async generateDailyVerse() {
     try {
       const themes = [
@@ -35,48 +35,67 @@ class AIGenerationService {
       const randomTheme = themes[Math.floor(Math.random() * themes.length)]
       
       const translations = [
-        'KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'NKJV', 'AMP', 'MSG', 'CEV', 'NRSV',
-        'CSB', 'NET', 'RSV', 'ASV', 'YLT', 'WEB', 'GNV', 'DRB', 'WYC', 'BBE',
-        'TLV', 'TPT', 'ERV', 'GNV', 'JUB', 'LSV', 'NOG', 'NTE', 'RGT', 'TLB'
+        'KJV', 'NKJV', 'NIV', 'AMP', 'ESV', 'NLT'
       ]
       const randomTranslation = translations[Math.floor(Math.random() * translations.length)]
       
-      const prompt = `Generate a spiritually profound Bible verse for today's daily devotion. CRITICAL: You must use REAL, EXISTING Bible verses only. Do not create or make up any verse references.
+      const prompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, LESS COMMON Bible verse for today's daily devotion.
 
-      SPIRITUAL DEPTH & DOCTRINAL BALANCE:
-      - Choose from diverse biblical books (not just popular ones like John, Psalms)
-      - Include books like: Isaiah, Jeremiah, Ezekiel, Daniel, Hosea, Joel, Amos, Obadiah, Jonah, Micah, Nahum, Habakkuk, Zephaniah, Haggai, Zechariah, Malachi, Lamentations, Song of Solomon, Ecclesiastes, Proverbs, Job, Ruth, Esther, Ezra, Nehemiah, Chronicles, Kings, Samuel, Judges, Joshua, Deuteronomy, Numbers, Leviticus, Exodus, Genesis, Acts, Corinthians, Galatians, Ephesians, Philippians, Colossians, Thessalonians, Timothy, Titus, Philemon, Hebrews, James, Peter, John's epistles, Jude, Revelation
-      - Focus on the theme: "${randomTheme}"
-      - Ensure doctrinal balance and spiritual depth
-      - Avoid only well-known verses - include lesser-known but powerful scriptures
-      - Use the ${randomTranslation} translation for the verse text
+      CRITICAL: You must provide the EXACT text of a REAL Bible verse, not a confession or interpretation.
+
+      REQUIREMENTS:
+      - Choose ONE verse from this DIVERSE list of powerful, less common verses:
+      - Isaiah 43:19, Isaiah 55:8-9, Isaiah 61:1, Isaiah 65:24, Isaiah 66:13
+      - Jeremiah 1:5, Jeremiah 17:7-8, Jeremiah 31:3, Jeremiah 33:3
+      - Psalm 18:2, Psalm 27:1, Psalm 34:8, Psalm 37:4, Psalm 46:10, Psalm 84:11, Psalm 91:4, Psalm 103:2-3, Psalm 139:13-14
+      - Romans 5:8, Romans 8:38-39, Romans 12:1, Romans 15:13, Romans 16:20
+      - Philippians 1:6, Philippians 2:13, Philippians 3:14, Philippians 4:6-7
+      - Hebrews 4:16, Hebrews 10:23, Hebrews 12:1-2, Hebrews 13:5-6
+      - 2 Corinthians 3:18, 2 Corinthians 4:16-18, 2 Corinthians 9:8, 2 Corinthians 12:9-10
+      - Ephesians 1:3, Ephesians 2:10, Ephesians 3:16-17, Ephesians 4:23-24, Ephesians 6:18
+      - Matthew 5:4, Matthew 5:8, Matthew 11:28-30, Matthew 19:26, Matthew 28:20
+      - John 1:12, John 8:12, John 10:10, John 14:1, John 15:5, John 16:33, John 17:3
+      - Proverbs 4:23, Proverbs 16:3, Proverbs 18:10, Proverbs 19:21
+      - Joshua 1:8, Joshua 24:15
+      - 1 Corinthians 2:9, 1 Corinthians 15:58, 1 Corinthians 16:13-14
+      - Galatians 5:22-23, Galatians 6:9
+      - 1 Peter 1:3, 1 Peter 2:9, 1 Peter 3:15, 1 Peter 4:8
+      - James 1:2-3, James 1:17, James 4:8, James 5:16
+      - 1 John 1:9, 1 John 3:1, 1 John 4:4, 1 John 5:14-15
+      - Revelation 3:20, Revelation 21:4, Revelation 22:17
+      - Use the ${randomTranslation} translation
+      - Provide the EXACT verse text as it appears in that translation
+      - Do NOT paraphrase, interpret, or create confessions
+      - Focus on theme: "${randomTheme}"
       
-      CRITICAL REQUIREMENTS:
-      - MUST use REAL, EXISTING Bible verse references only
-      - Do NOT create or invent any verse references
-      - Provide exact verse text as it appears in the ${randomTranslation} Bible
-      - Include complete reference (e.g., "Isaiah 43:2", "Hebrews 11:1")
-      - Specify book name, chapter number, and verse number
-      - Ensure the verse is encouraging, faith-building, and spiritually enriching
+      EXAMPLES OF ACCURATE VERSES IN DIFFERENT TRANSLATIONS:
+      - KJV: "For my thoughts are not your thoughts, neither are your ways my ways, saith the Lord."
+      - NIV: "For my thoughts are not your thoughts, neither are your ways my ways, declares the Lord."
+      - ESV: "For my thoughts are not your thoughts, neither are your ways my ways, declares the Lord."
+      - NLT: "My thoughts are nothing like your thoughts, says the Lord. And my ways are far beyond anything you could imagine."
+      - AMP: "For My thoughts are not your thoughts, nor are your ways My ways, declares the Lord."
+      - NKJV: "For My thoughts are not your thoughts, nor are your ways My ways, says the Lord."
       
-      EXAMPLES OF REAL BIBLE VERSES:
-      - Isaiah 40:31, Isaiah 43:2, Isaiah 55:8-9
-      - Jeremiah 29:11, Jeremiah 33:3
-      - Psalm 23:1, Psalm 91:1, Psalm 139:14
-      - Romans 8:28, Romans 8:37, Romans 12:2
-      - Philippians 4:13, Philippians 4:19
-      - Hebrews 11:1, Hebrews 13:8
-      - 2 Corinthians 5:17, 2 Corinthians 12:9
-      - Ephesians 3:20, Ephesians 6:10
-      - Matthew 6:33, Matthew 11:28
-      - John 3:16, John 14:27, John 15:7
+      CRITICAL: You MUST include the translation field in your response. The translation field is REQUIRED.
       
       FORMAT: Return as JSON with fields: verse_text, reference, book, chapter, verse, translation, theme
       
-      Example: {"verse_text": "But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.", "reference": "Isaiah 40:31", "book": "Isaiah", "chapter": 40, "verse": 31, "translation": "KJV", "theme": "strength and endurance"}`
+      Example: {"verse_text": "For my thoughts are not your thoughts, neither are your ways my ways, saith the Lord.", "reference": "Isaiah 55:8", "book": "Isaiah", "chapter": 55, "verse": 8, "translation": "KJV", "theme": "divine wisdom"}
+      
+      REMEMBER: The translation field is MANDATORY and must match the ${randomTranslation} you are using.`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(this.cleanJsonResponse(response))
+      const cleanedResponse = this.cleanJsonResponse(response)
+      
+      
+      const result = JSON.parse(cleanedResponse)
+      
+      // Ensure translation field is present
+      if (!result.translation) {
+        result.translation = randomTranslation
+      }
+      
+      return result
     } catch (error) {
       console.error('Error generating daily verse:', error)
       throw new Error('Failed to generate daily verse')
@@ -338,15 +357,12 @@ class AIGenerationService {
   // Generate complete daily content (verse + confession)
   async generateDailyContent() {
     try {
-      console.log('🤖 Generating daily content with AI...')
       
       // Generate verse first
       const verseData = await this.generateDailyVerse()
-      console.log('✅ Generated verse:', verseData.reference)
       
       // Generate confession based on the verse
       const confessionData = await this.generateConfessionForVerse(verseData)
-      console.log('✅ Generated confession:', confessionData.title)
       
       return {
         verse: verseData,
@@ -444,7 +460,6 @@ class AIGenerationService {
           const retryAfter = response.headers.get('Retry-After')
           const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, retryCount) * 1000 // Exponential backoff
           
-          console.log(`Rate limited. Retrying after ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           return this.callOpenRouter(prompt, model, retryCount + 1)
         }

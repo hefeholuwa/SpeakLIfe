@@ -9,7 +9,8 @@ const actions = [
     description: "Read Scripture",
     gradient: "from-blue-500 to-purple-600",
     textColor: "text-white",
-    action: "bible"
+    action: "bible",
+    status: "available"
   },
   {
     name: "Confession Journal",
@@ -17,7 +18,8 @@ const actions = [
     description: "Write your thoughts",
     gradient: "from-purple-500 to-pink-500",
     textColor: "text-white",
-    action: "confessions"
+    action: "confessions",
+    status: "available"
   },
   {
     name: "Reading Plans",
@@ -25,7 +27,8 @@ const actions = [
     description: "Daily Bible reading",
     gradient: "from-green-500 to-teal-600",
     textColor: "text-white",
-    action: "plans"
+    action: "plans",
+    status: "coming-soon"
   },
   {
     name: "Bookmarks",
@@ -33,7 +36,8 @@ const actions = [
     description: "Saved verses",
     gradient: "from-orange-500 to-red-500",
     textColor: "text-white",
-    action: "bookmarks"
+    action: "bookmarks",
+    status: "coming-soon"
   },
   {
     name: "Highlights",
@@ -41,7 +45,8 @@ const actions = [
     description: "Marked verses",
     gradient: "from-yellow-500 to-orange-500",
     textColor: "text-white",
-    action: "highlights"
+    action: "highlights",
+    status: "coming-soon"
   },
   {
     name: "Notifications",
@@ -49,7 +54,8 @@ const actions = [
     description: "Set reminders",
     gradient: "from-indigo-500 to-purple-600",
     textColor: "text-white",
-    action: "notifications"
+    action: "notifications",
+    status: "coming-soon"
   },
 ]
 
@@ -162,7 +168,6 @@ const QuickActions = ({ onNavigate }) => {
           break
           
         default:
-          console.log('Unknown action:', action)
       }
     } catch (error) {
       console.error('Error handling action:', error)
@@ -257,37 +262,97 @@ const QuickActions = ({ onNavigate }) => {
     })
   }
   return (
-    <Card className="p-8 bg-gradient-to-br from-white to-gray-50 border-0 shadow-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
+    <div className="relative overflow-hidden">
+      {/* Premium Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.1),transparent_50%)]"></div>
+      
+      <Card className="relative p-4 sm:p-6 border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
+        {/* Premium Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6">
+          <div className="flex items-center gap-4 mb-4 lg:mb-0">
+            <div className="relative">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
           <span className="text-white text-2xl">⚡</span>
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Quick Actions</h2>
-          <p className="text-gray-600 text-sm">Access your spiritual tools</p>
+              <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
+                Quick Actions
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">Access your spiritual tools and features</p>
+            </div>
         </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {actions.map((action, index) => (
-          <Button
-            key={action.name}
-            className={`group h-auto p-6 flex-col items-start gap-4 bg-gradient-to-br ${action.gradient} ${action.textColor} hover:scale-102 transition-all duration-200 shadow-lg hover:shadow-2xl border-0 ${loading === action.action ? 'opacity-75' : ''}`}
+          <Card 
+            key={action.name} 
+            className="group relative p-4 cursor-pointer bg-white/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 rounded-2xl overflow-hidden"
             onClick={() => handleAction(action.action)}
-            disabled={loading === action.action}
           >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-3xl group-hover:scale-105 transition-transform duration-200">{action.icon}</span>
-              <div className="w-2 h-2 bg-white/30 rounded-full group-hover:bg-white/60 transition-colors"></div>
+            {/* Premium Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${action.gradient.replace('from-', 'from-').replace('to-', 'to-')} rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-700 opacity-20`}></div>
+            
+            <div className="relative z-10 space-y-4">
+              {/* Premium Icon */}
+              <div className="relative">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-2xl bg-gradient-to-br ${action.gradient}`}>
+                  <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{action.icon}</span>
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+              </div>
+              
+              {/* Premium Content */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
+                    {action.name}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed text-sm">
+                    {action.description}
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-semibold text-purple-600">
+                      {action.status === 'coming-soon' ? 'Coming Soon' : 'Available'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span>{action.name}</span>
+                    <div className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">→</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-left w-full">
-              <p className="font-bold text-lg mb-1">{action.name}</p>
-              <p className="text-sm opacity-90">{action.description}</p>
-            </div>
-          </Button>
+            
+            {/* Hover Effect Overlay */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient.replace('from-', 'from-').replace('to-', 'to-')} opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-2xl`}></div>
+          </Card>
         ))}
       </div>
     </Card>
+      
+      <style jsx="true">{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
   )
 }
 

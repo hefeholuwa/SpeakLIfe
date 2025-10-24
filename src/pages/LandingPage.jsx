@@ -56,18 +56,15 @@ const LandingPage = ({ onNavigate }) => {
     let hasNavigated = false
     
     const handleUserVerified = (event) => {
-      console.log('User verified event received:', event.detail)
       
       // Only redirect if we're not on the admin route
       const currentPath = window.location.pathname
       if (currentPath === '/admin') {
-        console.log('On admin route, not redirecting')
         return
       }
       
       // Prevent duplicate navigation
       if (hasNavigated) {
-        console.log('Already navigated, ignoring duplicate event')
         return
       }
       
@@ -88,7 +85,6 @@ const LandingPage = ({ onNavigate }) => {
     // Only redirect if we're not on the admin route
     const currentPath = window.location.pathname
     if (user && user.email_confirmed_at && currentPath !== '/admin') {
-      console.log('User is already verified, redirecting to dashboard')
       onNavigate('dashboard')
     }
   }, [user, onNavigate])

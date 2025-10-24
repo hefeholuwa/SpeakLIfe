@@ -13,7 +13,7 @@ import ConfessionJournal from './ConfessionJournal'
 import notificationService from '../services/notificationService'
 
 const UserDashboard = ({ onNavigate }) => {
-  const { user, needsVerification } = useAuth()
+  const { user, needsVerification, loading } = useAuth()
   const [showProfile, setShowProfile] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
 
@@ -26,61 +26,102 @@ const UserDashboard = ({ onNavigate }) => {
   useEffect(() => {
     const initializeNotifications = async () => {
       try {
-        // Request notification permission
-        await notificationService.requestPermission();
-        
-        // Register service worker
-        await notificationService.registerServiceWorker();
-        
-        // Set up daily notifications
-        await notificationService.setupDailyNotifications();
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Notification initialization timeout')), 5000)
+        )
+
+        const notificationPromise = (async () => {
+          // Request notification permission
+          await notificationService.requestPermission();
+          
+          // Register service worker
+          await notificationService.registerServiceWorker();
+          
+          // Set up daily notifications
+          await notificationService.setupDailyNotifications();
+        })()
+
+        await Promise.race([notificationPromise, timeoutPromise]);
       } catch (error) {
         console.error('Failed to initialize notifications:', error);
+        // Don't let notification errors block the app
       }
     };
 
     initializeNotifications();
   }, []);
 
-
+  // Show loading screen if auth is still loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-celestial-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-white mb-2">Loading SpeakLife...</h2>
+          <p className="text-purple-200">Setting up your spiritual journey</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-celestial-gradient" style={{ willChange: 'auto' }}>
       <DashboardHeader onShowProfile={setShowProfile} />
       
-      {/* Navigation Tabs */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-20 z-40">
+      {/* Premium Navigation Tabs */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-white/20 sticky top-20 z-40 shadow-lg">
         <div className="container mx-auto px-4">
-          <nav className="flex space-x-1 py-2">
+          <nav className="flex space-x-2 py-4">
             <button
               onClick={() => setActiveTab('home')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`group relative px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'home'
-                  ? 'bg-purple-100 text-purple-700 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl transform scale-105'
+                  : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50 hover:shadow-lg hover:scale-105'
               }`}
             >
-              🏠 Home
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏠</span>
+                <span>Home</span>
+              </div>
+              {activeTab === 'home' && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
+              )}
             </button>
+            
             <button
               onClick={() => setActiveTab('bible')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`group relative px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'bible'
-                  ? 'bg-purple-100 text-purple-700 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl transform scale-105'
+                  : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50 hover:shadow-lg hover:scale-105'
               }`}
             >
-              📖 Bible
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📖</span>
+                <span>Bible</span>
+              </div>
+              {activeTab === 'bible' && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
+              )}
             </button>
+            
             <button
               onClick={() => setActiveTab('confessions')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`group relative px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'confessions'
-                  ? 'bg-purple-100 text-purple-700 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl transform scale-105'
+                  : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50 hover:shadow-lg hover:scale-105'
               }`}
             >
-              📝 Confession Journal
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📝</span>
+                <span>Journal</span>
+              </div>
+              {activeTab === 'confessions' && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
+              )}
             </button>
           </nav>
         </div>

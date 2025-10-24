@@ -19,6 +19,16 @@
 .env.test.local
 .env.production.local
 
+# MCP Server Configuration (contains sensitive data)
+supabase-mcp-config.env
+.cursor/mcp.json
+setup-supabase-mcp.sh
+SUPABASE_MCP_SETUP.md
+
+# Test files with sensitive data
+test_user_auth.js
+test-ai-generation.js
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

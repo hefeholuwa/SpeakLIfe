@@ -30,7 +30,6 @@ class AdminService {
     
     // Also log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[ADMIN ${type.toUpperCase()}] ${message}`, data || '')
     }
     
     return logEntry
@@ -144,9 +143,9 @@ class AdminService {
         .from('daily_verses')
         .insert({
           date: content.date,
-          verse: content.verse_text || content.verse,
-          confession: content.confession_text || content.confession,
-          reference: content.reference || ''
+          verse_text: content.verse_text || content.verse,
+          confession_text: content.confession_text || content.confession,
+          reference: `${content.reference} (${content.translation || 'KJV'})`
         })
         .select()
 
@@ -541,9 +540,13 @@ class AdminService {
   async createTopicVerse(verseData) {
     try {
       this.addLog(`Creating topic verse...`, 'info')
+      
+      // Remove id field to prevent duplicate key constraint violation
+      const { id, ...insertData } = verseData
+      
       const { data, error } = await supabase
         .from('topic_verses')
-        .insert([verseData])
+        .insert([insertData])
         .select()
 
       if (error) throw error
@@ -576,9 +579,13 @@ class AdminService {
   async createTopicConfession(confessionData) {
     try {
       this.addLog(`Creating topic confession...`, 'info')
+      
+      // Remove id field to prevent duplicate key constraint violation
+      const { id, ...insertData } = confessionData
+      
       const { data, error } = await supabase
         .from('topic_confessions')
-        .insert([confessionData])
+        .insert([insertData])
         .select()
 
       if (error) throw error
@@ -856,8 +863,8 @@ class AdminService {
         .insert([{
           date: new Date().toISOString().split('T')[0],
           verse_text: previewContent.verse.verse_text,
-          reference: `${previewContent.verse.reference} (${previewContent.verse.translation || 'KJV'})`,
-          confession_text: previewContent.confession.confession_text
+          confession_text: previewContent.confession.confession_text,
+          reference: `${previewContent.verse.reference} (${previewContent.verse.translation || 'KJV'})`
         }])
         .select()
 
@@ -883,8 +890,8 @@ class AdminService {
         .insert([{
           date: new Date().toISOString().split('T')[0],
           verse_text: aiContent.verse.verse_text,
-          reference: `${aiContent.verse.reference} (${aiContent.verse.translation || 'KJV'})`,
-          confession_text: aiContent.confession.confession_text
+          confession_text: aiContent.confession.confession_text,
+          reference: `${aiContent.verse.reference} (${aiContent.verse.translation || 'KJV'})`
         }])
         .select()
 
@@ -904,8 +911,8 @@ class AdminService {
         .insert([{
           date: new Date().toISOString().split('T')[0],
           verse_text: fallbackContent.verse.verse_text,
-          reference: `${fallbackContent.verse.reference} (${fallbackContent.verse.translation || 'KJV'})`,
-          confession_text: fallbackContent.confession.confession_text
+          confession_text: fallbackContent.confession.confession_text,
+          reference: `${fallbackContent.verse.reference} (${fallbackContent.verse.translation || 'KJV'})`
         }])
         .select()
 
@@ -1807,7 +1814,6 @@ class AdminService {
       this.addLog('Starting AI content generation...', 'info')
       
       const aiContent = await aiGenerationService.generateDailyContent()
-      console.log('🔍 AI Content received:', JSON.stringify(aiContent, null, 2))
       
       if (aiContent && aiContent.verse && aiContent.confession) {
         // Save the generated content to database
@@ -1819,7 +1825,6 @@ class AdminService {
           translation: aiContent.verse.translation || 'KJV'
         }
         
-        console.log('🔍 Content data to save:', contentData)
         
         // Validate required fields
         if (!contentData.verse_text || !contentData.reference) {

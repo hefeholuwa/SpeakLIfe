@@ -8,6 +8,7 @@ const Dashboard = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true)
   const [minLoadingComplete, setMinLoadingComplete] = useState(false)
 
+
   useEffect(() => {
     // Ensure minimum loading duration of 2 seconds
     const minTimer = setTimeout(() => {

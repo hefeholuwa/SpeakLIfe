@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { bibleBooks } from '../../data/bibleBooks'
 
-const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = [] }) => {
+const ESVBibleReader = () => {
   const [selectedBook, setSelectedBook] = useState(null)
   const [selectedChapter, setSelectedChapter] = useState(1)
   const [bibleContent, setBibleContent] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [isFullScreen, setIsFullScreen] = useState(false)
-  const [isNightMode, setIsNightMode] = useState(false)
   const [fontSize, setFontSize] = useState(18)
   const [showBookSelector, setShowBookSelector] = useState(false)
   const [showChapterSelector, setShowChapterSelector] = useState(false)
@@ -90,7 +88,14 @@ const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = 
     
     try {
       const bookCode = bookCodeMap[book.name] || book.name.toLowerCase().replace(/\s+/g, '')
-      const response = await fetch(`https://raw.githubusercontent.com/wldeh/bible-api/main/bibles/en-kjv/books/${bookCode}/chapters/${chapter}.json`)
+      const url = `https://raw.githubusercontent.com/wldeh/bible-api/main/bibles/en-kjv/books/${bookCode}/chapters/${chapter}.json`;
+      
+      const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json()
       
       if (data.error) {
@@ -172,70 +177,6 @@ const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = 
       .trim()
   }
 
-  // Handle bookmarking a verse
-  const handleBookmark = async (verse) => {
-    if (!onBookmark) return;
-    
-    const verseData = {
-      book: selectedBook?.name || selectedBook,
-      chapter: selectedChapter,
-      verse: verse.verse,
-      text: cleanText(verse.text)
-    };
-    
-    try {
-      await onBookmark(verseData);
-      // Show success feedback
-      const button = document.querySelector(`[title*="bookmark"]`);
-      if (button) {
-        button.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-          button.style.transform = 'scale(1)';
-        }, 200);
-      }
-    } catch (error) {
-      console.error('Error bookmarking verse:', error);
-      alert('Failed to bookmark verse. Please try again.');
-    }
-  };
-
-  // Handle highlighting a verse
-  const handleHighlight = async (verse) => {
-    if (!onHighlight) return;
-    
-    const verseData = {
-      book: selectedBook?.name || selectedBook,
-      chapter: selectedChapter,
-      verse: verse.verse,
-      text: cleanText(verse.text)
-    };
-    
-    try {
-      // Show color picker for highlight
-      const colors = ['yellow', 'blue', 'green', 'pink'];
-      const selectedColor = prompt(
-        'Choose highlight color:\n1. Yellow\n2. Blue\n3. Green\n4. Pink\n\nEnter number (1-4):',
-        '1'
-      );
-      
-      if (selectedColor && ['1', '2', '3', '4'].includes(selectedColor)) {
-        const color = colors[parseInt(selectedColor) - 1];
-        await onHighlight(verseData, color);
-        
-        // Show success feedback
-        const button = document.querySelector(`[title="Highlight verse"]`);
-        if (button) {
-          button.style.transform = 'scale(1.2)';
-          setTimeout(() => {
-            button.style.transform = 'scale(1)';
-          }, 200);
-        }
-      }
-    } catch (error) {
-      console.error('Error highlighting verse:', error);
-      alert('Failed to highlight verse. Please try again.');
-    }
-  };
 
   // Initialize with Genesis
   useEffect(() => {
@@ -244,229 +185,241 @@ const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = 
       if (genesis) {
         setSelectedBook(genesis)
         fetchChapterContent(genesis, 1)
+      } else {
+        console.error('Genesis book not found in bibleBooks');
       }
     }
   }, [])
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${
-      isNightMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-    } ${isFullScreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className="min-h-screen bg-white text-gray-900">
       
-      {/* Header */}
-      <div className={`sticky top-0 z-40 border-b transition-all duration-300 ${
-        isNightMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <div className="max-w-4xl mx-auto px-4 py-3">
+      {/* Premium Header */}
+      <div className="sticky top-0 z-40 border-b transition-all duration-300 bg-white/95 backdrop-blur-sm border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            {/* Book/Chapter Selector */}
-            <div className="flex items-center space-x-4">
+            {/* Premium Book/Chapter Selector */}
+            <div className="flex items-center space-x-4 relative">
+              <div className="relative">
+                <button
+                  onClick={() => setShowBookSelector(!showBookSelector)}
+                  className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📖</span>
+                    <span>{selectedBook ? selectedBook.name : 'Select Book'}</span>
+                    <span className="text-sm">▼</span>
+                  </div>
+                </button>
+
+                {/* Compact Book Selector Dropdown */}
+                {showBookSelector && (
+                  <div className="absolute top-full left-0 z-50 mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 w-80 max-h-80 overflow-y-auto">
+                    <div className="p-3">
+                      {/* Old Testament */}
+                      <div className="mb-4">
+                        <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                          Old Testament
+                        </h4>
+                        <div className="grid grid-cols-3 gap-1">
+                          {bibleBooks.filter(book => book.testament === 'Old').map((book) => (
+                            <button
+                              key={book.name}
+                              onClick={() => handleBookSelect(book)}
+                              className="p-2 text-center rounded-lg transition-all duration-200 bg-gray-50 hover:bg-blue-100 border border-gray-100 hover:border-blue-200 hover:shadow-sm"
+                            >
+                              <div className="font-medium text-gray-700 text-xs">
+                                {book.name.length > 8 ? book.name.substring(0, 8) + '...' : book.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {book.chapters} ch
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* New Testament */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                          New Testament
+                        </h4>
+                        <div className="grid grid-cols-3 gap-1">
+                          {bibleBooks.filter(book => book.testament === 'New').map((book) => (
               <button
-                onClick={() => setShowBookSelector(true)}
-                className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                  isNightMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {selectedBook ? selectedBook.name : 'Select Book'}
+                              key={book.name}
+                              onClick={() => handleBookSelect(book)}
+                              className="p-2 text-center rounded-lg transition-all duration-200 bg-gray-50 hover:bg-green-100 border border-gray-100 hover:border-green-200 hover:shadow-sm"
+                            >
+                              <div className="font-medium text-gray-700 text-xs">
+                                {book.name.length > 8 ? book.name.substring(0, 8) + '...' : book.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {book.chapters} ch
+                              </div>
               </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               
+              <div className="relative">
+                <button
+                  onClick={() => setShowChapterSelector(!showChapterSelector)}
+                  className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 hover:from-blue-200 hover:to-indigo-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📄</span>
+                    <span>Chapter {selectedChapter}</span>
+                    <span className="text-sm">▼</span>
+                  </div>
+                </button>
+
+                {/* Compact Chapter Selector Dropdown */}
+                {showChapterSelector && selectedBook && (
+                  <div className="absolute top-full left-0 z-50 mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 w-64 max-h-64 overflow-y-auto">
+                    <div className="p-3">
+                      <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                        {selectedBook.name} Chapters
+                      </h4>
+                      <div className="grid grid-cols-5 gap-1">
+                        {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((chapter) => (
               <button
-                onClick={() => setShowChapterSelector(true)}
-                className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                  isNightMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Chapter {selectedChapter}
+                            key={chapter}
+                            onClick={() => handleChapterSelect(chapter)}
+                            className={`p-2 text-center rounded-lg font-medium transition-all duration-200 ${
+                              chapter === selectedChapter
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-50 hover:bg-blue-100 border border-gray-100 hover:border-blue-200 hover:shadow-sm text-gray-700'
+                            }`}
+                          >
+                            <div className="text-xs">
+                              {chapter}
+                            </div>
               </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center space-x-2">
-              {/* Font Size */}
-              <div className="flex items-center space-x-2">
+            {/* Premium Controls */}
+            <div className="flex items-center space-x-3">
+              {/* Font Size Controls */}
+              <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-xl p-2 border border-gray-200">
                 <button
                   onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                  }`}
+                  className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-purple-100 text-purple-600"
                 >
                   A-
                 </button>
-                <span className="text-sm font-medium">{fontSize}px</span>
+                <span className="text-sm font-semibold px-2">{fontSize}px</span>
                 <button
                   onClick={() => setFontSize(Math.min(32, fontSize + 2))}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                  }`}
+                  className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-purple-100 text-purple-600"
                 >
                   A+
                 </button>
               </div>
 
-              {/* Night Mode */}
-              <button
-                onClick={() => setIsNightMode(!isNightMode)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                }`}
-              >
-                {isNightMode ? '☀️' : '🌙'}
-              </button>
-
-              {/* Full Screen */}
-              <button
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                }`}
-              >
-                {isFullScreen ? '⤓' : '⤢'}
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Chapter Navigation */}
-      <div className={`border-b transition-all duration-300 ${
-        isNightMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-      }`}>
-        <div className="max-w-4xl mx-auto px-4 py-2">
+      {/* Premium Chapter Navigation */}
+      <div className="border-b transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={goToPreviousChapter}
               disabled={!selectedBook || selectedChapter <= 1}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isNightMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+              className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 hover:from-blue-200 hover:to-indigo-200 shadow-lg hover:shadow-xl"
             >
-              ← Previous
+              <div className="flex items-center gap-2">
+                <span className="text-lg">←</span>
+                <span>Previous</span>
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
             
-            <span className="text-sm font-medium">
+            <div className="text-center">
+              <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {selectedBook ? `${selectedBook.name} ${selectedChapter}` : 'Select a book'}
-            </span>
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Holy Bible - KJV Translation</p>
+            </div>
             
             <button
               onClick={goToNextChapter}
               disabled={!selectedBook || selectedChapter >= selectedBook.chapters}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isNightMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+              className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 hover:from-green-200 hover:to-emerald-200 shadow-lg hover:shadow-xl"
             >
-              Next →
+              <div className="flex items-center gap-2">
+                <span>Next</span>
+                <span className="text-lg">→</span>
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Bible Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Premium Bible Content */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {loading && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading chapter...</p>
+          <div className="text-center py-16">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-pink-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Chapter</h3>
+            <p className="text-gray-500">Fetching God's Word...</p>
           </div>
         )}
 
         {error && (
-          <div className="text-center py-12">
-            <div className="text-red-600 text-lg font-medium mb-2">⚠️ Error Loading Chapter</div>
+          <div className="text-center py-16">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
+              <div className="text-red-600 text-4xl mb-4">⚠️</div>
+              <h3 className="text-red-600 text-lg font-semibold mb-2">Error Loading Chapter</h3>
             <p className="text-red-500">{error}</p>
+            </div>
           </div>
         )}
 
         {bibleContent && !loading && !error && (
-          <div className="prose prose-lg max-w-none">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
             <div 
-              className={`leading-relaxed ${
-                isNightMode ? 'text-gray-100' : 'text-gray-800'
-              }`}
+              className="leading-relaxed font-serif text-gray-800"
               style={{ fontSize: `${fontSize}px` }}
             >
-              {bibleContent.verses.map((verse, index) => {
-                const isBookmarked = bookmarks.some(b => 
-                  b.book === selectedBook && 
-                  b.chapter === selectedChapter && 
-                  b.verse === verse.verse
-                );
-                const isHighlighted = highlights.find(h => 
-                  h.book === selectedBook && 
-                  h.chapter === selectedChapter && 
-                  h.verse === verse.verse
-                );
-                
-                return (
-                  <div key={index} className="mb-4 group relative">
-                    <p className={`leading-relaxed ${
-                      isNightMode ? 'text-gray-100' : 'text-gray-800'
-                    }`}>
+              {bibleContent.verses.map((verse, index) => (
+                <div key={index} className="mb-4">
+                  <p className="leading-relaxed text-gray-800">
                       <sup className="text-purple-600 font-semibold mr-1">{verse.verse}</sup>
-                      <span 
-                        className={`${
-                          isHighlighted 
-                            ? `bg-${isHighlighted.color}-200 px-1 rounded` 
-                            : ''
-                        }`}
-                      >
-                        {cleanText(verse.text)}
-                      </span>
-                    </p>
-                    
-                    {/* Verse Actions */}
-                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => handleBookmark(verse)}
-                          className={`p-1 rounded-full transition-colors ${
-                            isBookmarked 
-                              ? 'bg-yellow-100 text-yellow-600' 
-                              : 'bg-gray-100 text-gray-500 hover:bg-yellow-100 hover:text-yellow-600'
-                          }`}
-                          title={isBookmarked ? 'Remove bookmark' : 'Bookmark verse'}
-                        >
-                          {isBookmarked ? '🔖' : '📖'}
-                        </button>
-                        
-                        <button
-                          onClick={() => handleHighlight(verse)}
-                          className="p-1 rounded-full bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-600 transition-colors"
-                          title="Highlight verse"
-                        >
-                          ✨
-                        </button>
+                    <span>{cleanText(verse.text)}</span>
+                  </p>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         )}
       </div>
 
       {/* Bottom Navigation */}
-      <div className={`sticky bottom-0 border-t transition-all duration-300 ${
-        isNightMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-      }`}>
+      <div className="sticky bottom-0 border-t transition-all duration-300 bg-gray-50 border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={goToPreviousChapter}
               disabled={!selectedBook || selectedChapter <= 1}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isNightMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-100"
             >
               ← Previous Chapter
             </button>
@@ -474,11 +427,7 @@ const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = 
             <button
               onClick={goToNextChapter}
               disabled={!selectedBook || selectedChapter >= selectedBook.chapters}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isNightMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-100"
             >
               Next Chapter →
             </button>
@@ -486,88 +435,7 @@ const ESVBibleReader = ({ onBookmark, onHighlight, bookmarks = [], highlights = 
         </div>
       </div>
 
-      {/* Book Selector Modal */}
-      {showBookSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`w-full max-w-2xl max-h-[80vh] rounded-lg overflow-hidden ${
-            isNightMode ? 'bg-gray-800' : 'bg-white'
-          }`}>
-            <div className={`p-4 border-b ${
-              isNightMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Select Book</h3>
-                <button
-                  onClick={() => setShowBookSelector(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {bibleBooks.map((book) => (
-                  <button
-                    key={book.name}
-                    onClick={() => handleBookSelect(book)}
-                    className={`p-3 text-left rounded-lg transition-colors ${
-                      isNightMode 
-                        ? 'hover:bg-gray-700' 
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-medium">{book.name}</div>
-                    <div className="text-sm text-gray-500">{book.testament} Testament</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Chapter Selector Modal */}
-      {showChapterSelector && selectedBook && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`w-full max-w-md rounded-lg overflow-hidden ${
-            isNightMode ? 'bg-gray-800' : 'bg-white'
-          }`}>
-            <div className={`p-4 border-b ${
-              isNightMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{selectedBook.name} Chapters</h3>
-                <button
-                  onClick={() => setShowChapterSelector(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map((chapter) => (
-                  <button
-                    key={chapter}
-                    onClick={() => handleChapterSelect(chapter)}
-                    className={`p-3 text-center rounded-lg font-medium transition-colors ${
-                      chapter === selectedChapter
-                        ? 'bg-purple-600 text-white'
-                        : isNightMode
-                        ? 'hover:bg-gray-700'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    {chapter}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

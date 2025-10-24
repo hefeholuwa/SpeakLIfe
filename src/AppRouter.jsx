@@ -86,7 +86,6 @@ const AppRouter = () => {
   }
 
   if (currentRoute === 'admin') {
-    console.log('🔧 AppRouter: Rendering AdminRouter for admin route')
     return <AdminRouter />
   }
 

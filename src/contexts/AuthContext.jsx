@@ -13,36 +13,56 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [hasDispatchedVerified, setHasDispatchedVerified] = useState(false)
 
+  // Simplified user profile loading - just set to null for now to prevent hanging
+  // Updated to fix infinite loading issue
+  const loadUserProfile = async (authUser) => {
+    if (!authUser) {
+      setUserProfile(null)
+      return
+    }
+    
+    // For now, just set userProfile to null to prevent hanging
+    // We can implement proper profile loading later
+    setUserProfile(null)
+  }
+
   useEffect(() => {
-    // Get initial session
+    // Simplified initial session check with timeout
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session loading timeout')), 5000)
+        )
+        
+        const sessionPromise = supabase.auth.getSession()
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
+        
         if (error) {
           console.error('Error getting session:', error)
           setError(error.message)
-        } else {
-          setUser(session?.user || null)
-          
-          // If user is already verified on initial load, dispatch event
-          if (session?.user?.email_confirmed_at && !hasDispatchedVerified) {
-            console.log('User already verified on initial load, dispatching navigation event')
-            setHasDispatchedVerified(true)
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('userVerified', { 
-                detail: { user: session.user, session } 
-              }))
-            }, 100) // Small delay to ensure components are ready
-          }
+          setLoading(false)
+          return
         }
+        
+        setUser(session?.user || null)
+        
+        // Load user profile if user exists (simplified)
+        if (session?.user) {
+          await loadUserProfile(session.user)
+        }
+        
+        setLoading(false)
+        
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         setError(error.message)
-      } finally {
         setLoading(false)
       }
     }
@@ -53,14 +73,24 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id)
         setUser(session?.user || null)
-        setLoading(false)
         
+        // Load user profile on auth changes
+        if (session?.user) {
+          try {
+            await loadUserProfile(session.user)
+          } catch (error) {
+            console.error('Error loading user profile in auth change:', error)
+            setUserProfile(null)
+          }
+        } else {
+          setUserProfile(null)
+        }
+        
+        setLoading(false)
         
         // If user just verified their email, dispatch a custom event
         if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
-          console.log('User verified email, dispatching navigation event')
           setHasDispatchedVerified(true)
           window.dispatchEvent(new CustomEvent('userVerified', { 
             detail: { user: session.user, session } 
@@ -69,7 +99,6 @@ export const AuthProvider = ({ children }) => {
         
         // Also check for TOKEN_REFRESHED event which happens after email verification
         if (event === 'TOKEN_REFRESHED' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
-          console.log('Token refreshed for verified user, dispatching navigation event')
           setHasDispatchedVerified(true)
           window.dispatchEvent(new CustomEvent('userVerified', { 
             detail: { user: session.user, session } 
@@ -138,6 +167,15 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: error.message }
       }
 
+      // Load user profile after successful login
+      if (data.user) {
+        try {
+          await loadUserProfile(data.user)
+        } catch (profileError) {
+          console.error('Error loading user profile after login:', profileError)
+          // Continue anyway, don't block the login
+        }
+      }
 
       return { success: true, data }
     } catch (error) {
@@ -153,13 +191,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null)
       
-      
       // Clear user state immediately
       setUser(null)
+      setUserProfile(null)
       
       // Try Supabase logout but don't wait for it
       supabase.auth.signOut().catch(err => {
-        console.log('Supabase logout failed, but continuing with local logout:', err)
+        // Supabase logout failed, but continuing with local logout
       })
       
       // Dispatch custom event to notify components of logout
@@ -246,6 +284,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    userProfile,
     loading,
     error,
     needsVerification,
@@ -257,6 +296,7 @@ export const AuthProvider = ({ children }) => {
     resendVerification,
     setError
   }
+
 
   return (
     <AuthContext.Provider value={value}>

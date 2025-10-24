@@ -43,7 +43,6 @@ class NotificationService {
 
     try {
       this.registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service worker registered successfully');
       return true;
     } catch (error) {
       console.error('Service worker registration failed:', error);
