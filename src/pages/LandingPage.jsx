@@ -131,24 +131,27 @@ const LandingPage = ({ onNavigate }) => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setShowLogin(true)}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
+                >
+                  🔑 Sign In
+                </button>
                 <button 
                   onClick={() => setShowRegistration(true)}
                   className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Get Started
                 </button>
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-gray-600 text-lg">👤</span>
-                </div>
               </div>
             </div>
             
             {/* Navigation */}
-            <div className="flex items-center justify-center space-x-2 mb-6">
+            <div className="flex items-center justify-center space-x-1 mb-4">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === 'home'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
@@ -158,7 +161,7 @@ const LandingPage = ({ onNavigate }) => {
               </button>
               <button
                 onClick={() => setActiveTab('bible')}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === 'bible'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
@@ -182,10 +185,10 @@ const LandingPage = ({ onNavigate }) => {
                       window.dispatchEvent(event)
                     }
                   }}
-                  className="w-full pl-12 pr-14 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-base shadow-lg"
+                  className="w-full pl-10 pr-12 py-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm shadow-lg"
                 />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-xl">🔍</span>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-400 text-lg">🔍</span>
                 </div>
                 <button
                   onClick={() => {
@@ -193,9 +196,9 @@ const LandingPage = ({ onNavigate }) => {
                     window.dispatchEvent(event)
                   }}
                   disabled={!searchQuery.trim()}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  <span className="text-xl">🚀</span>
+                  <span className="text-lg">🚀</span>
                 </button>
               </div>
             </div>
