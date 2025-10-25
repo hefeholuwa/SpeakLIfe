@@ -1,17 +1,32 @@
 // Test AI Generation Service
-import { aiGenerationService } from './src/services/aiGenerationService.js'
+import { AIGenerationService } from './src/services/aiGenerationService.js'
 
-console.log('🧪 Testing AI Generation Service...')
-
-try {
-  // Force regenerate content for today
-  const result = await aiGenerationService.generateDailyContent(true)
-  console.log('✅ AI Generation Result:')
-  console.log('Verse:', result.verse_text)
-  console.log('Reference:', result.reference)
-  console.log('Translation:', result.translation)
-  console.log('Confession:', result.confession_text)
-} catch (error) {
-  console.error('❌ AI Generation Error:', error.message)
-  console.error('Full error:', error)
+async function testAIGeneration() {
+  console.log('🧪 Testing AI Generation Service...')
+  
+  try {
+    const aiService = new AIGenerationService()
+    
+    // Check if API key is configured
+    console.log('🔑 API Key configured:', !!aiService.apiKey)
+    console.log('🔑 API Key length:', aiService.apiKey ? aiService.apiKey.length : 0)
+    
+    // Test daily verse generation
+    console.log('📖 Testing daily verse generation...')
+    const verse = await aiService.generateDailyVerse()
+    console.log('✅ Daily verse generated:', verse)
+    
+    // Test confession generation
+    console.log('🙏 Testing confession generation...')
+    const confession = await aiService.generateConfessionForVerse(verse)
+    console.log('✅ Confession generated:', confession)
+    
+    console.log('🎉 All tests passed!')
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error.message)
+    console.error('Stack trace:', error.stack)
+  }
 }
+
+testAIGeneration()

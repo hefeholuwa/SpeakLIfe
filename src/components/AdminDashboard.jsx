@@ -29,6 +29,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext'
 import OverviewPanel from './admin/OverviewPanel'
 import ContentManagementPanel from './admin/ContentManagementPanel'
 import TopicsPanel from './admin/TopicsPanel'
+import AITest from './AITest'
 import adminService from '../services/adminService'
 
 const AdminDashboard = ({ onNavigate }) => {
@@ -703,7 +704,7 @@ const AdminDashboard = ({ onNavigate }) => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
+          <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
             <TabsTrigger value="overview" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Overview</span>
@@ -715,6 +716,10 @@ const AdminDashboard = ({ onNavigate }) => {
             <TabsTrigger value="topics" className="flex items-center space-x-2">
               <BookOpen className="h-4 w-4" />
               <span>Topics</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-test" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>AI Test</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center space-x-2">
               <Settings className="h-4 w-4" />
@@ -801,6 +806,10 @@ const AdminDashboard = ({ onNavigate }) => {
               editPreviewContent={editPreviewContent}
               loadTopics={loadTopics}
             />
+          </TabsContent>
+
+          <TabsContent value="ai-test">
+            <AITest />
           </TabsContent>
 
           <TabsContent value="settings">

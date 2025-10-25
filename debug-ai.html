@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generation Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .info { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <h1>AI Generation Debug</h1>
+    <button onclick="testAI()">Test AI Generation</button>
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = message;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+
+        async function testAI() {
+            log('🧪 Starting AI Generation Test...', 'info');
+            
+            try {
+                // Check if we're in the right environment
+                log('🌐 Environment check...', 'info');
+                log(`Window location: ${window.location.href}`, 'info');
+                
+                // Test API key
+                const apiKey = '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';
+                log(`🔑 API Key: ${apiKey.substring(0, 20)}...`, 'info');
+                
+                // Test OpenRouter API directly
+                log('📡 Testing OpenRouter API...', 'info');
+                
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.origin,
+                        'X-Title': 'SpeakLife AI Test'
+                    },
+                    body: JSON.stringify({
+                        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a helpful assistant that generates Christian spiritual content.'
+                            },
+                            {
+                                role: 'user',
+                                content: 'Generate a short Bible verse about faith. Return only the verse text.'
+                            }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+                
+                log(`📊 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ API call successful!', 'success');
+                    log(`🤖 AI Response: ${data.choices[0].message.content}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ API Error: ${response.status} - ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
