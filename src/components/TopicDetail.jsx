@@ -144,140 +144,141 @@ const TopicDetail = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(120,119,198,0.1),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.1),transparent_50%)]"></div>
       
-      {/* Premium Header */}
+      {/* Mobile-Responsive Header */}
       <div className="relative bg-white/80 backdrop-blur-sm shadow-2xl border-b border-white/20">
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="flex items-center gap-6 mb-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
             <Button
               onClick={() => {
                 window.history.pushState({}, '', '/dashboard')
                 window.dispatchEvent(new PopStateEvent('popstate'))
               }}
               variant="outline"
-              size="lg"
-              className="flex items-center gap-3 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              size="sm"
+              className="flex items-center gap-2 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm"
             >
-              <ArrowLeft className="h-5 w-5" />
-              Back to Dashboard
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
             </Button>
             
-            <div className="flex items-center gap-6">
-              <div className="relative">
+            <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto">
+              <div className="relative flex-shrink-0">
                 <div 
-                  className="w-20 h-20 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-2xl"
+                  className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-2xl"
                   style={{ 
                     background: `linear-gradient(135deg, ${topic.color}20, ${topic.color}40)`,
                     boxShadow: `0 20px 40px ${topic.color}20`
                   }}
                 >
-                  <span className="text-4xl">{topic.icon}</span>
+                  <span className="text-2xl sm:text-3xl lg:text-4xl">{topic.icon}</span>
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
               </div>
               
-              <div>
-                <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent truncate">
                   {topic.title}
                 </h1>
-                <p className="text-xl text-gray-600 mt-2">{topic.description}</p>
+                <p className="text-sm sm:text-base lg:text-xl text-gray-600 mt-1 sm:mt-2 line-clamp-2">{topic.description}</p>
               </div>
             </div>
           </div>
 
-          {/* Premium Stats */}
-          <div className="flex flex-wrap items-center gap-8">
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
+          {/* Mobile-Responsive Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-8">
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl shadow-lg">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{verses.length}</div>
-                <div className="text-sm text-gray-600">Verses</div>
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{verses.length}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Verses</div>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                <MessageCircle className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl shadow-lg">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{confessions.length}</div>
-                <div className="text-sm text-gray-600">Confessions</div>
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{confessions.length}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Confessions</div>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
-                <Star className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl shadow-lg">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{topic.daily_views || 0}</div>
-                <div className="text-sm text-gray-600">Today</div>
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{topic.daily_views || 0}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Today</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Premium Content */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <Card className="relative overflow-hidden bg-white/90 backdrop-blur-sm border-0 shadow-2xl rounded-3xl">
-          {/* Premium Tab Navigation */}
-          <div className="relative p-8 border-b border-gray-100">
-            <div className="flex gap-2 bg-gradient-to-r from-gray-100 to-gray-50 p-2 rounded-2xl w-fit shadow-lg">
+      {/* Mobile-Responsive Content */}
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
+        <Card className="relative overflow-hidden bg-white/90 backdrop-blur-sm border-0 shadow-2xl rounded-2xl sm:rounded-3xl">
+          {/* Mobile-Responsive Tab Navigation */}
+          <div className="relative p-4 sm:p-6 lg:p-8 border-b border-gray-100">
+            <div className="flex gap-1 sm:gap-2 bg-gradient-to-r from-gray-100 to-gray-50 p-1 sm:p-2 rounded-xl sm:rounded-2xl w-full sm:w-fit shadow-lg">
               <Button
                 onClick={() => setActiveTab('verses')}
                 variant={activeTab === 'verses' ? 'default' : 'ghost'}
-                size="lg"
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
+                size="sm"
+                className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 text-xs sm:text-sm ${
                   activeTab === 'verses' 
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' 
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <BookOpen className="h-5 w-5" />
-                <span className="font-semibold">Verses ({verses.length})</span>
+                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold truncate">Verses ({verses.length})</span>
               </Button>
               <Button
                 onClick={() => setActiveTab('confessions')}
                 variant={activeTab === 'confessions' ? 'default' : 'ghost'}
-                size="lg"
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
+                size="sm"
+                className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 text-xs sm:text-sm ${
                   activeTab === 'confessions' 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg' 
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <MessageCircle className="h-5 w-5" />
-                <span className="font-semibold">Confessions ({confessions.length})</span>
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold truncate">Confessions ({confessions.length})</span>
               </Button>
             </div>
           </div>
 
-        {/* Content */}
-        <div className="space-y-6">
+        {/* Mobile-Responsive Content */}
+        <div className="p-4 sm:p-6 lg:p-8">
           {activeTab === 'verses' && (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {verses.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Verses Yet</h3>
-                  <p className="text-gray-600">Verses for this topic will appear here.</p>
+                <Card className="p-6 sm:p-8 text-center">
+                  <BookOpen className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">No Verses Yet</h3>
+                  <p className="text-sm sm:text-base text-gray-600">Verses for this topic will appear here.</p>
                 </Card>
               ) : (
                 verses.map((verse) => (
-                  <Card key={verse.id} className="p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <Badge variant="outline" className="mb-2">{verse.reference}</Badge>
-                        <p className="text-lg text-gray-800 leading-relaxed">{verse.verse_text}</p>
+                  <Card key={verse.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                      <div className="flex-1 min-w-0">
+                        <Badge variant="outline" className="mb-2 text-xs">{verse.reference}</Badge>
+                        <p className="text-sm sm:text-base lg:text-lg text-gray-800 leading-relaxed">{verse.verse_text}</p>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex items-center gap-2 sm:ml-4 flex-shrink-0">
                         <Button
                           onClick={() => handleSaveToFavorites(verse, 'verse')}
                           variant="outline"
                           size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 p-2"
                         >
                           <Heart className="h-4 w-4" />
                         </Button>
@@ -285,13 +286,13 @@ const TopicDetail = () => {
                           onClick={() => handleShare(verse, 'verse')}
                           variant="outline"
                           size="sm"
-                          className="text-blue-600 hover:text-blue-700"
+                          className="text-blue-600 hover:text-blue-700 p-2"
                         >
                           <Share2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-gray-500">
                       {verse.book} {verse.chapter}:{verse.verse} • {verse.translation}
                     </div>
                   </Card>
@@ -301,58 +302,58 @@ const TopicDetail = () => {
           )}
 
           {activeTab === 'confessions' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {confessions.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <MessageCircle className="h-10 w-10 text-purple-600" />
+                <div className="text-center py-12 sm:py-16">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No confessions yet</h3>
-                  <p className="text-gray-600">Confessions for this topic will appear here when added.</p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No confessions yet</h3>
+                  <p className="text-sm sm:text-base text-gray-600">Confessions for this topic will appear here when added.</p>
                 </div>
               ) : (
                 confessions.map((confession, index) => (
                   <div 
                     key={confession.id} 
-                    className="group relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+                    className="group relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
                         {confession.title && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <h4 className="text-xl font-bold text-gray-900">{confession.title}</h4>
-                            <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                            <h4 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">{confession.title}</h4>
+                            <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse flex-shrink-0"></div>
                           </div>
                         )}
                         
-                        <blockquote className="text-gray-800 text-xl leading-relaxed font-medium italic">
+                        <blockquote className="text-gray-800 text-sm sm:text-base lg:text-xl leading-relaxed font-medium italic">
                           "{confession.confession_text}"
                         </blockquote>
                       </div>
                       
-                      <div className="flex items-center gap-2 ml-6">
+                      <div className="flex items-center gap-2 sm:ml-6 flex-shrink-0">
                         <Button
-                          onClick={() => saveToFavorites('confession', confession)}
+                          onClick={() => handleSaveToFavorites(confession, 'confession')}
                           variant="ghost"
-                          size="icon"
-                          className="w-10 h-10 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+                          size="sm"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
                         >
-                          <Heart className="h-5 w-5" />
+                          <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                         <Button
-                          onClick={() => shareContent('confession', confession)}
+                          onClick={() => handleShare(confession, 'confession')}
                           variant="ghost"
-                          size="icon"
-                          className="w-10 h-10 rounded-xl text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all duration-300"
+                          size="sm"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all duration-300"
                         >
-                          <Share2 className="h-5 w-5" />
+                          <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                     </div>
                     
                     {/* Hover Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl sm:rounded-2xl"></div>
                   </div>
                 ))
               )}
