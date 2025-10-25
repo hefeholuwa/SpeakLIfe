@@ -23,16 +23,19 @@ const AITest = () => {
         return
       }
       
-      // Test daily verse generation
-      addLog('📖 Testing daily verse generation...', 'info')
-      const verse = await aiGenerationService.generateDailyVerse()
-      addLog(`✅ Daily verse generated: ${verse.verse_text}`, 'success')
-      addLog(`📖 Reference: ${verse.reference}`, 'info')
+      // Test complete daily content generation
+      addLog('🎯 Testing complete daily content generation...', 'info')
+      const dailyContent = await aiGenerationService.generateDailyContent()
       
-      // Test confession generation
-      addLog('🙏 Testing confession generation...', 'info')
-      const confession = await aiGenerationService.generateConfessionForVerse(verse)
-      addLog(`✅ Confession generated: ${confession.confession_text}`, 'success')
+      if (dailyContent && dailyContent.verse && dailyContent.confession) {
+        addLog(`✅ Daily verse generated: ${dailyContent.verse.verse_text}`, 'success')
+        addLog(`📖 Reference: ${dailyContent.verse.reference}`, 'info')
+        addLog(`✅ Confession generated: ${dailyContent.confession.confession_text}`, 'success')
+        addLog(`🎯 Theme: ${dailyContent.theme}`, 'info')
+      } else {
+        addLog('❌ Daily content generation returned invalid structure', 'error')
+        console.error('Invalid daily content structure:', dailyContent)
+      }
       
       addLog('🎉 All tests passed!', 'success')
       

@@ -622,20 +622,28 @@ RANDOMIZATION INSTRUCTIONS:
   // Generate complete daily content (verse + confession)
   async generateDailyContent() {
     try {
+      console.log('🎯 Starting complete daily content generation...')
       
       // Generate verse first
+      console.log('📖 Generating daily verse...')
       const verseData = await this.generateDailyVerse()
+      console.log('✅ Daily verse generated:', verseData.reference)
       
       // Generate confession based on the verse
+      console.log('🙏 Generating confession for verse...')
       const confessionData = await this.generateConfessionForVerse(verseData)
+      console.log('✅ Confession generated:', confessionData.title)
       
-      return {
+      const result = {
         verse: verseData,
         confession: confessionData,
         theme: verseData.theme
       }
+      
+      console.log('🎉 Complete daily content generated successfully')
+      return result
     } catch (error) {
-      console.error('Error generating daily content:', error)
+      console.error('❌ Error generating daily content:', error)
       throw error
     }
   }
