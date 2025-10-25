@@ -51,6 +51,8 @@ class AIGenerationService {
           return false
       }
 
+      console.log(`🔍 Checking for duplicates in ${tableName}.${fieldName}`)
+
       // Check for exact matches first
       const { data: exactMatches, error: exactError } = await supabase
         .from(tableName)
@@ -63,13 +65,13 @@ class AIGenerationService {
       }
 
       if (exactMatches && exactMatches.length > 0) {
-        console.log('🔍 Exact duplicate found')
+        console.log('🔍 Exact duplicate found:', exactMatches.length, 'matches')
         return true
       }
 
-      // Check for similar content (first 30 characters)
-      const contentStart = content.substring(0, 30).trim()
-      if (contentStart.length < 10) return false // Too short to be meaningful
+      // Check for similar content (first 50 characters for better detection)
+      const contentStart = content.substring(0, 50).trim()
+      if (contentStart.length < 15) return false // Too short to be meaningful
 
       const { data: similarMatches, error: similarError } = await supabase
         .from(tableName)
@@ -83,9 +85,11 @@ class AIGenerationService {
 
       if (similarMatches && similarMatches.length > 0) {
         console.log('🔍 Similar content found:', similarMatches.length, 'matches')
+        console.log('Similar content preview:', similarMatches[0][fieldName]?.substring(0, 50))
         return true
       }
 
+      console.log('✅ No duplicates found, content is unique')
       return false
     } catch (error) {
       console.error('Error in duplicate check:', error)

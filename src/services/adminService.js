@@ -1816,15 +1816,66 @@ class AdminService {
       const aiContent = await aiGenerationService.generateDailyContent()
       
       if (aiContent && aiContent.verse && aiContent.confession) {
-        // Save the generated content to database
-        const contentData = {
-          date: new Date().toISOString().split('T')[0],
-          verse_text: aiContent.verse.verse_text || aiContent.verse.text || '',
-          reference: aiContent.verse.reference || '',
-          confession_text: aiContent.confession.confession_text || aiContent.confession.text || '',
-          translation: aiContent.verse.translation || 'KJV'
+        // Check for duplicates before saving
+        this.addLog('Checking for duplicate content...', 'info')
+        
+        const verseText = aiContent.verse.verse_text || aiContent.verse.text || ''
+        const confessionText = aiContent.confession.confession_text || aiContent.confession.text || ''
+        
+        // Check if verse already exists
+        const { data: existingVerses, error: verseError } = await supabase
+          .from('daily_verses')
+          .select('verse_text')
+          .eq('verse_text', verseText)
+        
+        if (verseError) {
+          console.error('Error checking verse duplicates:', verseError)
+        } else if (existingVerses && existingVerses.length > 0) {
+          this.addLog('Duplicate verse detected, using fallback content', 'warning')
+          const fallbackContent = this.getFallbackDailyContent()
+          const contentData = {
+            date: new Date().toISOString().split('T')[0],
+            verse_text: fallbackContent.verse_text,
+            reference: fallbackContent.reference,
+            confession_text: fallbackContent.confession_text,
+            translation: fallbackContent.translation
+          }
+          await this.createDailyContent(contentData)
+          this.addLog('Fallback content saved successfully', 'success')
+          return contentData
         }
         
+        // Check if confession already exists
+        const { data: existingConfessions, error: confessionError } = await supabase
+          .from('daily_verses')
+          .select('confession_text')
+          .eq('confession_text', confessionText)
+        
+        if (confessionError) {
+          console.error('Error checking confession duplicates:', confessionError)
+        } else if (existingConfessions && existingConfessions.length > 0) {
+          this.addLog('Duplicate confession detected, using fallback content', 'warning')
+          const fallbackContent = this.getFallbackDailyContent()
+          const contentData = {
+            date: new Date().toISOString().split('T')[0],
+            verse_text: fallbackContent.verse_text,
+            reference: fallbackContent.reference,
+            confession_text: fallbackContent.confession_text,
+            translation: fallbackContent.translation
+          }
+          await this.createDailyContent(contentData)
+          this.addLog('Fallback content saved successfully', 'success')
+          return contentData
+        }
+        
+        // No duplicates found, save the generated content
+        const contentData = {
+          date: new Date().toISOString().split('T')[0],
+          verse_text: verseText,
+          reference: aiContent.verse.reference || '',
+          confession_text: confessionText,
+          translation: aiContent.verse.translation || 'KJV'
+        }
         
         // Validate required fields
         if (!contentData.verse_text || !contentData.reference) {
