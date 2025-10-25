@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Favicon Test</title>
+    <meta charset="UTF-8">
+    <script>
+      // Force favicon change immediately
+      document.addEventListener('DOMContentLoaded', function() {
+        // Remove any existing favicon links
+        const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
+        existingFavicons.forEach(link => link.remove());
+        
+        // Create new favicon links with timestamp
+        const timestamp = Date.now();
+        
+        const faviconSVG = document.createElement('link');
+        faviconSVG.rel = 'icon';
+        faviconSVG.type = 'image/svg+xml';
+        faviconSVG.href = '/sl-icon.svg?t=' + timestamp;
+        document.head.appendChild(faviconSVG);
+        
+        const faviconICO = document.createElement('link');
+        faviconICO.rel = 'icon';
+        faviconICO.type = 'image/x-icon';
+        faviconICO.href = '/sl-icon.ico?t=' + timestamp;
+        document.head.appendChild(faviconICO);
+        
+        const shortcutIcon = document.createElement('link');
+        shortcutIcon.rel = 'shortcut icon';
+        shortcutIcon.href = '/sl-icon.ico?t=' + timestamp;
+        document.head.appendChild(shortcutIcon);
+        
+        console.log('Favicon forced to change at:', new Date().toLocaleTimeString());
+      });
+    </script>
+</head>
+<body>
+    <h1>Force Favicon Test</h1>
+    <p>This page should show the SpeakLife favicon (purple/pink gradient with "SL")</p>
+    <p>Check the browser tab - you should see the new favicon!</p>
+    
+    <h2>Direct Links:</h2>
+    <ul>
+        <li><a href="/sl-icon.svg" target="_blank">SVG Icon</a></li>
+        <li><a href="/sl-icon.ico" target="_blank">ICO Icon</a></li>
+    </ul>
+    
+    <h2>If still showing React logo:</h2>
+    <ul>
+        <li>Hard refresh: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)</li>
+        <li>Clear browser cache completely</li>
+        <li>Open in incognito/private mode</li>
+        <li>Try a different browser</li>
+    </ul>
+</body>
+</html>
