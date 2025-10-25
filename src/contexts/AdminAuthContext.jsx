@@ -167,7 +167,14 @@ export const AdminAuthProvider = ({ children }) => {
   useEffect(() => {
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Admin session loading timeout')), 10000)
+        )
+        
+        const sessionPromise = supabase.auth.getSession()
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
         
         if (error) {
           console.error('Error getting session:', error)
@@ -184,7 +191,10 @@ export const AdminAuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
-        setError(error.message)
+        // Don't set error for timeout, just continue without admin session
+        if (!error.message.includes('timeout')) {
+          setError(error.message)
+        }
         setIsAdmin(false)
         setAdminUser(null)
       } finally {

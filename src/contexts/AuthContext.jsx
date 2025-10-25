@@ -32,12 +32,12 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    // Simplified initial session check with timeout
+    // Improved initial session check with longer timeout
     const getInitialSession = async () => {
       try {
-        // Add timeout to prevent hanging
+        // Increase timeout to 15 seconds for better reliability
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session loading timeout')), 5000)
+          setTimeout(() => reject(new Error('Session loading timeout')), 15000)
         )
         
         const sessionPromise = supabase.auth.getSession()
@@ -55,14 +55,22 @@ export const AuthProvider = ({ children }) => {
         
         // Load user profile if user exists (simplified)
         if (session?.user) {
-          await loadUserProfile(session.user)
+          try {
+            await loadUserProfile(session.user)
+          } catch (profileError) {
+            console.error('Error loading user profile:', profileError)
+            // Don't block the session loading if profile loading fails
+          }
         }
         
         setLoading(false)
         
       } catch (error) {
         console.error('Error in getInitialSession:', error)
-        setError(error.message)
+        // Don't set error for timeout, just continue without session
+        if (!error.message.includes('timeout')) {
+          setError(error.message)
+        }
         setLoading(false)
       }
     }
