@@ -716,6 +716,12 @@ RANDOMIZATION INSTRUCTIONS:
       // Use specified model, random model for variety, or default model
       const selectedModel = model || this.getRandomModel() || this.model
 
+      console.log('📡 Making API call to OpenRouter...', {
+        model: selectedModel,
+        promptLength: prompt.length,
+        apiKeyLength: this.apiKey.length
+      })
+
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -744,6 +750,8 @@ RANDOMIZATION INSTRUCTIONS:
         })
       })
 
+      console.log('📡 API call completed, processing response...')
+
       console.log('📡 API Response status:', response.status)
 
       if (!response.ok) {
@@ -767,7 +775,17 @@ RANDOMIZATION INSTRUCTIONS:
       }
 
       const data = await response.json()
-      return data.choices[0].message.content
+      console.log('🤖 AI Response received:', {
+        hasChoices: !!data.choices,
+        choicesLength: data.choices?.length || 0,
+        hasContent: !!data.choices?.[0]?.message?.content,
+        contentLength: data.choices?.[0]?.message?.content?.length || 0
+      })
+      
+      const content = data.choices[0].message.content
+      console.log('📝 Raw AI content:', content.substring(0, 200) + '...')
+      
+      return content
     } catch (error) {
       console.error('OpenRouter API call failed:', error)
       throw error
