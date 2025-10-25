@@ -131,12 +131,18 @@ const LandingPage = ({ onNavigate }) => {
                 </div>
               </div>
               
-              <div className="flex items-center">
+              <div className="flex items-center space-x-2">
                 <button 
                   onClick={() => setShowLogin(true)}
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
                 >
                   🔑 Sign In
+                </button>
+                <button 
+                  onClick={() => setShowRegistration(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-3 py-2 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  Get Started
                 </button>
               </div>
             </div>
@@ -311,22 +317,22 @@ const LandingPage = ({ onNavigate }) => {
                   Transform your spiritual journey with personalized confessions, divine verses, and guidance that speaks directly to your heart.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-6 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                   <button 
                     onClick={() => setShowRegistration(true)}
-                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-4 sm:px-6 md:px-12 py-2.5 sm:py-3 md:py-5 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-3 sm:px-6 md:px-12 py-2 sm:py-3 md:py-5 rounded-lg sm:rounded-2xl text-xs sm:text-base md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    <span className="flex items-center justify-center gap-2 sm:gap-3">
-                      <span className="text-lg sm:text-xl">✨</span>
+                    <span className="flex items-center justify-center gap-1 sm:gap-3">
+                      <span className="text-sm sm:text-xl">✨</span>
                       <span>Get Started</span>
-                      <span className="text-lg sm:text-xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
+                      <span className="text-sm sm:text-xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
                     </span>
                   </button>
-                  <button className="group border-2 border-purple-600 text-purple-600 px-4 sm:px-6 md:px-12 py-2.5 sm:py-3 md:py-5 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                    <span className="flex items-center justify-center gap-2 sm:gap-3">
-                      <span className="text-lg sm:text-xl">📚</span>
+                  <button className="group border-2 border-purple-600 text-purple-600 px-3 sm:px-6 md:px-12 py-2 sm:py-3 md:py-5 rounded-lg sm:rounded-2xl text-xs sm:text-base md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <span className="flex items-center justify-center gap-1 sm:gap-3">
+                      <span className="text-sm sm:text-xl">📚</span>
                       <span>Learn More</span>
-                      <span className="text-lg sm:text-xl group-hover:rotate-12 transition-transform duration-300">💡</span>
+                      <span className="text-sm sm:text-xl group-hover:rotate-12 transition-transform duration-300">💡</span>
                     </span>
                   </button>
                 </div>
@@ -393,12 +399,12 @@ const LandingPage = ({ onNavigate }) => {
                 </p>
                 <button 
                   onClick={() => onNavigate('dashboard')}
-                  className="group bg-white text-purple-600 px-6 sm:px-10 md:px-16 py-3 sm:py-4 md:py-6 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-xl sm:shadow-2xl hover:shadow-2xl sm:hover:shadow-3xl transform hover:scale-105"
+                  className="group bg-white text-purple-600 px-4 sm:px-10 md:px-16 py-2.5 sm:py-4 md:py-6 rounded-lg sm:rounded-2xl text-sm sm:text-lg md:text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transform hover:scale-105"
                 >
-                  <span className="flex items-center justify-center gap-2 sm:gap-3">
-                    <span className="text-lg sm:text-xl md:text-2xl">🚀</span>
+                  <span className="flex items-center justify-center gap-1 sm:gap-3">
+                    <span className="text-sm sm:text-xl md:text-2xl">🚀</span>
                     <span>Start Your Journey</span>
-                    <span className="text-lg sm:text-xl md:text-2xl group-hover:translate-x-1 transition-transform duration-300">✨</span>
+                    <span className="text-sm sm:text-xl md:text-2xl group-hover:translate-x-1 transition-transform duration-300">✨</span>
                   </span>
                 </button>
               </div>
