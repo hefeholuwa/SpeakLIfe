@@ -192,23 +192,23 @@ const ESVBibleReader = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-gray-50">
       
-      {/* Premium Header */}
-      <div className="sticky top-0 z-40 border-b transition-all duration-300 bg-white/95 backdrop-blur-sm border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+      {/* Clean Mobile-Optimized Header */}
+      <div className="sticky top-0 z-40 border-b bg-white border-gray-200">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            {/* Premium Book/Chapter Selector */}
-            <div className="flex items-center space-x-4 relative">
+            {/* Clean Book/Chapter Selector */}
+            <div className="flex items-center space-x-2 sm:space-x-4 relative">
               <div className="relative">
                 <button
                   onClick={() => setShowBookSelector(!showBookSelector)}
-                  className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200 shadow-lg hover:shadow-xl"
+                  className="group relative px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-300 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📖</span>
-                    <span>{selectedBook ? selectedBook.name : 'Select Book'}</span>
-                    <span className="text-sm">▼</span>
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-sm sm:text-lg">📖</span>
+                    <span className="text-xs sm:text-sm">{selectedBook ? selectedBook.name : 'Select Book'}</span>
+                    <span className="text-xs">▼</span>
                   </div>
                 </button>
 
@@ -269,12 +269,12 @@ const ESVBibleReader = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowChapterSelector(!showChapterSelector)}
-                  className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 hover:from-blue-200 hover:to-indigo-200 shadow-lg hover:shadow-xl"
+                  className="group relative px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-300 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">📄</span>
-                    <span>Chapter {selectedChapter}</span>
-                    <span className="text-sm">▼</span>
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-sm sm:text-lg">📄</span>
+                    <span className="text-xs sm:text-sm">Chapter {selectedChapter}</span>
+                    <span className="text-xs">▼</span>
                   </div>
                 </button>
 
@@ -308,20 +308,20 @@ const ESVBibleReader = () => {
               </div>
             </div>
 
-            {/* Premium Controls */}
-            <div className="flex items-center space-x-3">
+            {/* Clean Controls */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {/* Font Size Controls */}
-              <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-xl p-2 border border-gray-200">
+              <div className="flex items-center space-x-1 sm:space-x-2 bg-white rounded-lg p-1 sm:p-2 border border-gray-300 shadow-sm">
                 <button
                   onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                  className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-purple-100 text-purple-600"
+                  className="p-1 sm:p-2 rounded-md transition-all duration-300 hover:bg-gray-100 text-gray-600 text-xs sm:text-sm"
                 >
                   A-
                 </button>
-                <span className="text-sm font-semibold px-2">{fontSize}px</span>
+                <span className="text-xs sm:text-sm font-medium px-1 sm:px-2">{fontSize}px</span>
                 <button
                   onClick={() => setFontSize(Math.min(32, fontSize + 2))}
-                  className="p-2 rounded-lg transition-all duration-300 hover:scale-110 hover:bg-purple-100 text-purple-600"
+                  className="p-1 sm:p-2 rounded-md transition-all duration-300 hover:bg-gray-100 text-gray-600 text-xs sm:text-sm"
                 >
                   A+
                 </button>
@@ -332,75 +332,70 @@ const ESVBibleReader = () => {
         </div>
       </div>
 
-      {/* Premium Chapter Navigation */}
-      <div className="border-b transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+      {/* Clean Chapter Navigation */}
+      <div className="border-b bg-white border-gray-200">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={goToPreviousChapter}
               disabled={!selectedBook || selectedChapter <= 1}
-              className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 hover:from-blue-200 hover:to-indigo-200 shadow-lg hover:shadow-xl"
+              className="px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">←</span>
-                <span>Previous</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-sm sm:text-lg">←</span>
+                <span className="text-xs sm:text-sm">Previous</span>
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
             
             <div className="text-center">
-              <h2 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h2 className="text-base sm:text-lg font-bold text-gray-800">
               {selectedBook ? `${selectedBook.name} ${selectedChapter}` : 'Select a book'}
               </h2>
-              <p className="text-sm text-gray-500 mt-1">Holy Bible - KJV Translation</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Holy Bible - KJV Translation</p>
             </div>
             
             <button
               onClick={goToNextChapter}
               disabled={!selectedBook || selectedChapter >= selectedBook.chapters}
-              className="group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 hover:from-green-200 hover:to-emerald-200 shadow-lg hover:shadow-xl"
+              className="px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md"
             >
-              <div className="flex items-center gap-2">
-                <span>Next</span>
-                <span className="text-lg">→</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-xs sm:text-sm">Next</span>
+                <span className="text-sm sm:text-lg">→</span>
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Premium Bible Content */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Clean Bible Content */}
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
         {loading && (
-          <div className="text-center py-16">
-            <div className="relative mb-6">
-              <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto"></div>
-              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-pink-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Chapter</h3>
-            <p className="text-gray-500">Fetching God's Word...</p>
+          <div className="text-center py-8 sm:py-16">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">Loading Chapter</h3>
+            <p className="text-sm sm:text-base text-gray-500">Fetching God's Word...</p>
           </div>
         )}
 
         {error && (
-          <div className="text-center py-16">
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
-              <div className="text-red-600 text-4xl mb-4">⚠️</div>
-              <h3 className="text-red-600 text-lg font-semibold mb-2">Error Loading Chapter</h3>
-            <p className="text-red-500">{error}</p>
+          <div className="text-center py-8 sm:py-16">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-8 max-w-md mx-auto">
+              <div className="text-red-600 text-2xl sm:text-4xl mb-4">⚠️</div>
+              <h3 className="text-red-600 text-base sm:text-lg font-semibold mb-2">Error Loading Chapter</h3>
+            <p className="text-red-500 text-sm sm:text-base">{error}</p>
             </div>
           </div>
         )}
 
         {bibleContent && !loading && !error && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-8">
             <div 
               className="leading-relaxed font-serif text-gray-800"
               style={{ fontSize: `${fontSize}px` }}
             >
               {bibleContent.verses.map((verse, index) => (
-                <div key={index} className="mb-4">
+                <div key={index} className="mb-3 sm:mb-4">
                   <p className="leading-relaxed text-gray-800">
                       <sup className="text-purple-600 font-semibold mr-1">{verse.verse}</sup>
                     <span>{cleanText(verse.text)}</span>
@@ -412,14 +407,14 @@ const ESVBibleReader = () => {
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="sticky bottom-0 border-t transition-all duration-300 bg-gray-50 border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+      {/* Clean Bottom Navigation */}
+      <div className="sticky bottom-0 border-t bg-white border-gray-200">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={goToPreviousChapter}
               disabled={!selectedBook || selectedChapter <= 1}
-              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-100"
+              className="px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md text-xs sm:text-sm"
             >
               ← Previous Chapter
             </button>
@@ -427,7 +422,7 @@ const ESVBibleReader = () => {
             <button
               onClick={goToNextChapter}
               disabled={!selectedBook || selectedChapter >= selectedBook.chapters}
-              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-100"
+              className="px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm hover:shadow-md text-xs sm:text-sm"
             >
               Next Chapter →
             </button>
