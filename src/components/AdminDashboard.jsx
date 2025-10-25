@@ -145,20 +145,20 @@ const AdminDashboard = ({ onNavigate }) => {
     try {
       setLoadingStates(prev => ({ ...prev, topics: true }))
       setError(null)
-      adminService.addLog('Loading topics...', 'info')
-      const topicsData = await adminService.getTopics()
+      adminService.addLog('Loading topics with counts...', 'info')
+      const topicsData = await adminService.getAllTopicsWithCounts()
       
       // If no topics exist, create some sample topics
       if (topicsData.length === 0) {
         adminService.addLog('No topics found, creating sample topics...', 'info')
         await createSampleTopics()
         // Reload topics after creating samples
-        const newTopicsData = await adminService.getTopics()
+        const newTopicsData = await adminService.getAllTopicsWithCounts()
         setTopics(newTopicsData)
-        adminService.addLog(`Created and loaded ${newTopicsData.length} sample topics`, 'success')
+        adminService.addLog(`Created and loaded ${newTopicsData.length} sample topics with counts`, 'success')
       } else {
         setTopics(topicsData)
-        adminService.addLog(`Loaded ${topicsData.length} topics`, 'success')
+        adminService.addLog(`Loaded ${topicsData.length} topics with counts`, 'success')
       }
     } catch (error) {
       console.error('Error loading topics:', error)
@@ -255,6 +255,9 @@ const AdminDashboard = ({ onNavigate }) => {
       setTopicVerses(verses)
       setTopicConfessions(confessions)
       adminService.addLog(`Loaded ${verses.length} verses and ${confessions.length} confessions`, 'success')
+      
+      // Refresh topics list to update counters
+      await loadTopics()
     } catch (error) {
       console.error('Error loading topic content:', error)
       setError(`Failed to load topic content: ${error.message}`)
@@ -796,6 +799,7 @@ const AdminDashboard = ({ onNavigate }) => {
               approvePreviewContent={approvePreviewContent}
               rejectPreviewContent={rejectPreviewContent}
               editPreviewContent={editPreviewContent}
+              loadTopics={loadTopics}
             />
           </TabsContent>
 

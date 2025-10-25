@@ -61,7 +61,8 @@ const TopicsPanel = ({
   setShowPreview,
   approvePreviewContent,
   rejectPreviewContent,
-  editPreviewContent
+  editPreviewContent,
+  loadTopics
 }) => {
   // Local state for confirmation dialogs and notifications
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -154,13 +155,23 @@ const TopicsPanel = ({
               <p className="text-gray-600">Manage spiritual topics and their content</p>
             </div>
           </div>
-          <Button
-            onClick={() => setShowTopicForm(true)}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Topic
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={loadTopics}
+              variant="outline"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Counters
+            </Button>
+            <Button
+              onClick={() => setShowTopicForm(true)}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Topic
+            </Button>
+          </div>
         </div>
       </Card>
 
