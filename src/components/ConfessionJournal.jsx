@@ -9,7 +9,6 @@ const ConfessionJournal = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -204,8 +203,7 @@ const ConfessionJournal = () => {
 
   const filteredEntries = entries.filter(entry => {
     const matchesFilter = filter === 'all' || entry.category === filter;
-    const matchesSearch = entry.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         entry.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = true; // No search functionality
     return matchesFilter && matchesSearch;
   });
 
@@ -274,47 +272,48 @@ const ConfessionJournal = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.1),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]"></div>
       
-      {/* Premium Header */}
+      {/* Mobile-Responsive Header */}
       <div className="relative bg-white/90 backdrop-blur-sm border-b border-white/20 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 shadow-2xl">
-                  <span className="text-white text-2xl">📝</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div className="relative flex-shrink-0">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 shadow-2xl">
+                  <span className="text-white text-lg sm:text-2xl">📝</span>
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent truncate">
                   Confession Journal
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">Your sacred space for reflection and growth</p>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Your sacred space for reflection and growth</p>
               </div>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-2 sm:space-x-3 flex-shrink-0">
                 <button
                   onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold text-xs sm:text-sm"
                 >
-                  ✍️ New Entry
+                  <span className="hidden sm:inline">✍️ New Entry</span>
+                  <span className="sm:hidden">✍️ New</span>
                 </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Premium Filters */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-6 border border-white/20">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex space-x-3">
+            {/* Mobile-Responsive Filters */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-white/20">
+              <div className="flex flex-wrap gap-2 sm:gap-4 items-center justify-center sm:justify-start">
+                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start w-full sm:w-auto">
                   <button
                     onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                       filter === 'all' 
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
                         : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
@@ -324,7 +323,7 @@ const ConfessionJournal = () => {
                   </button>
                   <button
                     onClick={() => setFilter('confession')}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                       filter === 'confession' 
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
                         : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
@@ -334,7 +333,7 @@ const ConfessionJournal = () => {
                   </button>
                   <button
                     onClick={() => setFilter('prayer')}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                       filter === 'prayer' 
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
                         : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
@@ -344,7 +343,7 @@ const ConfessionJournal = () => {
                   </button>
                   <button
                     onClick={() => setFilter('reflection')}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                       filter === 'reflection' 
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
                         : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
@@ -352,21 +351,6 @@ const ConfessionJournal = () => {
                   >
                     🤔 Reflections
                   </button>
-                </div>
-                
-                <div className="flex-1">
-                  <div className="relative">
-                  <input
-                    type="text"
-                      placeholder="🔍 Search your entries..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-3 pl-12 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md"
-                  />
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      🔍
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -405,7 +389,7 @@ const ConfessionJournal = () => {
                 filteredEntries.map((entry, index) => (
                   <div 
                     key={entry.id} 
-                    className="group relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/20 overflow-hidden"
+                    className="group relative bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/20 overflow-hidden"
                     style={{ 
                       animationDelay: `${index * 0.1}s`,
                       animation: 'fadeInUp 0.6s ease-out forwards'
@@ -416,41 +400,41 @@ const ConfessionJournal = () => {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-700"></div>
                     
                     <div className="relative z-10">
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="relative">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 group-hover:scale-110 transition-transform duration-300">
-                              <span className="text-white text-xl">{getCategoryEmoji(entry.category)}</span>
+                      <div className="flex items-start justify-between mb-4 sm:mb-6">
+                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 group-hover:scale-110 transition-transform duration-300">
+                              <span className="text-white text-lg sm:text-xl">{getCategoryEmoji(entry.category)}</span>
                             </div>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                            <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
                           </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300">
+                        <div className="min-w-0 flex-1">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300 truncate">
                             {entry.title || 'Untitled Entry'}
                           </h3>
-                            <div className="flex items-center space-x-3 text-sm text-gray-500 mt-1">
-                              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold capitalize">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 mt-1">
+                              <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold capitalize">
                                 {entry.category}
                               </span>
                               <span className="flex items-center gap-1">
                                 {getMoodEmoji(entry.mood)} {entry.mood}
                               </span>
-                            <span>•</span>
-                            <span>{new Date(entry.created_at).toLocaleDateString()}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="text-xs sm:text-sm">{new Date(entry.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1 sm:space-x-2">
                         <button
                           onClick={() => startEdit(entry)}
-                            className="text-blue-600 hover:text-blue-800 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md"
+                            className="text-blue-600 hover:text-blue-800 p-2 sm:p-3 hover:bg-blue-50 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md text-sm sm:text-base"
                             title="Edit entry"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => deleteEntry(entry.id)}
-                            className="text-red-600 hover:text-red-800 p-3 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md"
+                            className="text-red-600 hover:text-red-800 p-2 sm:p-3 hover:bg-red-50 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md text-sm sm:text-base"
                             title="Delete entry"
                         >
                           🗑️
@@ -458,8 +442,8 @@ const ConfessionJournal = () => {
                       </div>
                     </div>
                     
-                      <div className="prose max-w-none mb-6">
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
+                      <div className="prose max-w-none mb-4 sm:mb-6">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
                         {entry.content}
                       </p>
                     </div>

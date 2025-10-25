@@ -111,203 +111,177 @@ const LandingPage = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 overflow-x-hidden">
-      {/* Enhanced Header with Glass Morphism */}
-      <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          {/* Mobile Layout */}
-          <div className="block md:hidden">
-            {/* Top Row - Logo and Profile */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="relative group">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                    <span className="text-white font-black text-xl">SL</span>
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black text-gray-800">SpeakLife</h1>
-                  <p className="text-xs text-gray-600 font-medium">One Confession at a Time</p>
-                </div>
-              </div>
-              
+      {/* CLEAN & ORGANIZED Navigation Bar - YouTube Style */}
+      <header className="bg-white/95 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Mobile Layout - Clean & Organized */}
+          <div className="block lg:hidden">
+            {/* Single Row - YouTube Style Layout */}
+            <div className="flex items-center justify-between h-14 sm:h-16">
+              {/* Left: Logo */}
               <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => setShowRegistration(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  Get Started
-                </button>
-                <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-gray-600 text-lg">👤</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Navigation */}
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <button
-                onClick={() => setActiveTab('home')}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                  activeTab === 'home'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
-                }`}
-              >
-                🏠 Home
-              </button>
-              <button
-                onClick={() => setActiveTab('bible')}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                  activeTab === 'bible'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
-                }`}
-              >
-                📖 Bible
-              </button>
-            </div>
-            
-            {/* Enhanced Search Bar */}
-            <div className="w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search bible"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const event = new CustomEvent('searchBible', { detail: searchQuery })
-                      window.dispatchEvent(event)
-                    }
-                  }}
-                  className="w-full pl-12 pr-14 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-base shadow-lg"
-                />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-xl">🔍</span>
-                </div>
-                <button
-                  onClick={() => {
-                    const event = new CustomEvent('searchBible', { detail: searchQuery })
-                    window.dispatchEvent(event)
-                  }}
-                  disabled={!searchQuery.trim()}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span className="text-xl">🚀</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-4">
-                <div className="relative group">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                    <span className="text-white font-black text-2xl">SL</span>
+                <div className="relative group flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                    <span className="text-white font-black text-lg sm:text-xl">SL</span>
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black text-gray-800">SpeakLife</h1>
-                  <p className="text-sm text-gray-600 font-medium">One Confession at a Time</p>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base font-black bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent truncate">
+                    SpeakLife
+                  </h1>
                 </div>
               </div>
               
-              {/* Header Options */}
-              <div className="flex items-center space-x-2">
+              {/* Center: Navigation Pills */}
+              <div className="flex items-center space-x-1 flex-shrink-0">
                 <button
                   onClick={() => setActiveTab('home')}
-                  className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
                     activeTab === 'home'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
+                      ? 'bg-gray-900 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
+                  style={{ minHeight: '32px' }}
                 >
-                  🏠 Home
+                  <span className="flex items-center gap-1">
+                    <span className="text-sm">🏠</span>
+                    <span className="hidden sm:inline">Home</span>
+                  </span>
                 </button>
                 <button
                   onClick={() => setActiveTab('bible')}
-                  className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
                     activeTab === 'bible'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
+                      ? 'bg-gray-900 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={{ minHeight: '32px' }}
+                >
+                  <span className="flex items-center gap-1">
+                    <span className="text-sm">📖</span>
+                    <span className="hidden sm:inline">Bible</span>
+                  </span>
+                </button>
+              </div>
+
+              {/* Right: Auth Buttons */}
+              {!user && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button 
+                    onClick={() => setShowLogin(true)}
+                    className="text-purple-600 hover:bg-purple-50 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200"
+                    style={{ minHeight: '32px' }}
+                  >
+                    <span className="hidden sm:inline">Sign in</span>
+                    <span className="sm:hidden">Sign in</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowRegistration(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-lg"
+                    style={{ minHeight: '32px' }}
+                  >
+                    <span className="hidden sm:inline">Start</span>
+                    <span className="sm:hidden">Start</span>
+                  </button>
+                </div>
+              )}
+              
+              {user && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button 
+                    onClick={() => onNavigate('dashboard')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-lg"
+                    style={{ minHeight: '32px' }}
+                  >
+                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="sm:hidden">Go</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Desktop Layout - Clean & Organized */}
+          <div className="hidden lg:flex items-center justify-between h-16">
+            {/* Left: Logo & Navigation */}
+            <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-3">
+                <div className="relative group">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                    <span className="text-white font-black text-xl">SL</span>
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-black bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                    SpeakLife
+                  </h1>
+                </div>
+              </div>
+              
+              {/* Navigation Pills */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    activeTab === 'home'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  📖 Bible
+                  <span className="flex items-center gap-2">
+                    <span>🏠</span>
+                    <span>Home</span>
+                  </span>
                 </button>
-              </div>
-            </div>
-            
-            {/* Enhanced Search Bar */}
-            <div className="max-w-md">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search bible"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const event = new CustomEvent('searchBible', { detail: searchQuery })
-                      window.dispatchEvent(event)
-                    }
-                  }}
-                  className="w-full pl-12 pr-14 py-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-lg"
-                />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-lg">🔍</span>
-                </div>
                 <button
-                  onClick={() => {
-                    const event = new CustomEvent('searchBible', { detail: searchQuery })
-                    window.dispatchEvent(event)
-                  }}
-                  disabled={!searchQuery.trim()}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setActiveTab('bible')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    activeTab === 'bible'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <span className="text-lg">🚀</span>
+                  <span className="flex items-center gap-2">
+                    <span>📖</span>
+                    <span>Bible</span>
+                  </span>
                 </button>
               </div>
             </div>
             
-            {/* Enhanced Profile Section */}
-            <div className="flex items-center space-x-4">
+            {/* Right: Profile Actions */}
+            <div className="flex items-center gap-4">
               {user ? (
                 <>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-sm">
+                  <button 
+                    onClick={() => onNavigate('dashboard')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-lg"
+                  >
+                    Dashboard
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg">
+                      <span className="text-white font-semibold text-sm">
                         {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-gray-800">
-                      {user.user_metadata?.full_name || 'User'}
-                    </span>
                   </div>
-                  <button 
-                    onClick={() => onNavigate('dashboard')}
-                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    🚀 Dashboard
-                  </button>
                 </>
               ) : (
                 <>
                   <button 
-                    onClick={() => setShowRegistration(true)}
-                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                    onClick={() => setShowLogin(true)}
+                    className="text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200"
                   >
-                    ✨ Get Started
+                    Sign in
                   </button>
                   <button 
-                    onClick={() => setShowLogin(true)}
-                    className="text-gray-600 hover:text-gray-900 px-4 py-3 rounded-2xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
+                    onClick={() => setShowRegistration(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-lg"
                   >
-                    🔑 Sign In
+                    Get Started
                   </button>
                 </>
               )}
@@ -556,15 +530,129 @@ const LandingPage = ({ onNavigate }) => {
         
         @keyframes float {
           0%, 100% {
-            transform: translateY(0px);
+            transform: translateY(0px) rotate(0deg);
+          }
+          25% {
+            transform: translateY(-10px) rotate(1deg);
           }
           50% {
-            transform: translateY(-20px);
+            transform: translateY(-20px) rotate(0deg);
+          }
+          75% {
+            transform: translateY(-10px) rotate(-1deg);
           }
         }
         
         .animate-float {
           animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+
+        .animate-shimmer {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
+        }
+
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(147, 51, 234, 0.6), 0 0 60px rgba(236, 72, 153, 0.4);
+          }
+        }
+
+        .animate-glow {
+          animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+          0%, 100% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-sparkle {
+          animation: sparkle 2s ease-in-out infinite;
+        }
+
+        /* Scrollbar hiding */
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+          /* Prevent zoom on input focus for iOS */
+          input[type="text"], input[type="email"], input[type="password"] {
+            font-size: 16px !important;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+          }
+          
+          /* Optimize touch interactions */
+          button, [role="button"] {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            touch-action: manipulation;
+          }
+          
+          /* Smooth scrolling for iOS */
+          * {
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          /* Prevent text selection on buttons */
+          button {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+          input[type="text"], input[type="email"], input[type="password"] {
+            font-size: 16px !important;
+          }
+          
+          /* Fix for iOS Safari viewport issues */
+          .min-h-screen {
+            min-height: -webkit-fill-available;
+          }
+        }
+
+        /* Android Chrome optimizations */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+          input[type="text"], input[type="email"], input[type="password"] {
+            font-size: 16px !important;
+          }
+        }
+
+        /* High DPI display optimizations */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+          .shadow-lg {
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          }
         }
       `}</style>
     </div>
