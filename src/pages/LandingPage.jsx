@@ -111,62 +111,76 @@ const LandingPage = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 overflow-x-hidden">
-      {/* Mobile App-Style Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+      {/* Modern Mobile App Header */}
+      <header className="bg-white sticky top-0 z-50 shadow-lg">
         <div className="max-w-6xl mx-auto">
           {/* Mobile Layout */}
           <div className="block md:hidden">
-            {/* App-Style Top Bar */}
-            <div className="flex items-center justify-between px-4 py-3">
+            {/* Status Bar Spacer */}
+            <div className="h-6 bg-gradient-to-b from-gray-50 to-white"></div>
+            
+            {/* App Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-white">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                  <span className="text-white font-black text-sm">SL</span>
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-black text-lg">SL</span>
                 </div>
                 <div>
-                  <h1 className="text-base font-bold text-gray-900">SpeakLife</h1>
+                  <h1 className="text-lg font-bold text-gray-900">SpeakLife</h1>
+                  <p className="text-xs text-gray-500">Spiritual Journey</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-2">
                 <button 
                   onClick={() => setShowLogin(true)}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
                 >
                   Sign In
                 </button>
                 <button 
                   onClick={() => setShowRegistration(true)}
-                  className="bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all duration-200 text-sm font-semibold shadow-lg"
                 >
                   Get Started
                 </button>
               </div>
             </div>
             
-            {/* Mobile App-Style Bottom Navigation */}
-            <div className="bg-white border-t border-gray-100 px-4 py-2">
-              <div className="flex items-center justify-around">
+            {/* Modern Tab Navigation */}
+            <div className="bg-white border-b border-gray-100">
+              <div className="flex items-center px-4">
                 <button
                   onClick={() => setActiveTab('home')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200 ${
+                  className={`relative px-4 py-3 text-sm font-medium transition-all duration-200 ${
                     activeTab === 'home'
-                      ? 'bg-purple-50 text-purple-600'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      ? 'text-purple-600'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <span className="text-lg mb-1">🏠</span>
-                  <span className="text-xs font-medium">Home</span>
+                  <span className="flex items-center space-x-2">
+                    <span className="text-lg">🏠</span>
+                    <span>Home</span>
+                  </span>
+                  {activeTab === 'home' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full"></div>
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('bible')}
-                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200 ${
+                  className={`relative px-4 py-3 text-sm font-medium transition-all duration-200 ${
                     activeTab === 'bible'
-                      ? 'bg-purple-50 text-purple-600'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      ? 'text-purple-600'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <span className="text-lg mb-1">📖</span>
-                  <span className="text-xs font-medium">Bible</span>
+                  <span className="flex items-center space-x-2">
+                    <span className="text-lg">📖</span>
+                    <span>Bible</span>
+                  </span>
+                  {activeTab === 'bible' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full"></div>
+                  )}
                 </button>
               </div>
             </div>
@@ -288,31 +302,31 @@ const LandingPage = ({ onNavigate }) => {
       </header>
 
 
-      <div className="max-w-4xl mx-auto px-4 py-6 md:py-4">
+      <div className="max-w-4xl mx-auto px-4 py-4 md:py-4">
         {/* Landing Page */}
         {activeTab === 'home' && (
           <>
-            {/* Mobile-First Hero Section */}
-            <div className="text-center py-6 md:py-20 mb-8 md:mb-20">
+            {/* Modern Mobile Hero Section */}
+            <div className="text-center py-8 md:py-20 mb-8 md:mb-20">
               <div className="max-w-5xl mx-auto">
-                {/* Mobile Logo */}
-                <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-purple-600 to-pink-500 rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 md:mb-8 shadow-xl">
-                  <span className="text-white font-black text-xl md:text-3xl">SL</span>
+                {/* Hero Logo */}
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-2xl">
+                  <span className="text-white font-black text-2xl md:text-3xl">SL</span>
                 </div>
                 
-                {/* Mobile-First Title */}
-                <h1 className="text-2xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-4 md:mb-8">
+                {/* Hero Title */}
+                <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-4 md:mb-8">
                   Welcome to <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">SpeakLife</span>
                 </h1>
-                <p className="text-sm md:text-2xl text-gray-600 mb-6 md:mb-12 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-base md:text-2xl text-gray-600 mb-8 md:mb-12 max-w-2xl mx-auto leading-relaxed">
                   Transform your spiritual journey with personalized confessions, divine verses, and guidance that speaks directly to your heart.
                 </p>
                 
-                {/* Mobile-First Buttons */}
-                <div className="flex flex-col md:flex-row gap-3 md:gap-6 justify-center">
+                {/* Hero Buttons */}
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center">
                   <button 
                     onClick={() => setShowRegistration(true)}
-                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 md:px-12 md:py-5 rounded-xl md:rounded-2xl text-sm md:text-xl font-bold hover:from-purple-700 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-2xl text-base md:text-xl font-bold hover:from-purple-700 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <span>✨</span>
@@ -320,7 +334,7 @@ const LandingPage = ({ onNavigate }) => {
                       <span>🚀</span>
                     </span>
                   </button>
-                  <button className="border-2 border-purple-600 text-purple-600 px-6 py-3 md:px-12 md:py-5 rounded-xl md:rounded-2xl text-sm md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <button className="border-2 border-purple-600 text-purple-600 px-8 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-2xl text-base md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
                     <span className="flex items-center justify-center gap-2">
                       <span>📚</span>
                       <span>Learn More</span>
