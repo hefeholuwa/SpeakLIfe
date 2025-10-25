@@ -59,8 +59,8 @@ class NotificationService {
 
     try {
       const notification = new Notification(title, {
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
+        icon: '/sl-icon.ico',
+        badge: '/sl-icon.ico',
         ...options
       });
 
@@ -112,12 +112,12 @@ class NotificationService {
         {
           action: 'read',
           title: 'Read More',
-          icon: '/favicon.ico'
+          icon: '/sl-icon.ico'
         },
         {
           action: 'confess',
           title: 'Confess',
-          icon: '/favicon.ico'
+          icon: '/sl-icon.ico'
         }
       ]
     };
@@ -136,7 +136,7 @@ class NotificationService {
         {
           action: 'confess',
           title: 'Start Confessing',
-          icon: '/favicon.ico'
+          icon: '/sl-icon.ico'
         }
       ]
     };
@@ -155,7 +155,7 @@ class NotificationService {
         {
           action: 'read',
           title: 'Start Reading',
-          icon: '/favicon.ico'
+          icon: '/sl-icon.ico'
         }
       ]
     };
@@ -174,7 +174,7 @@ class NotificationService {
         {
           action: 'view',
           title: 'View Achievement',
-          icon: '/favicon.ico'
+          icon: '/sl-icon.ico'
         }
       ]
     };

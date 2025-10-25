@@ -4,7 +4,7 @@
   "description": "A spiritual confession and reflection app for daily spiritual practice",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "sl-icon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
