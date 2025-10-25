@@ -37,26 +37,16 @@ export const AdminAuthProvider = ({ children }) => {
       const isAdminEmail = ADMIN_EMAILS.includes(user.email)
       
       if (isAdminEmail) {
-        // Get user profile to check for admin role
+        // For admin emails, we'll create/update the profile with admin role
+        // This avoids the RLS recursion issue
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching admin profile:', error)
-          return false
-        }
-
-        // If profile exists, check admin role
-        if (profile) {
-          const hasAdminRole = profile.role === 'admin' || profile.is_admin === true
-          setIsAdmin(hasAdminRole)
-          setAdminUser({ ...user, ...profile })
-          return hasAdminRole
-        } else {
-          // Create admin profile if it doesn't exist
+        if (error && error.code === 'PGRST116') {
+          // Profile doesn't exist, create admin profile
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
@@ -76,6 +66,30 @@ export const AdminAuthProvider = ({ children }) => {
 
           setIsAdmin(true)
           setAdminUser({ ...user, role: 'admin', is_admin: true })
+          return true
+        } else if (error) {
+          console.error('Error fetching admin profile:', error)
+          return false
+        } else {
+          // Profile exists, update to admin if needed
+          if (profile.role !== 'admin' || !profile.is_admin) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({
+                role: 'admin',
+                is_admin: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id)
+
+            if (updateError) {
+              console.error('Error updating admin profile:', updateError)
+              return false
+            }
+          }
+
+          setIsAdmin(true)
+          setAdminUser({ ...user, ...profile, role: 'admin', is_admin: true })
           return true
         }
       } else {
