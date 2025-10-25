@@ -129,9 +129,13 @@ RANDOMIZATION INSTRUCTIONS:
   // Generate daily verse with AI as the main source
   async generateDailyVerse() {
     try {
+      console.log('🎲 Generating daily verse with AI...')
+      
       // Get unused themes for better variety
       const availableThemes = this.getUnusedThemes()
       const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)]
+      
+      console.log('🎯 Selected theme:', randomTheme)
       
       // Track used theme
       this.usedThemes.add(randomTheme)
@@ -595,6 +599,12 @@ RANDOMIZATION INSTRUCTIONS:
   // Call OpenRouter API with free models
   async callOpenRouter(prompt, model = null, retryCount = 0) {
     try {
+      console.log('🔑 API Key check:', {
+        hasApiKey: !!this.apiKey,
+        apiKeyLength: this.apiKey ? this.apiKey.length : 0,
+        apiKeyStart: this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'none'
+      })
+      
       if (!this.apiKey) {
         throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY or REACT_APP_OPENROUTER_API_KEY in your environment variables.')
       }
@@ -630,17 +640,26 @@ RANDOMIZATION INSTRUCTIONS:
         })
       })
 
+      console.log('📡 API Response status:', response.status)
+      
       if (!response.ok) {
         // Handle rate limiting
         if (response.status === 429 && retryCount < 3) {
           const retryAfter = response.headers.get('Retry-After')
           const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, retryCount) * 1000 // Exponential backoff
           
+          console.log(`Rate limited, retrying in ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           return this.callOpenRouter(prompt, model, retryCount + 1)
         }
         
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('❌ API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText
+        })
+        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`)
       }
 
       const data = await response.json()
