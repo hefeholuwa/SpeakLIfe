@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <br>
+    <button onclick="downloadFavicon()">Download Favicon</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+        gradient.addColorStop(0, '#8B5CF6');
+        gradient.addColorStop(0.5, '#A855F7');
+        gradient.addColorStop(1, '#EC4899');
+        
+        // Draw rounded rectangle
+        ctx.fillStyle = gradient;
+        ctx.roundRect(0, 0, 32, 32, 8);
+        ctx.fill();
+        
+        // Draw SL text
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SL', 16, 18);
+        
+        // Draw green dot
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.arc(26, 8, 3, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        function downloadFavicon() {
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
