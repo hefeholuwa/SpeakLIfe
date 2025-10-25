@@ -671,6 +671,14 @@ RANDOMIZATION INSTRUCTIONS:
       cleaned = jsonMatch[0]
     }
     
+    // Fix common JSON issues
+    // Fix unquoted translation values (e.g., "translation": NIV -> "translation": "NIV")
+    cleaned = cleaned.replace(/"translation":\s*([A-Z0-9]+)(?=\s*[,}])/g, '"translation": "$1"')
+    
+    // Fix other unquoted string values that should be quoted
+    cleaned = cleaned.replace(/"book":\s*([A-Za-z0-9\s]+)(?=\s*[,}])/g, '"book": "$1"')
+    cleaned = cleaned.replace(/"reference":\s*([A-Za-z0-9\s:]+)(?=\s*[,}])/g, '"reference": "$1"')
+    
     // Handle incomplete JSON by finding the last complete object
     if (cleaned.includes('"verse_text"') && !cleaned.endsWith('}') && !cleaned.endsWith(']')) {
       // Find the last complete object
