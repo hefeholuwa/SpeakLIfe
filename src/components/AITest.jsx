@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AIGenerationService } from '../services/aiGenerationService.js'
+import aiGenerationService from '../services/aiGenerationService.js'
 
 const AITest = () => {
   const [logs, setLogs] = useState([])
@@ -14,26 +14,24 @@ const AITest = () => {
     addLog('🧪 Starting AI Generation Test...', 'info')
     
     try {
-      const aiService = new AIGenerationService()
-      
       // Check API key
-      addLog(`🔑 API Key configured: ${!!aiService.apiKey}`, aiService.apiKey ? 'success' : 'error')
-      addLog(`🔑 API Key length: ${aiService.apiKey ? aiService.apiKey.length : 0}`, 'info')
+      addLog(`🔑 API Key configured: ${!!aiGenerationService.apiKey}`, aiGenerationService.apiKey ? 'success' : 'error')
+      addLog(`🔑 API Key length: ${aiGenerationService.apiKey ? aiGenerationService.apiKey.length : 0}`, 'info')
       
-      if (!aiService.apiKey) {
+      if (!aiGenerationService.apiKey) {
         addLog('❌ No API key found. Check your .env file.', 'error')
         return
       }
       
       // Test daily verse generation
       addLog('📖 Testing daily verse generation...', 'info')
-      const verse = await aiService.generateDailyVerse()
+      const verse = await aiGenerationService.generateDailyVerse()
       addLog(`✅ Daily verse generated: ${verse.verse_text}`, 'success')
       addLog(`📖 Reference: ${verse.reference}`, 'info')
       
       // Test confession generation
       addLog('🙏 Testing confession generation...', 'info')
-      const confession = await aiService.generateConfessionForVerse(verse)
+      const confession = await aiGenerationService.generateConfessionForVerse(verse)
       addLog(`✅ Confession generated: ${confession.confession_text}`, 'success')
       
       addLog('🎉 All tests passed!', 'success')

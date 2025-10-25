@@ -51,17 +51,42 @@ class AIGenerationService {
           return false
       }
 
-      const { data, error } = await supabase
+      // Check for exact matches first
+      const { data: exactMatches, error: exactError } = await supabase
         .from(tableName)
         .select(fieldName)
-        .ilike(fieldName, `%${content.substring(0, 50)}%`)
+        .eq(fieldName, content)
 
-      if (error) {
-        console.error('Error checking duplicates:', error)
+      if (exactError) {
+        console.error('Error checking exact duplicates:', exactError)
         return false
       }
 
-      return data && data.length > 0
+      if (exactMatches && exactMatches.length > 0) {
+        console.log('🔍 Exact duplicate found')
+        return true
+      }
+
+      // Check for similar content (first 30 characters)
+      const contentStart = content.substring(0, 30).trim()
+      if (contentStart.length < 10) return false // Too short to be meaningful
+
+      const { data: similarMatches, error: similarError } = await supabase
+        .from(tableName)
+        .select(fieldName)
+        .ilike(fieldName, `%${contentStart}%`)
+
+      if (similarError) {
+        console.error('Error checking similar duplicates:', similarError)
+        return false
+      }
+
+      if (similarMatches && similarMatches.length > 0) {
+        console.log('🔍 Similar content found:', similarMatches.length, 'matches')
+        return true
+      }
+
+      return false
     } catch (error) {
       console.error('Error in duplicate check:', error)
       return false
@@ -71,12 +96,12 @@ class AIGenerationService {
   // Get unused themes for better variety
   getUnusedThemes() {
     const allThemes = [
-      'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory', 
-      'prayer and communion', 'hope and restoration', 'wisdom and understanding',
-      'peace and comfort', 'strength and endurance', 'salvation and redemption',
-      'holiness and sanctification', 'worship and praise', 'servanthood and humility',
-      'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
-      'perseverance and patience', 'divine protection', 'spiritual growth',
+        'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory', 
+        'prayer and communion', 'hope and restoration', 'wisdom and understanding',
+        'peace and comfort', 'strength and endurance', 'salvation and redemption',
+        'holiness and sanctification', 'worship and praise', 'servanthood and humility',
+        'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
+        'perseverance and patience', 'divine protection', 'spiritual growth',
       'kingdom principles', 'eternal perspective', 'divine purpose', 'spiritual authority',
       'divine timing', 'spiritual discernment', 'inner transformation', 'divine calling',
       'spiritual maturity', 'divine favor', 'spiritual breakthrough', 'divine alignment',
@@ -92,6 +117,22 @@ class AIGenerationService {
     }
     
     return unusedThemes
+  }
+
+  // Clear used content tracking to prevent memory buildup
+  clearUsedContent() {
+    if (this.usedThemes.size > 20) {
+      console.log('🧹 Clearing used themes to prevent memory buildup')
+      this.usedThemes.clear()
+    }
+    if (this.usedVerses.size > 50) {
+      console.log('🧹 Clearing used verses to prevent memory buildup')
+      this.usedVerses.clear()
+    }
+    if (this.usedConfessions.size > 30) {
+      console.log('🧹 Clearing used confessions to prevent memory buildup')
+      this.usedConfessions.clear()
+    }
   }
 
   // Get random model for variety
@@ -127,9 +168,15 @@ RANDOMIZATION INSTRUCTIONS:
   }
 
   // Generate daily verse with AI as the main source
-  async generateDailyVerse() {
+  async generateDailyVerse(retryCount = 0) {
     try {
-      console.log('🎲 Generating daily verse with AI...')
+      console.log(`🎲 Generating daily verse with AI... (attempt ${retryCount + 1})`)
+      
+      // Prevent infinite recursion
+      if (retryCount >= 3) {
+        console.log('⚠️ Max retries reached, using fallback content')
+        return this.getFallbackDailyVerse()
+      }
       
       // Get unused themes for better variety
       const availableThemes = this.getUnusedThemes()
@@ -205,21 +252,62 @@ RANDOMIZATION INSTRUCTIONS:
       // Check for duplicates in database
       const isDuplicate = await this.checkForDuplicates('verse', result.verse_text)
       if (isDuplicate) {
-        console.log('Duplicate verse detected, generating alternative...')
+        console.log(`Duplicate verse detected (attempt ${retryCount + 1}), generating alternative...`)
         // Track used verse reference
         this.usedVerses.add(result.reference)
         // Generate alternative with different approach
-        return await this.generateDailyVerse() // Recursive call with different randomization
+        return await this.generateDailyVerse(retryCount + 1) // Recursive call with retry count
       }
       
       // Track used verse reference
       this.usedVerses.add(result.reference)
       
+      // Clear used content to prevent memory buildup
+      this.clearUsedContent()
+      
       return result
     } catch (error) {
       console.error('Error generating daily verse:', error)
-      throw new Error('Failed to generate daily verse')
+      // Return fallback content instead of throwing error
+      return this.getFallbackDailyVerse()
     }
+  }
+
+  // Fallback daily verse when AI generation fails
+  getFallbackDailyVerse() {
+    const fallbackVerses = [
+      {
+        verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
+        reference: "Jeremiah 29:11",
+        book: "Jeremiah",
+        chapter: 29,
+        verse: 11,
+        translation: "NIV",
+        theme: "divine purpose"
+      },
+      {
+        verse_text: "I can do all things through Christ who strengthens me.",
+        reference: "Philippians 4:13",
+        book: "Philippians",
+        chapter: 4,
+        verse: 13,
+        translation: "KJV",
+        theme: "strength and endurance"
+      },
+      {
+        verse_text: "Trust in the Lord with all your heart and lean not on your own understanding.",
+        reference: "Proverbs 3:5",
+        book: "Proverbs",
+        chapter: 3,
+        verse: 5,
+        translation: "NIV",
+        theme: "faith and trust"
+      }
+    ]
+    
+    const randomFallback = fallbackVerses[Math.floor(Math.random() * fallbackVerses.length)]
+    console.log('📖 Using fallback verse:', randomFallback.reference)
+    return randomFallback
   }
 
   // Generate confession related to the verse
@@ -641,7 +729,7 @@ RANDOMIZATION INSTRUCTIONS:
       })
 
       console.log('📡 API Response status:', response.status)
-      
+
       if (!response.ok) {
         // Handle rate limiting
         if (response.status === 429 && retryCount < 3) {
