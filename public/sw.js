@@ -1,12 +1,13 @@
 // Service Worker for SpeakLife App
 // Handles background notifications and offline functionality
 
-const CACHE_NAME = 'speaklife-v1';
+const CACHE_NAME = 'speaklife-v2';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
   '/static/css/main.css',
-  '/favicon.ico',
+  '/sl-icon.ico',
+  '/sl-icon.svg',
   '/manifest.json'
 ];
 
@@ -71,20 +72,20 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'You have a new notification from SpeakLife',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/sl-icon.ico',
+    badge: '/sl-icon.ico',
     tag: data.tag || 'speaklife-notification',
     requireInteraction: data.requireInteraction || false,
     actions: data.actions || [
       {
         action: 'open',
         title: 'Open App',
-        icon: '/favicon.ico'
+        icon: '/sl-icon.ico'
       },
       {
         action: 'dismiss',
         title: 'Dismiss',
-        icon: '/favicon.ico'
+        icon: '/sl-icon.ico'
       }
     ]
   };
@@ -272,7 +273,7 @@ async function syncDailyVerse() {
     // Show notification
     await self.registration.showNotification('📖 Daily Verse - SpeakLife', {
       body: `${data.verse}\n\n${data.confession}`,
-      icon: '/favicon.ico',
+      icon: '/sl-icon.ico',
       tag: 'daily-verse',
       requireInteraction: true
     });
