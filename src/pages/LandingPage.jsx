@@ -166,116 +166,121 @@ const LandingPage = ({ onNavigate }) => {
             </div>
           </div>
           
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-4">
-                <div className="relative group">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                    <span className="text-white font-black text-2xl">SL</span>
+          {/* Premium Desktop Layout */}
+          <div className="hidden md:block">
+            {/* Premium Header */}
+            <div className="flex items-center justify-between py-4">
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative group">
+                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                      <span className="text-white font-black text-3xl">SL</span>
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white animate-pulse shadow-lg"></div>
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                  <div>
+                    <h1 className="text-3xl font-black text-gray-800 mb-1">SpeakLife</h1>
+                    <p className="text-sm text-gray-500 font-medium">Transform Your Spiritual Journey</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black text-gray-800">SpeakLife</h1>
-                  <p className="text-sm text-gray-600 font-medium">One Confession at a Time</p>
+                
+                {/* Premium Navigation */}
+                <div className="flex items-center space-x-1 bg-white/80 backdrop-blur-xl rounded-2xl p-1 shadow-lg border border-white/30">
+                  <button
+                    onClick={() => setActiveTab('home')}
+                    className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                      activeTab === 'home'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg transform scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    🏠 Home
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('bible')}
+                    className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                      activeTab === 'bible'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg transform scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    📖 Bible
+                  </button>
                 </div>
               </div>
               
-              {/* Header Options */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setActiveTab('home')}
-                  className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    activeTab === 'home'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
-                  }`}
-                >
-                  🏠 Home
-                </button>
-                <button
-                  onClick={() => setActiveTab('bible')}
-                  className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    activeTab === 'bible'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
-                  }`}
-                >
-                  📖 Bible
-                </button>
-              </div>
-            </div>
-            
-            {/* Enhanced Search Bar */}
-            <div className="max-w-md">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search bible"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+              {/* Premium Search Bar */}
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl blur-sm opacity-30"></div>
+                  <input
+                    type="text"
+                    placeholder="Search Bible verses..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const event = new CustomEvent('searchBible', { detail: searchQuery })
+                        window.dispatchEvent(event)
+                      }
+                    }}
+                    className="relative w-80 pl-12 pr-14 py-4 bg-white/90 backdrop-blur-sm border border-white/30 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-xl text-gray-700 placeholder-gray-400"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-gray-400 text-xl">🔍</span>
+                  </div>
+                  <button
+                    onClick={() => {
                       const event = new CustomEvent('searchBible', { detail: searchQuery })
                       window.dispatchEvent(event)
-                    }
-                  }}
-                  className="w-full pl-12 pr-14 py-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-lg"
-                />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-lg">🔍</span>
+                    }}
+                    disabled={!searchQuery.trim()}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span className="text-xl">🚀</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    const event = new CustomEvent('searchBible', { detail: searchQuery })
-                    window.dispatchEvent(event)
-                  }}
-                  disabled={!searchQuery.trim()}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span className="text-lg">🚀</span>
-                </button>
+                
+                {/* Premium Profile Section */}
+                <div className="flex items-center space-x-4">
+                  {user ? (
+                    <>
+                      <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg border border-white/30">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-sm">
+                            {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                          </span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">
+                          {user.user_metadata?.full_name || 'User'}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={() => onNavigate('dashboard')}
+                        className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
+                      >
+                        🚀 Dashboard
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => setShowLogin(true)}
+                        className="text-gray-600 hover:text-gray-900 px-6 py-3 rounded-xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
+                      >
+                        🔑 Sign In
+                      </button>
+                      <button 
+                        onClick={() => setShowRegistration(true)}
+                        className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
+                      >
+                        ✨ Get Started
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-            
-            {/* Enhanced Profile Section */}
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-sm">
-                        {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-800">
-                      {user.user_metadata?.full_name || 'User'}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => onNavigate('dashboard')}
-                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    🚀 Dashboard
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button 
-                    onClick={() => setShowRegistration(true)}
-                    className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-2xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    ✨ Get Started
-                  </button>
-                  <button 
-                    onClick={() => setShowLogin(true)}
-                    className="text-gray-600 hover:text-gray-900 px-4 py-3 rounded-2xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
-                  >
-                    🔑 Sign In
-                  </button>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -286,25 +291,44 @@ const LandingPage = ({ onNavigate }) => {
         {/* Landing Page */}
         {activeTab === 'home' && (
           <>
-            {/* Simple Hero Section */}
-            <div className="text-center py-6 md:py-20 mb-8 md:mb-20">
-              <div className="max-w-3xl mx-auto">
-                <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
-                  Welcome to <span className="text-purple-600">SpeakLife</span>
+            {/* Premium Hero Section */}
+            <div className="text-center py-8 md:py-20 mb-12 md:mb-24">
+              <div className="max-w-6xl mx-auto">
+                {/* Premium Logo */}
+                <div className="relative mb-8 md:mb-12">
+                  <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-110 hover:rotate-3">
+                    <span className="text-white font-black text-3xl md:text-4xl">SL</span>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white animate-pulse shadow-lg"></div>
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-400 to-pink-400 opacity-0 hover:opacity-20 transition-opacity duration-500"></div>
+                </div>
+                
+                {/* Premium Title */}
+                <h1 className="text-3xl md:text-7xl lg:text-8xl font-black text-gray-800 mb-6 md:mb-8">
+                  Welcome to <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 bg-clip-text text-transparent">SpeakLife</span>
                 </h1>
-                <p className="text-base md:text-xl text-gray-600 mb-6 md:mb-8">
-                  Transform your spiritual journey with personalized confessions, divine verses, and guidance.
+                <p className="text-lg md:text-2xl text-gray-600 mb-8 md:mb-12 max-w-4xl mx-auto leading-relaxed">
+                  Transform your spiritual journey with personalized confessions, divine verses, and guidance that speaks directly to your heart.
                 </p>
                 
-                <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
+                {/* Premium Buttons */}
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center">
                   <button 
                     onClick={() => setShowRegistration(true)}
-                    className="bg-purple-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-lg text-base md:text-lg font-semibold hover:bg-purple-700 transition-colors"
+                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-8 md:px-12 py-4 md:py-6 rounded-2xl text-base md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
                   >
-                    Get Started
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="text-2xl">✨</span>
+                      <span>Get Started</span>
+                      <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
+                    </span>
                   </button>
-                  <button className="border border-purple-600 text-purple-600 px-6 py-3 md:px-8 md:py-4 rounded-lg text-base md:text-lg font-semibold hover:bg-purple-50 transition-colors">
-                    Learn More
+                  <button className="group border-2 border-purple-600 text-purple-600 px-8 md:px-12 py-4 md:py-6 rounded-2xl text-base md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="text-2xl">📚</span>
+                      <span>Learn More</span>
+                      <span className="text-2xl group-hover:rotate-12 transition-transform duration-300">💡</span>
+                    </span>
                   </button>
                 </div>
               </div>
