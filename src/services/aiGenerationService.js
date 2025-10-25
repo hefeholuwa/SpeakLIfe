@@ -17,29 +17,131 @@ class AIGenerationService {
       'google/gemma-2-9b-it', // GOOD - Google's lightweight model
       'qwen/qwen-2.5-7b-instruct' // GOOD - Alibaba's multilingual model
     ]
+    
+    // Enhanced randomization and duplicate checking
+    this.generatedContent = new Set() // Track generated content to avoid duplicates
+    this.usedThemes = new Set() // Track used themes for better variety
+    this.usedVerses = new Set() // Track used verse references
+    this.usedConfessions = new Set() // Track used confession patterns
+  }
+
+  // Check for duplicate content in database
+  async checkForDuplicates(contentType, content) {
+    try {
+      let tableName, fieldName
+      
+      switch (contentType) {
+        case 'verse':
+          tableName = 'daily_verses'
+          fieldName = 'verse_text'
+          break
+        case 'confession':
+          tableName = 'daily_verses'
+          fieldName = 'confession_text'
+          break
+        case 'topic_verse':
+          tableName = 'topic_verses'
+          fieldName = 'verse_text'
+          break
+        case 'topic_confession':
+          tableName = 'topic_confessions'
+          fieldName = 'confession_text'
+          break
+        default:
+          return false
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(fieldName)
+        .ilike(fieldName, `%${content.substring(0, 50)}%`)
+
+      if (error) {
+        console.error('Error checking duplicates:', error)
+        return false
+      }
+
+      return data && data.length > 0
+    } catch (error) {
+      console.error('Error in duplicate check:', error)
+      return false
+    }
+  }
+
+  // Get unused themes for better variety
+  getUnusedThemes() {
+    const allThemes = [
+      'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory', 
+      'prayer and communion', 'hope and restoration', 'wisdom and understanding',
+      'peace and comfort', 'strength and endurance', 'salvation and redemption',
+      'holiness and sanctification', 'worship and praise', 'servanthood and humility',
+      'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
+      'perseverance and patience', 'divine protection', 'spiritual growth',
+      'kingdom principles', 'eternal perspective', 'divine purpose', 'spiritual authority',
+      'divine timing', 'spiritual discernment', 'inner transformation', 'divine calling',
+      'spiritual maturity', 'divine favor', 'spiritual breakthrough', 'divine alignment',
+      'spiritual warfare', 'divine strategy', 'spiritual inheritance', 'divine restoration'
+    ]
+    
+    const unusedThemes = allThemes.filter(theme => !this.usedThemes.has(theme))
+    
+    // If all themes used, reset and start fresh
+    if (unusedThemes.length === 0) {
+      this.usedThemes.clear()
+      return allThemes
+    }
+    
+    return unusedThemes
+  }
+
+  // Get random model for variety
+  getRandomModel() {
+    const availableModels = this.freeModels.filter(model => 
+      model !== this.model // Don't use the same model twice in a row
+    )
+    
+    if (availableModels.length === 0) {
+      return this.freeModels[Math.floor(Math.random() * this.freeModels.length)]
+    }
+    
+    return availableModels[Math.floor(Math.random() * availableModels.length)]
+  }
+
+  // Enhanced randomization with content tracking
+  getRandomizedPrompt(basePrompt, contentType) {
+    const timestamp = Date.now()
+    const randomSeed = Math.floor(Math.random() * 1000000)
+    const sessionId = Math.random().toString(36).substring(7)
+    
+    return `${basePrompt}
+
+RANDOMIZATION INSTRUCTIONS:
+- Current timestamp: ${timestamp}
+- Random seed: ${randomSeed}
+- Session ID: ${sessionId}
+- Content type: ${contentType}
+- Generate completely unique content that has never been generated before
+- Use creative variations in language, structure, and approach
+- Avoid any patterns from previous generations
+- Be innovative and fresh in your approach`
   }
 
   // Generate daily verse with AI as the main source
   async generateDailyVerse() {
     try {
-      const themes = [
-        'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory', 
-        'prayer and communion', 'hope and restoration', 'wisdom and understanding',
-        'peace and comfort', 'strength and endurance', 'salvation and redemption',
-        'holiness and sanctification', 'worship and praise', 'servanthood and humility',
-        'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
-        'perseverance and patience', 'divine protection', 'spiritual growth',
-        'kingdom principles', 'eternal perspective', 'divine purpose', 'spiritual authority'
-      ]
+      // Get unused themes for better variety
+      const availableThemes = this.getUnusedThemes()
+      const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)]
       
-      const randomTheme = themes[Math.floor(Math.random() * themes.length)]
+      // Track used theme
+      this.usedThemes.add(randomTheme)
       
       const translations = [
         'KJV', 'NKJV', 'NIV', 'AMP', 'ESV', 'NLT'
       ]
       const randomTranslation = translations[Math.floor(Math.random() * translations.length)]
       
-      const prompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, LESS COMMON Bible verse for today's daily devotion.
+      const basePrompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, LESS COMMON Bible verse for today's daily devotion.
 
       CRITICAL: You must provide the EXACT text of a REAL Bible verse, not a confession or interpretation.
 
@@ -84,6 +186,7 @@ class AIGenerationService {
       
       REMEMBER: The translation field is MANDATORY and must match the ${randomTranslation} you are using.`
 
+      const prompt = this.getRandomizedPrompt(basePrompt, 'daily_verse')
       const response = await this.callOpenRouter(prompt)
       const cleanedResponse = this.cleanJsonResponse(response)
       
@@ -94,6 +197,19 @@ class AIGenerationService {
       if (!result.translation) {
         result.translation = randomTranslation
       }
+      
+      // Check for duplicates in database
+      const isDuplicate = await this.checkForDuplicates('verse', result.verse_text)
+      if (isDuplicate) {
+        console.log('Duplicate verse detected, generating alternative...')
+        // Track used verse reference
+        this.usedVerses.add(result.reference)
+        // Generate alternative with different approach
+        return await this.generateDailyVerse() // Recursive call with different randomization
+      }
+      
+      // Track used verse reference
+      this.usedVerses.add(result.reference)
       
       return result
     } catch (error) {
@@ -112,7 +228,14 @@ class AIGenerationService {
         'spiritual breakthrough', 'kingdom advancement', 'spiritual authority'
       ]
       
-      const randomStyle = confessionStyles[Math.floor(Math.random() * confessionStyles.length)]
+      // Get unused confession styles for variety
+      const availableStyles = confessionStyles.filter(style => !this.usedConfessions.has(style))
+      const randomStyle = availableStyles.length > 0 
+        ? availableStyles[Math.floor(Math.random() * availableStyles.length)]
+        : confessionStyles[Math.floor(Math.random() * confessionStyles.length)]
+      
+      // Track used style
+      this.usedConfessions.add(randomStyle)
       
       const prompt = `CRITICAL: Generate a confession that DIRECTLY aligns with this specific Bible verse: "${verseData.verse_text}" (${verseData.reference})
 
@@ -155,7 +278,17 @@ class AIGenerationService {
       }`
 
       const response = await this.callOpenRouter(prompt)
-      return JSON.parse(this.cleanJsonResponse(response))
+      const result = JSON.parse(this.cleanJsonResponse(response))
+      
+      // Check for duplicates in database
+      const isDuplicate = await this.checkForDuplicates('confession', result.confession_text)
+      if (isDuplicate) {
+        console.log('Duplicate confession detected, generating alternative...')
+        // Generate alternative with different approach
+        return await this.generateConfessionForVerse(verseData) // Recursive call with different randomization
+      }
+      
+      return result
     } catch (error) {
       console.error('Error generating confession:', error)
       throw new Error('Failed to generate confession')
@@ -245,7 +378,27 @@ class AIGenerationService {
           return [parsed]
         }
         
-        return parsed
+        // Check for duplicates in each verse
+        const uniqueVerses = []
+        for (const verse of parsed) {
+          const isDuplicate = await this.checkForDuplicates('topic_verse', verse.verse_text)
+          if (!isDuplicate) {
+            uniqueVerses.push(verse)
+            // Track used verse reference
+            this.usedVerses.add(verse.reference)
+          } else {
+            console.log(`Duplicate verse detected: ${verse.reference}`)
+          }
+        }
+        
+        // If we have fewer unique verses than requested, generate more
+        if (uniqueVerses.length < count) {
+          const additionalCount = count - uniqueVerses.length
+          const additionalVerses = await this.generateTopicVerses(topic, additionalCount, [...existingVerses, ...uniqueVerses])
+          uniqueVerses.push(...additionalVerses)
+        }
+        
+        return uniqueVerses.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
         console.error('Raw response:', response)
@@ -335,7 +488,27 @@ class AIGenerationService {
           return [parsed]
         }
         
-        return parsed
+        // Check for duplicates in each confession
+        const uniqueConfessions = []
+        for (const confession of parsed) {
+          const isDuplicate = await this.checkForDuplicates('topic_confession', confession.confession_text)
+          if (!isDuplicate) {
+            uniqueConfessions.push(confession)
+            // Track used confession pattern
+            this.usedConfessions.add(confession.title)
+          } else {
+            console.log(`Duplicate confession detected: ${confession.title}`)
+          }
+        }
+        
+        // If we have fewer unique confessions than requested, generate more
+        if (uniqueConfessions.length < count) {
+          const additionalCount = count - uniqueConfessions.length
+          const additionalConfessions = await this.generateTopicConfessions(topic, additionalCount, [...existingConfessions, ...uniqueConfessions])
+          uniqueConfessions.push(...additionalConfessions)
+        }
+        
+        return uniqueConfessions.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
         console.error('Raw response:', response)
@@ -426,8 +599,8 @@ class AIGenerationService {
         throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY or REACT_APP_OPENROUTER_API_KEY in your environment variables.')
       }
 
-      // Use specified model, default model, or random free model
-      const selectedModel = model || this.model || this.getRandomFreeModel()
+      // Use specified model, random model for variety, or default model
+      const selectedModel = model || this.getRandomModel() || this.model
 
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
@@ -450,7 +623,10 @@ class AIGenerationService {
             }
           ],
           max_tokens: 2000,
-          temperature: 0.7
+          temperature: 0.8 + Math.random() * 0.2, // Random temperature between 0.8-1.0 for more creativity
+          top_p: 0.9,
+          frequency_penalty: 0.1,
+          presence_penalty: 0.1
         })
       })
 
