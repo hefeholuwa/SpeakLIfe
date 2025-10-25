@@ -131,27 +131,21 @@ const LandingPage = ({ onNavigate }) => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center">
                 <button 
                   onClick={() => setShowLogin(true)}
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-xl hover:bg-white/50 backdrop-blur-sm transition-all duration-300 text-sm font-bold"
                 >
                   🔑 Sign In
                 </button>
-                <button 
-                  onClick={() => setShowRegistration(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-600 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  Get Started
-                </button>
               </div>
             </div>
             
             {/* Navigation */}
-            <div className="flex items-center justify-center space-x-1 mb-4">
+            <div className="flex items-center justify-center space-x-1 mb-2">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                   activeTab === 'home'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
@@ -161,7 +155,7 @@ const LandingPage = ({ onNavigate }) => {
               </button>
               <button
                 onClick={() => setActiveTab('bible')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                   activeTab === 'bible'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 backdrop-blur-sm'
@@ -169,38 +163,6 @@ const LandingPage = ({ onNavigate }) => {
               >
                 📖 Bible
               </button>
-            </div>
-            
-            {/* Enhanced Search Bar */}
-            <div className="w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search bible"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const event = new CustomEvent('searchBible', { detail: searchQuery })
-                      window.dispatchEvent(event)
-                    }
-                  }}
-                  className="w-full pl-10 pr-12 py-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm shadow-lg"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-lg">🔍</span>
-                </div>
-                <button
-                  onClick={() => {
-                    const event = new CustomEvent('searchBible', { detail: searchQuery })
-                    window.dispatchEvent(event)
-                  }}
-                  disabled={!searchQuery.trim()}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-purple-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span className="text-lg">🚀</span>
-                </button>
-              </div>
             </div>
           </div>
           
@@ -349,22 +311,22 @@ const LandingPage = ({ onNavigate }) => {
                   Transform your spiritual journey with personalized confessions, divine verses, and guidance that speaks directly to your heart.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                   <button 
                     onClick={() => setShowRegistration(true)}
-                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
+                    className="group bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white px-4 sm:px-6 md:px-12 py-2.5 sm:py-3 md:py-5 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-xl font-bold hover:from-purple-700 hover:via-pink-600 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
                   >
-                    <span className="flex items-center justify-center gap-3">
-                      <span className="text-2xl">✨</span>
+                    <span className="flex items-center justify-center gap-2 sm:gap-3">
+                      <span className="text-lg sm:text-xl">✨</span>
                       <span>Get Started</span>
-                      <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
+                      <span className="text-lg sm:text-xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
                     </span>
                   </button>
-                  <button className="group border-2 border-purple-600 text-purple-600 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                    <span className="flex items-center justify-center gap-3">
-                      <span className="text-2xl">📚</span>
+                  <button className="group border-2 border-purple-600 text-purple-600 px-4 sm:px-6 md:px-12 py-2.5 sm:py-3 md:py-5 rounded-xl sm:rounded-2xl text-sm sm:text-base md:text-xl font-bold hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <span className="flex items-center justify-center gap-2 sm:gap-3">
+                      <span className="text-lg sm:text-xl">📚</span>
                       <span>Learn More</span>
-                      <span className="text-2xl group-hover:rotate-12 transition-transform duration-300">💡</span>
+                      <span className="text-lg sm:text-xl group-hover:rotate-12 transition-transform duration-300">💡</span>
                     </span>
                   </button>
                 </div>
@@ -372,43 +334,43 @@ const LandingPage = ({ onNavigate }) => {
             </div>
 
             {/* Enhanced Features Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mb-12 sm:mb-16 md:mb-24">
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  <span className="text-white text-3xl md:text-4xl">🙏</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-12 mb-8 sm:mb-12 md:mb-24">
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 p-4 sm:p-6 md:p-10 text-center hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 animate-fade-in-up">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 shadow-lg sm:shadow-xl group-hover:shadow-xl sm:group-hover:shadow-2xl group-hover:scale-105 sm:group-hover:scale-110 transition-all duration-300">
+                  <span className="text-white text-2xl sm:text-3xl md:text-4xl">🙏</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Personalized Confessions</h3>
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6">Personalized Confessions</h3>
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
                   Generate spiritual confessions tailored to your journey and current season of life.
                 </p>
-                <div className="mt-6 w-12 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto group-hover:w-16 transition-all duration-300"></div>
+                <div className="mt-4 sm:mt-6 w-8 sm:w-12 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto group-hover:w-12 sm:group-hover:w-16 transition-all duration-300"></div>
               </div>
               
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  <span className="text-white text-3xl md:text-4xl">📖</span>
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 p-4 sm:p-6 md:p-10 text-center hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 shadow-lg sm:shadow-xl group-hover:shadow-xl sm:group-hover:shadow-2xl group-hover:scale-105 sm:group-hover:scale-110 transition-all duration-300">
+                  <span className="text-white text-2xl sm:text-3xl md:text-4xl">📖</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Personalized Verses</h3>
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6">Personalized Verses</h3>
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
                   Discover unique Bible verses and confessions that speak directly to your spiritual focus areas.
                 </p>
-                <div className="mt-6 w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mx-auto group-hover:w-16 transition-all duration-300"></div>
+                <div className="mt-4 sm:mt-6 w-8 sm:w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mx-auto group-hover:w-12 sm:group-hover:w-16 transition-all duration-300"></div>
               </div>
               
-              <div className="group bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-10 text-center hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300">
-                  <span className="text-white text-3xl md:text-4xl">✨</span>
+              <div className="group bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 p-4 sm:p-6 md:p-10 text-center hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-8 shadow-lg sm:shadow-xl group-hover:shadow-xl sm:group-hover:shadow-2xl group-hover:scale-105 sm:group-hover:scale-110 transition-all duration-300">
+                  <span className="text-white text-2xl sm:text-3xl md:text-4xl">✨</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Divine Guidance</h3>
-                <p className="text-base md:text-lg text-gray-600 leading-relaxed">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6">Divine Guidance</h3>
+                <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed">
                   Receive spiritual guidance and encouragement that understands your faith journey.
                 </p>
-                <div className="mt-6 w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto group-hover:w-16 transition-all duration-300"></div>
+                <div className="mt-4 sm:mt-6 w-8 sm:w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto group-hover:w-12 sm:group-hover:w-16 transition-all duration-300"></div>
               </div>
             </div>
 
             {/* Enhanced CTA Section */}
-            <div className="relative bg-gradient-to-br from-purple-600 via-pink-500 to-purple-600 rounded-3xl p-8 md:p-16 text-center text-white overflow-hidden">
+            <div className="relative bg-gradient-to-br from-purple-600 via-pink-500 to-purple-600 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-16 text-center text-white overflow-hidden">
               {/* Animated Background Elements */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-purple-600"></div>
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/20"></div>
@@ -425,18 +387,18 @@ const LandingPage = ({ onNavigate }) => {
                 <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-8">
                   <span className="text-white text-3xl animate-pulse">🌟</span>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-black mb-6 md:mb-8">Ready to Transform Your Spiritual Life?</h2>
-                <p className="text-xl md:text-2xl mb-10 md:mb-12 opacity-90 px-4 max-w-4xl mx-auto leading-relaxed">
+                <h2 className="text-2xl sm:text-3xl md:text-5xl font-black mb-4 sm:mb-6 md:mb-8">Ready to Transform Your Spiritual Life?</h2>
+                <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 md:mb-12 opacity-90 px-4 max-w-4xl mx-auto leading-relaxed">
                   Join thousands of believers who are experiencing deeper spiritual growth through personalized confessions.
                 </p>
                 <button 
                   onClick={() => onNavigate('dashboard')}
-                  className="group bg-white text-purple-600 px-10 md:px-16 py-4 md:py-6 rounded-2xl text-lg md:text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
+                  className="group bg-white text-purple-600 px-6 sm:px-10 md:px-16 py-3 sm:py-4 md:py-6 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-xl sm:shadow-2xl hover:shadow-2xl sm:hover:shadow-3xl transform hover:scale-105"
                 >
-                  <span className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">🚀</span>
+                  <span className="flex items-center justify-center gap-2 sm:gap-3">
+                    <span className="text-lg sm:text-xl md:text-2xl">🚀</span>
                     <span>Start Your Journey</span>
-                    <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">✨</span>
+                    <span className="text-lg sm:text-xl md:text-2xl group-hover:translate-x-1 transition-transform duration-300">✨</span>
                   </span>
                 </button>
               </div>
