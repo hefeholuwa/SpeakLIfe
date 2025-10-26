@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+// Use fallback values for testing
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
 
 console.log('Environment check:', {
   hasSupabaseUrl: !!supabaseUrl,
@@ -10,29 +11,20 @@ console.log('Environment check:', {
   keyLength: supabaseAnonKey?.length || 0
 })
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-    supabaseAnonKey: supabaseAnonKey ? 'Present' : 'Missing'
-  })
+// Check if we're using placeholder values
+const isUsingPlaceholders = supabaseUrl.includes('placeholder') || supabaseAnonKey.includes('placeholder')
+
+if (isUsingPlaceholders) {
+  console.warn('Using placeholder Supabase credentials - app will show demo mode')
   
-  // Show error message on page
-  document.body.innerHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
-      <div style="text-align: center; padding: 20px; border: 2px solid #ef4444; border-radius: 8px; background: #fef2f2;">
-        <h2 style="color: #dc2626; margin-bottom: 16px;">Configuration Error</h2>
-        <p style="color: #7f1d1d; margin-bottom: 8px;">Missing environment variables:</p>
-        <ul style="color: #7f1d1d; text-align: left;">
-          <li>VITE_SUPABASE_URL: ${supabaseUrl ? '✓ Present' : '✗ Missing'}</li>
-          <li>VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✓ Present' : '✗ Missing'}</li>
-        </ul>
-        <p style="color: #7f1d1d; margin-top: 16px; font-size: 14px;">
-          Please set these environment variables in your Vercel dashboard.
-        </p>
-      </div>
+  // Show demo mode message
+  const demoMessage = document.createElement('div')
+  demoMessage.innerHTML = `
+    <div style="position: fixed; top: 0; left: 0; right: 0; background: #fbbf24; color: #92400e; padding: 12px; text-align: center; z-index: 9999; font-family: Arial, sans-serif;">
+      <strong>Demo Mode:</strong> Environment variables not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel dashboard.
     </div>
   `
-  throw new Error('Missing required environment variables')
+  document.body.appendChild(demoMessage)
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
