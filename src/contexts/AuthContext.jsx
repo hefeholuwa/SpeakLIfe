@@ -18,17 +18,53 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
   const [hasDispatchedVerified, setHasDispatchedVerified] = useState(false)
 
-  // Simplified user profile loading - just set to null for now to prevent hanging
-  // Updated to fix infinite loading issue
+  // Load user profile from profiles table
   const loadUserProfile = async (authUser) => {
     if (!authUser) {
       setUserProfile(null)
       return
     }
     
-    // For now, just set userProfile to null to prevent hanging
-    // We can implement proper profile loading later
-    setUserProfile(null)
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create one
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authUser.id,
+              email: authUser.email,
+              full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
+              role: 'user',
+              is_admin: false
+            })
+            .select()
+            .single()
+
+          if (createError) {
+            console.error('Error creating profile:', createError)
+            setUserProfile(null)
+            return
+          }
+
+          setUserProfile(newProfile)
+        } else {
+          console.error('Error loading profile:', error)
+          setUserProfile(null)
+        }
+      } else {
+        setUserProfile(profile)
+      }
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error)
+      setUserProfile(null)
+    }
   }
 
   useEffect(() => {
