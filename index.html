@@ -10,12 +10,42 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>SpeakLife - v4 CACHE BUSTED</title>
-    <script src="/force-reload.js?v=4"></script>
     <script>
-      // Immediate cache busting
-      console.log('🚀 SpeakLife v4 - Cache busting active');
-      if (window.location.search.indexOf('v=') === -1) {
-        window.location.href = window.location.href + '?v=' + Date.now();
+      // ULTRA AGGRESSIVE CACHE BUSTING - v5
+      console.log('🚀 SpeakLife v5 - ULTRA AGGRESSIVE cache busting');
+      
+      // Clear ALL caches immediately
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          console.log('🗑️ Clearing ALL caches:', names);
+          names.forEach(function(name) {
+            caches.delete(name);
+          });
+        });
+      }
+      
+      // Force reload with multiple parameters
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 9);
+      const url = new URL(window.location);
+      
+      // Add multiple cache busting parameters
+      url.searchParams.set('v', 'v5-' + timestamp);
+      url.searchParams.set('t', timestamp);
+      url.searchParams.set('cb', random);
+      url.searchParams.set('force', 'true');
+      
+      console.log('🔄 Current URL:', window.location.href);
+      console.log('🔄 New URL:', url.href);
+      
+      // ALWAYS redirect to force fresh load
+      if (url.href !== window.location.href) {
+        console.log('🔄 REDIRECTING to:', url.href);
+        window.location.replace(url.href);
+      } else {
+        // Force reload even if URL is the same
+        console.log('🔄 FORCING RELOAD');
+        window.location.reload(true);
       }
     </script>
   </head>

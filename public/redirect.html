@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting to SpeakLife...</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container { text-align: center; }
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 5px solid rgba(255,255,255,0.3); 
+            border-top: 5px solid white; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SpeakLife</h1>
+        <div class="spinner"></div>
+        <p>Redirecting to the latest version...</p>
+        <p id="status">Clearing cache and loading fresh content...</p>
+    </div>
+
+    <script>
+        // ULTRA AGGRESSIVE CACHE BUSTING
+        console.log('🚀 SpeakLife Redirect - Clearing ALL caches');
+        
+        // Clear ALL caches
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                console.log('🗑️ Clearing caches:', names);
+                names.forEach(function(name) {
+                    caches.delete(name);
+                });
+            });
+        }
+        
+        // Force redirect with multiple cache busting parameters
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 9);
+        const redirectUrl = `https://speak-l-ife.vercel.app/?v=v5-${timestamp}&t=${timestamp}&cb=${random}&force=true&redirect=1`;
+        
+        console.log('🔄 Redirecting to:', redirectUrl);
+        document.getElementById('status').textContent = 'Redirecting to: ' + redirectUrl;
+        
+        // Force redirect after a short delay
+        setTimeout(function() {
+            window.location.replace(redirectUrl);
+        }, 1000);
+    </script>
+</body>
+</html>
