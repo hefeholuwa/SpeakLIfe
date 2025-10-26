@@ -32,10 +32,10 @@ export default defineConfig({
                 icons: ['lucide-react'],
                 forms: ['react-hook-form', '@hookform/resolvers', 'zod']
               },
-              // Force cache busting with timestamp
-              entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-              chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-              assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
+              // Force cache busting with hash
+              entryFileNames: `assets/[name]-[hash].js`,
+              chunkFileNames: `assets/[name]-[hash].js`,
+              assetFileNames: `assets/[name]-[hash].[ext]`
             }
           },
           chunkSizeWarningLimit: 1000,
