@@ -2,8 +2,8 @@ import { supabase } from '../supabaseClient.jsx'
 
 class AIGenerationService {
   constructor() {
-    // Use import.meta.env for Vite or fallback to empty string
-    this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || import.meta.env?.REACT_APP_OPENROUTER_API_KEY || ''
+    // Use import.meta.env for Vite or fallback to process.env for Vercel
+    this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || ''
     this.baseURL = 'https://openrouter.ai/api/v1'
     this.model = 'mistralai/mistral-small-3.2-24b-instruct:free' // BEST FREE model - 24B parameters, excellent reasoning
     this.freeModels = [

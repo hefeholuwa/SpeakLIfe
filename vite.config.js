@@ -17,5 +17,28 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs', '@radix-ui/react-accordion', '@radix-ui/react-alert-dialog'],
+          supabase: ['@supabase/supabase-js'],
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          icons: ['lucide-react'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+    target: 'es2015',
+    cssCodeSplit: true
+  },
+  define: {
+    global: 'globalThis',
   }
 })

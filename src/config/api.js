@@ -1,8 +1,8 @@
 // API Configuration
 export const API_CONFIG = {
-  OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY,
+  OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY,
   OPENROUTER_BASE_URL: 'https://openrouter.ai/api/v1',
-  SCRIPTURE_API_KEY: import.meta.env.VITE_SCRIPTURE_API_KEY,
+  SCRIPTURE_API_KEY: import.meta.env.VITE_SCRIPTURE_API_KEY || process.env.VITE_SCRIPTURE_API_KEY,
   
   // DeepSeek Free Model Only
   DEEPSEEK_MODELS: [
