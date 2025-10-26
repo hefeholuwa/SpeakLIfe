@@ -9,8 +9,15 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>SpeakLife - v3</title>
-    <script src="/force-reload.js?v=3"></script>
+    <title>SpeakLife - v4 CACHE BUSTED</title>
+    <script src="/force-reload.js?v=4"></script>
+    <script>
+      // Immediate cache busting
+      console.log('🚀 SpeakLife v4 - Cache busting active');
+      if (window.location.search.indexOf('v=') === -1) {
+        window.location.href = window.location.href + '?v=' + Date.now();
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
