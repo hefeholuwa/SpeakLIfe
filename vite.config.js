@@ -32,7 +32,6 @@ export default defineConfig({
                 icons: ['lucide-react'],
                 forms: ['react-hook-form', '@hookform/resolvers', 'zod']
               },
-              // Force cache busting with hash
               entryFileNames: `assets/[name]-[hash].js`,
               chunkFileNames: `assets/[name]-[hash].js`,
               assetFileNames: `assets/[name]-[hash].[ext]`
