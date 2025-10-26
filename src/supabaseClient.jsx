@@ -21,7 +21,7 @@ if (isUsingPlaceholders) {
   const demoMessage = document.createElement('div')
   demoMessage.innerHTML = `
     <div style="position: fixed; top: 0; left: 0; right: 0; background: #fbbf24; color: #92400e; padding: 12px; text-align: center; z-index: 9999; font-family: Arial, sans-serif;">
-      <strong>Demo Mode:</strong> Environment variables not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel dashboard.
+      <strong>Demo Mode:</strong> Environment variables not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel dashboard. (v2)
     </div>
   `
   document.body.appendChild(demoMessage)
