@@ -39,13 +39,8 @@ const LandingPage = ({ onNavigate }) => {
   }
 
   useEffect(() => {
-    // Start fetching data immediately
-    fetchData()
-
-    // Set loading complete after auth loading is done
-    if (!authLoading) {
+    // Simplified initialization - no async calls that could hang
       setLoading(false)
-    }
   }, [authLoading])
 
   // Listen for email verification events
@@ -273,6 +268,12 @@ const LandingPage = ({ onNavigate }) => {
                     className="text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200"
                   >
                     Sign in
+                  </button>
+                  <button 
+                    onClick={() => fetchData()}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-lg mr-2"
+                  >
+                    Load Content
                   </button>
                   <button 
                     onClick={() => setShowRegistration(true)}

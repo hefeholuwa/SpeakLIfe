@@ -24,32 +24,8 @@ const UserDashboard = ({ onNavigate }) => {
 
   // Initialize notifications on component mount
   useEffect(() => {
-    const initializeNotifications = async () => {
-      try {
-        // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Notification initialization timeout')), 5000)
-        )
-
-        const notificationPromise = (async () => {
-          // Request notification permission
-          await notificationService.requestPermission();
-          
-          // Register service worker
-          await notificationService.registerServiceWorker();
-          
-          // Set up daily notifications
-          await notificationService.setupDailyNotifications();
-        })()
-
-        await Promise.race([notificationPromise, timeoutPromise]);
-      } catch (error) {
-        console.error('Failed to initialize notifications:', error);
-        // Don't let notification errors block the app
-      }
-    };
-
-    initializeNotifications();
+    // Simplified initialization - no async calls that could hang
+    // Notifications will be initialized when user interacts with the app
   }, []);
 
   // Show loading screen if auth is still loading
