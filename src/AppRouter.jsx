@@ -75,7 +75,11 @@ const AppRouter = () => {
   // Pass navigation function to components
   
   if (currentRoute === 'dashboard') {
-    return <TestPage />
+    return (
+      <AuthProvider>
+        <TestPage />
+      </AuthProvider>
+    )
   }
 
   if (currentRoute === 'bible') {
