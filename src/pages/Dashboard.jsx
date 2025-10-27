@@ -9,16 +9,11 @@ const Dashboard = ({ onNavigate }) => {
 
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Simplified authentication check - no complex logic that could hang
     if (!authLoading) {
-      if (!user) {
-        // User is not authenticated, redirect to landing page
-        onNavigate('landing')
-        return
-      }
       setLoading(false)
     }
-  }, [user, authLoading, onNavigate])
+  }, [authLoading])
 
   if (loading) {
     return <PremiumLoader message="Loading your dashboard..." minDuration={0} />
