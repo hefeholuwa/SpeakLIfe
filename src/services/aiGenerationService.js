@@ -9,7 +9,6 @@ class AIGenerationService {
     this.freeModels = [
       'mistralai/mistral-small-3.2-24b-instruct:free', // BEST FREE - 24B parameters, excellent reasoning and spiritual content
       'meta-llama/llama-3.1-8b-instruct:free', // VERY GOOD - Strong reasoning, 128K context
-      'deepseek/deepseek-chat:free', // VERY GOOD - Strong reasoning, 128K context
       'meta-llama/llama-3.2-3b-instruct:free', // GOOD - Meta's efficient model
       'google/gemma-2-9b-it:free' // GOOD - Google's lightweight model
     ]
