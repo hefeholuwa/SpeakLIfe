@@ -18,53 +18,9 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
   const [hasDispatchedVerified, setHasDispatchedVerified] = useState(false)
 
-  // Load user profile from profiles table
+  // Simplified user profile loading - just set to null for now
   const loadUserProfile = async (authUser) => {
-    if (!authUser) {
-      setUserProfile(null)
-      return
-    }
-    
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist, create one
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authUser.id,
-              email: authUser.email,
-              full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
-              role: 'user',
-              is_admin: false
-            })
-            .select()
-            .single()
-
-          if (createError) {
-            console.error('Error creating profile:', createError)
-            setUserProfile(null)
-            return
-          }
-
-          setUserProfile(newProfile)
-        } else {
-          console.error('Error loading profile:', error)
-          setUserProfile(null)
-        }
-      } else {
-        setUserProfile(profile)
-      }
-    } catch (error) {
-      console.error('Error in loadUserProfile:', error)
-      setUserProfile(null)
-    }
+    setUserProfile(null)
   }
 
   useEffect(() => {
@@ -81,12 +37,7 @@ export const AuthProvider = ({ children }) => {
           
           // Load user profile if user exists (simplified)
           if (session?.user) {
-            try {
-              await loadUserProfile(session.user)
-            } catch (profileError) {
-              console.error('Error loading user profile:', profileError)
-              // Don't block the session loading if profile loading fails
-            }
+            setUserProfile(null)
           }
         }
         
