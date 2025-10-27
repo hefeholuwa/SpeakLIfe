@@ -638,26 +638,21 @@ const AdminDashboard = ({ onNavigate }) => {
             </div>
             <div className="flex items-center space-x-3">
               {/* Admin User Info */}
-              {adminUser && (
-                <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/20">
-                  <Shield className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {adminUser.full_name || adminUser.email}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/20">
+                <Shield className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  Admin User
+                </span>
+              </div>
               
-              {/* Logout Button */}
+              {/* Back to App Button */}
               <Button
-                onClick={async () => {
-                  await adminSignOut()
-                  onNavigate('landing')
-                }}
+                onClick={() => onNavigate('landing')}
                 variant="outline"
-                className="flex items-center space-x-2 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 hover:border-red-300"
+                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white/90"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Logout</span>
+                <span>Back to App</span>
               </Button>
               
               <Badge variant="outline" className="bg-green-100 text-green-800">
