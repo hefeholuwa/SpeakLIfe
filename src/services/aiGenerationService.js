@@ -8,13 +8,12 @@ class AIGenerationService {
     this.model = 'mistralai/mistral-small-3.2-24b-instruct:free' // BEST FREE model - 24B parameters, excellent reasoning
     this.freeModels = [
       'mistralai/mistral-small-3.2-24b-instruct:free', // BEST FREE - 24B parameters, excellent reasoning and spiritual content
-      'mistralai/mixtral-8x7b-instruct', // EXCELLENT - Outperforms Llama 2 70B, 6x faster
-      'meta-llama/llama-3.1-8b-instruct', // VERY GOOD - Strong reasoning, 128K context
-      'deepseek/deepseek-chat', // VERY GOOD - Strong reasoning, 128K context
-      'google/gemini-flash-1.5', // GOOD - 1M token context, multimodal
-      'meta-llama/llama-3.2-3b-instruct', // GOOD - Meta's efficient model
-      'google/gemma-2-9b-it', // GOOD - Google's lightweight model
-      'qwen/qwen-2.5-7b-instruct' // GOOD - Alibaba's multilingual model
+      'meta-llama/llama-3.1-8b-instruct:free', // VERY GOOD - Strong reasoning, 128K context
+      'deepseek/deepseek-chat:free', // VERY GOOD - Strong reasoning, 128K context
+      'google/gemini-flash-1.5:free', // GOOD - 1M token context, multimodal
+      'meta-llama/llama-3.2-3b-instruct:free', // GOOD - Meta's efficient model
+      'google/gemma-2-9b-it:free', // GOOD - Google's lightweight model
+      'qwen/qwen-2.5-7b-instruct:free' // GOOD - Alibaba's multilingual model
     ]
     
     // Enhanced randomization and duplicate checking
@@ -237,7 +236,7 @@ RANDOMIZATION INSTRUCTIONS:
       FORMAT: Return as JSON with fields: verse_text, reference, book, chapter, verse, translation, theme
       
       Example: {"verse_text": "For my thoughts are not your thoughts, neither are your ways my ways, saith the Lord.", "reference": "Isaiah 55:8", "book": "Isaiah", "chapter": 55, "verse": 8, "translation": "KJV", "theme": "divine wisdom"}
-      
+
       REMEMBER: The translation field is MANDATORY and must match the ${randomTranslation} you are using.`
 
       const prompt = this.getRandomizedPrompt(basePrompt, 'daily_verse')
