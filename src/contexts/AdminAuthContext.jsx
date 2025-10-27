@@ -35,10 +35,12 @@ export const AdminAuthProvider = ({ children }) => {
     try {
       // Check if user email is in admin list
       const isAdminEmail = ADMIN_EMAILS.includes(user.email)
+      console.log('Checking admin status for:', user.email, 'Is admin email:', isAdminEmail)
       
       if (isAdminEmail) {
         // For admin emails, we'll create/update the profile with admin role
         // This avoids the RLS recursion issue
+        console.log('Fetching profile for admin user...')
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
@@ -47,6 +49,7 @@ export const AdminAuthProvider = ({ children }) => {
 
         if (error && error.code === 'PGRST116') {
           // Profile doesn't exist, create admin profile
+          console.log('Creating admin profile...')
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
@@ -64,6 +67,7 @@ export const AdminAuthProvider = ({ children }) => {
             return false
           }
 
+          console.log('Admin profile created successfully')
           setIsAdmin(true)
           setAdminUser({ ...user, role: 'admin', is_admin: true })
           return true
@@ -72,7 +76,9 @@ export const AdminAuthProvider = ({ children }) => {
           return false
         } else {
           // Profile exists, update to admin if needed
+          console.log('Profile found:', profile)
           if (profile.role !== 'admin' || !profile.is_admin) {
+            console.log('Updating profile to admin...')
             const { error: updateError } = await supabase
               .from('profiles')
               .update({
@@ -86,8 +92,10 @@ export const AdminAuthProvider = ({ children }) => {
               console.error('Error updating admin profile:', updateError)
               return false
             }
+            console.log('Profile updated to admin successfully')
           }
 
+          console.log('Setting admin user and status')
           setIsAdmin(true)
           setAdminUser({ ...user, ...profile, role: 'admin', is_admin: true })
           return true
@@ -167,34 +175,22 @@ export const AdminAuthProvider = ({ children }) => {
   useEffect(() => {
     const getInitialSession = async () => {
       try {
-        // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Admin session loading timeout')), 10000)
-        )
-        
-        const sessionPromise = supabase.auth.getSession()
-        
-        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
+        const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
           console.error('Error getting session:', error)
           setError(error.message)
-          setLoading(false)
-          return
-        }
-
-        if (session?.user) {
-          await checkAdminStatus(session.user)
         } else {
-          setIsAdmin(false)
-          setAdminUser(null)
+          if (session?.user) {
+            await checkAdminStatus(session.user)
+          } else {
+            setIsAdmin(false)
+            setAdminUser(null)
+          }
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
-        // Don't set error for timeout, just continue without admin session
-        if (!error.message.includes('timeout')) {
-          setError(error.message)
-        }
+        setError(error.message)
         setIsAdmin(false)
         setAdminUser(null)
       } finally {
