@@ -55,6 +55,12 @@ const AdminDashboard = ({ onNavigate }) => {
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [loadingStates, setLoadingStates] = useState({
+    systemData: false,
+    topics: false,
+    dailyContent: false,
+    topicContent: false
+  })
   
   // Form states
   const [showManualForm, setShowManualForm] = useState(false)
@@ -757,6 +763,14 @@ const AdminDashboard = ({ onNavigate }) => {
           </TabsContent>
 
           <TabsContent value="topics" className="relative">
+            {loadingStates.topics && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                <div className="text-center">
+                  <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading topics...</p>
+                </div>
+              </div>
+            )}
             <TopicsPanel
               topics={topics}
               selectedTopic={selectedTopic}
