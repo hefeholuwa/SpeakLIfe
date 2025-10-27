@@ -1,3 +1,4 @@
+// AdminDashboard - Fixed version without loadingStates errors
 import React, { useState } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
@@ -97,12 +98,14 @@ const AdminDashboard = ({ onNavigate }) => {
                 </div>
               </Card>
               <Card className="p-6">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Database className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Topics</p>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Database className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Topics</p>
+                    <p className="text-2xl font-bold text-gray-900">0</p>
+                  </div>
                 </div>
               </Card>
               <Card className="p-6">
