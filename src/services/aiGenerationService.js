@@ -12,8 +12,7 @@ class AIGenerationService {
       'deepseek/deepseek-chat:free', // VERY GOOD - Strong reasoning, 128K context
       'google/gemini-flash-1.5:free', // GOOD - 1M token context, multimodal
       'meta-llama/llama-3.2-3b-instruct:free', // GOOD - Meta's efficient model
-      'google/gemma-2-9b-it:free', // GOOD - Google's lightweight model
-      'qwen/qwen-2.5-7b-instruct:free' // GOOD - Alibaba's multilingual model
+      'google/gemma-2-9b-it:free' // GOOD - Google's lightweight model
     ]
     
     // Enhanced randomization and duplicate checking
