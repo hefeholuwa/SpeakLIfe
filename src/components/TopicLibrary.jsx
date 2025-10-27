@@ -14,8 +14,15 @@ const TopicLibrary = ({ onNavigate }) => {
 
   const loadTopics = async () => {
     try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database query timeout')), 5000)
+      )
+      
+      const dbPromise = adminService.getTopicViewsWithCounts()
+      
       // Get topics with daily view counts
-      const topicsWithViews = await adminService.getTopicViewsWithCounts()
+      const topicsWithViews = await Promise.race([dbPromise, timeoutPromise])
       setTopics(topicsWithViews)
     } catch (error) {
       console.error('Error loading topics:', error)

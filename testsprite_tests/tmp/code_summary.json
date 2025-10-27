@@ -1,0 +1,163 @@
+{
+  "tech_stack": [
+    "JavaScript",
+    "React",
+    "Vite",
+    "Tailwind CSS",
+    "Supabase",
+    "PostgreSQL",
+    "OpenRouter API",
+    "Lucide React Icons"
+  ],
+  "features": [
+    {
+      "name": "Authentication System",
+      "description": "Complete user authentication with Supabase Auth including login, register, email verification, and password reset",
+      "files": [
+        "src/contexts/AuthContext.jsx",
+        "src/components/Login.jsx",
+        "src/components/Register.jsx",
+        "src/components/EmailVerification.jsx",
+        "src/supabaseClient.jsx"
+      ]
+    },
+    {
+      "name": "User Dashboard",
+      "description": "Main user interface with navigation tabs for Home, Bible, and Journal sections",
+      "files": [
+        "src/components/UserDashboard.jsx",
+        "src/components/DashboardHeader.jsx",
+        "src/pages/Dashboard.jsx"
+      ]
+    },
+    {
+      "name": "Daily Verse & Confession",
+      "description": "AI-generated daily Bible verses and confessions with premium UI design",
+      "files": [
+        "src/components/DailyVerseHero.jsx",
+        "src/services/aiGenerationService.js",
+        "src/services/adminService.js"
+      ]
+    },
+    {
+      "name": "Bible Reader",
+      "description": "Complete Bible reading experience with KJV translation, book/chapter navigation, and responsive design",
+      "files": [
+        "src/components/BibleSection.jsx",
+        "src/components/bible/ESVBibleReader.jsx",
+        "src/data/bibleBooks.js"
+      ]
+    },
+    {
+      "name": "Confession Journal",
+      "description": "Personal journal for confessions, prayers, and reflections with writing prompts and entry management",
+      "files": [
+        "src/components/ConfessionJournal.jsx"
+      ]
+    },
+    {
+      "name": "Quick Actions",
+      "description": "Quick access to app features with premium card design and coming soon indicators",
+      "files": [
+        "src/components/QuickActions.jsx"
+      ]
+    },
+    {
+      "name": "Topic Library",
+      "description": "Browse and explore spiritual topics with verses and confessions",
+      "files": [
+        "src/components/TopicLibrary.jsx"
+      ]
+    },
+    {
+      "name": "Reading Progress",
+      "description": "Track Bible reading progress with coming soon features",
+      "files": [
+        "src/components/ReadingProgress.jsx"
+      ]
+    },
+    {
+      "name": "Recent Activity",
+      "description": "Display recent user activities and engagement",
+      "files": [
+        "src/components/RecentActivity.jsx"
+      ]
+    },
+    {
+      "name": "User Profile",
+      "description": "User profile management with avatar and settings",
+      "files": [
+        "src/components/UserProfile.jsx"
+      ]
+    },
+    {
+      "name": "Admin Dashboard",
+      "description": "Comprehensive admin interface for content management, AI testing, and system administration",
+      "files": [
+        "src/components/AdminDashboard.jsx",
+        "src/components/admin/OverviewPanel.jsx",
+        "src/components/admin/ContentManagementPanel.jsx",
+        "src/components/admin/TopicsPanel.jsx",
+        "src/components/AITest.jsx"
+      ]
+    },
+    {
+      "name": "Landing Page",
+      "description": "Marketing landing page with hero section, features, and call-to-action",
+      "files": [
+        "src/pages/LandingPage.jsx"
+      ]
+    },
+    {
+      "name": "Premium UI Components",
+      "description": "Reusable premium UI components with gradients, animations, and modern design",
+      "files": [
+        "src/components/ui/card.jsx",
+        "src/components/ui/button.jsx",
+        "src/components/ui/badge.jsx",
+        "src/components/ui/dropdown-menu.jsx",
+        "src/components/PremiumLoader.jsx"
+      ]
+    },
+    {
+      "name": "Database Services",
+      "description": "Supabase database integration for topics, verses, confessions, and user data",
+      "files": [
+        "src/services/adminService.js",
+        "src/services/userService.js"
+      ]
+    },
+    {
+      "name": "AI Content Generation",
+      "description": "AI-powered content generation for daily verses and confessions using OpenRouter API",
+      "files": [
+        "src/services/aiGenerationService.js"
+      ]
+    },
+    {
+      "name": "Notification System",
+      "description": "Push notification service for daily reminders and spiritual content",
+      "files": [
+        "src/services/notificationService.js"
+      ]
+    },
+    {
+      "name": "App Router",
+      "description": "Client-side routing system for navigation between pages",
+      "files": [
+        "src/AppRouter.jsx",
+        "src/App.jsx"
+      ]
+    },
+    {
+      "name": "Responsive Design",
+      "description": "Mobile-first responsive design with Tailwind CSS for all screen sizes",
+      "files": [
+        "src/components/UserDashboard.jsx",
+        "src/components/DashboardHeader.jsx",
+        "src/components/bible/ESVBibleReader.jsx",
+        "src/pages/LandingPage.jsx"
+      ]
+    }
+  ]
+}

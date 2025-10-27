@@ -32,12 +32,18 @@ const DailyVerseHero = () => {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0]
       
-      // Fetch today's content from database
-      const { data, error } = await supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database query timeout')), 5000)
+      )
+      
+      const dbPromise = supabase
         .from('daily_verses')
         .select('*')
         .eq('date', today)
         .single()
+
+      const { data, error } = await Promise.race([dbPromise, timeoutPromise])
 
       if (error) {
         if (error.code === 'PGRST116') {
