@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
 import TopicDetail from './components/TopicDetail.jsx'
-import TestPage from './components/TestPage.jsx'
 
 const AppRouter = () => {
   const [currentRoute, setCurrentRoute] = useState('landing')
