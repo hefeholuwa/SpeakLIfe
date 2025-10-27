@@ -1052,6 +1052,7 @@ class AdminService {
       // Generate verses if requested
       if (contentType === 'verses' || contentType === 'both') {
         try {
+          this.addLog(`🎯 Generating verses for topic: "${topic.title}" (ID: ${topicId})`, 'info')
           const aiVerses = await aiGenerationService.generateTopicVerses(topic.title, 3)
           
           for (const verseData of aiVerses) {
@@ -1082,6 +1083,7 @@ class AdminService {
       // Generate confessions if requested
       if (contentType === 'confessions' || contentType === 'both') {
         try {
+          this.addLog(`🎯 Generating confessions for topic: "${topic.title}" (ID: ${topicId})`, 'info')
           const aiConfessions = await aiGenerationService.generateTopicConfessions(topic.title, 3)
           
           for (const confessionData of aiConfessions) {

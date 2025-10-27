@@ -416,10 +416,24 @@ RANDOMIZATION INSTRUCTIONS:
 
       const prompt = `Generate ${count} different spiritually profound Bible verses specifically related to the topic "${topic}". CRITICAL: You must use REAL, EXISTING Bible verses only. Do not create or make up any verse references.
 
+      TOPIC-SPECIFIC FOCUS:
+      - Each verse MUST directly relate to the spiritual theme of "${topic}"
+      - If topic is "Faith" → choose verses about believing, trusting, having faith in God
+      - If topic is "Peace" → choose verses about peace, tranquility, God's protection, rest
+      - If topic is "Love" → choose verses about God's love, loving others, being loved by God
+      - If topic is "Wisdom" → choose verses about divine wisdom, understanding, guidance, knowledge
+      - If topic is "Prosperity" → choose verses about God's provision, abundance, blessing, success
+      - If topic is "Relationships" → choose verses about godly connections, fellowship, unity, marriage
+      - If topic is "Healing" → choose verses about physical, emotional, spiritual healing
+      - If topic is "Victory" → choose verses about overcoming, triumph, conquering, success
+      - If topic is "Hope" → choose verses about hope, expectation, future blessings, optimism
+      - If topic is "Forgiveness" → choose verses about forgiving others, being forgiven, mercy
+      - DO NOT choose generic verses that could apply to any topic
+      - Each verse must be a perfect match for the specific spiritual theme of "${topic}"
+
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Choose from diverse biblical books (not just popular ones like John, Psalms)
       - Include books like: Isaiah, Jeremiah, Ezekiel, Daniel, Hosea, Joel, Amos, Obadiah, Jonah, Micah, Nahum, Habakkuk, Zephaniah, Haggai, Zechariah, Malachi, Lamentations, Song of Solomon, Ecclesiastes, Proverbs, Job, Ruth, Esther, Ezra, Nehemiah, Chronicles, Kings, Samuel, Judges, Joshua, Deuteronomy, Numbers, Leviticus, Exodus, Genesis, Acts, Corinthians, Galatians, Ephesians, Philippians, Colossians, Thessalonians, Timothy, Titus, Philemon, Hebrews, James, Peter, John's epistles, Jude, Revelation
-      - Focus on the topic: "${topic}"
       - Ensure doctrinal balance and spiritual depth
       - Avoid only well-known verses - include lesser-known but powerful scriptures
       - Use different Bible translations for variety: ${translations.join(', ')}
@@ -533,14 +547,19 @@ RANDOMIZATION INSTRUCTIONS:
 
       TOPIC-SPECIFIC ALIGNMENT:
       - Each confession must DIRECTLY relate to the specific spiritual theme of "${topic}"
-      - If topic is "Faith" → confessions should be about believing, trusting, having faith
-      - If topic is "Peace" → confessions should be about peace, tranquility, God's protection
-      - If topic is "Love" → confessions should be about God's love, loving others, being loved
-      - If topic is "Wisdom" → confessions should be about divine wisdom, understanding, guidance
-      - If topic is "Prosperity" → confessions should be about God's provision, abundance, blessing
-      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity
+      - If topic is "Faith" → confessions should be about believing, trusting, having faith, walking by faith
+      - If topic is "Peace" → confessions should be about peace, tranquility, God's protection, rest, calm
+      - If topic is "Love" → confessions should be about God's love, loving others, being loved, unconditional love
+      - If topic is "Wisdom" → confessions should be about divine wisdom, understanding, guidance, knowledge, discernment
+      - If topic is "Prosperity" → confessions should be about God's provision, abundance, blessing, success, financial breakthrough
+      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity, marriage, family harmony
+      - If topic is "Healing" → confessions should be about physical, emotional, spiritual healing, wholeness, restoration
+      - If topic is "Victory" → confessions should be about overcoming, triumph, conquering, success, breakthrough
+      - If topic is "Hope" → confessions should be about hope, expectation, future blessings, optimism, anticipation
+      - If topic is "Forgiveness" → confessions should be about forgiving others, being forgiven, mercy, grace, reconciliation
       - DO NOT create generic confessions that could apply to any topic
       - Each confession must be a personal declaration of the topic's specific spiritual truth
+      - Make each confession laser-focused on the exact spiritual theme of "${topic}"
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Each confession should be doctrinally sound and biblically accurate
