@@ -1056,6 +1056,21 @@ class AdminService {
           const aiVerses = await aiGenerationService.generateTopicVerses(topic.title, 3)
           
           for (const verseData of aiVerses) {
+            // Validate required fields
+            if (!verseData.book || !verseData.chapter || !verseData.verse) {
+              this.addLog(`❌ Skipping verse with missing fields: ${JSON.stringify(verseData)}`, 'error')
+              continue
+            }
+
+            // Ensure chapter and verse are numbers
+            const chapter = parseInt(verseData.chapter)
+            const verse = parseInt(verseData.verse)
+            
+            if (isNaN(chapter) || isNaN(verse)) {
+              this.addLog(`❌ Skipping verse with invalid chapter/verse: ${JSON.stringify(verseData)}`, 'error')
+              continue
+            }
+
             const { data, error } = await supabase
               .from('topic_verses')
               .insert([{
@@ -1063,13 +1078,16 @@ class AdminService {
                 verse_text: verseData.verse_text,
                 reference: `${verseData.reference} (${verseData.translation || 'KJV'})`,
                 book: verseData.book,
-                chapter: verseData.chapter,
-                verse: verseData.verse,
+                chapter: chapter,
+                verse: verse,
                 is_featured: false
               }])
               .select()
 
-            if (!error) {
+            if (error) {
+              this.addLog(`❌ Database error inserting verse: ${error.message}`, 'error')
+              this.addLog(`❌ Verse data: ${JSON.stringify(verseData)}`, 'error')
+            } else {
               results.verses.push(data[0])
             }
           }
