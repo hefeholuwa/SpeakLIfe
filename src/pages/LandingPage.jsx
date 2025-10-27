@@ -83,7 +83,7 @@ const LandingPage = ({ onNavigate }) => {
 
   // Show premium loading screen while checking authentication
   if (authLoading) {
-    return <PremiumLoader message="Preparing your spiritual journey..." />
+    return <PremiumLoader message="Preparing your spiritual journey..." minDuration={0} />
   }
 
   const filteredVerses = verses.filter(verse => {
@@ -98,7 +98,7 @@ const LandingPage = ({ onNavigate }) => {
 
 
   if (loading) {
-    return <PremiumLoader message="Loading your spiritual journey..." />
+    return <PremiumLoader message="Loading your spiritual journey..." minDuration={0} />
   }
 
   return (

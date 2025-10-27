@@ -21,7 +21,7 @@ const Dashboard = ({ onNavigate }) => {
   }, [user, authLoading, onNavigate])
 
   if (loading) {
-    return <PremiumLoader message="Loading your dashboard..." />
+    return <PremiumLoader message="Loading your dashboard..." minDuration={0} />
   }
 
   return (
