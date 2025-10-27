@@ -1047,7 +1047,7 @@ class AdminService {
 
       if (topicError) throw topicError
 
-      const results = { verses: [], confessions: [] }
+      const results = { verses: [], confessions: [], topicId: topicId }
 
       // Generate verses if requested
       if (contentType === 'verses' || contentType === 'both') {
@@ -1071,25 +1071,15 @@ class AdminService {
               continue
             }
 
-            const { data, error } = await supabase
-              .from('topic_verses')
-              .insert([{
-                topic_id: topicId,
-                verse_text: verseData.verse_text,
-                reference: `${verseData.reference} (${verseData.translation || 'KJV'})`,
-                book: verseData.book,
-                chapter: chapter,
-                verse: verse,
-                is_featured: false
-              }])
-              .select()
-
-            if (error) {
-              this.addLog(`❌ Database error inserting verse: ${error.message}`, 'error')
-              this.addLog(`❌ Verse data: ${JSON.stringify(verseData)}`, 'error')
-            } else {
-              results.verses.push(data[0])
-            }
+            // Add to results without saving to database (preview mode)
+            results.verses.push({
+              verse_text: verseData.verse_text,
+              reference: `${verseData.reference} (${verseData.translation || 'KJV'})`,
+              book: verseData.book,
+              chapter: chapter,
+              verse: verse,
+              translation: verseData.translation || 'KJV'
+            })
           }
           
           this.addLog(`✅ Generated ${results.verses.length} AI verses for ${topic.title}`, 'success')
@@ -1105,19 +1095,12 @@ class AdminService {
           const aiConfessions = await aiGenerationService.generateTopicConfessions(topic.title, 3)
           
           for (const confessionData of aiConfessions) {
-            const { data, error } = await supabase
-              .from('topic_confessions')
-              .insert([{
-                topic_id: topicId,
-                confession_text: confessionData.confession_text,
-                title: confessionData.title,
-                is_featured: false
-              }])
-              .select()
-
-            if (!error) {
-              results.confessions.push(data[0])
-            }
+            // Add to results without saving to database (preview mode)
+            results.confessions.push({
+              confession_text: confessionData.confession_text,
+              title: confessionData.title,
+              is_featured: false
+            })
           }
           
           this.addLog(`✅ Generated ${results.confessions.length} AI confessions for ${topic.title}`, 'success')

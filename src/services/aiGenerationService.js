@@ -5,11 +5,9 @@ class AIGenerationService {
     // Use import.meta.env for Vite or fallback to process.env for Vercel
     this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || ''
     this.baseURL = 'https://openrouter.ai/api/v1'
-    this.model = 'mistralai/mistral-small-3.2-24b-instruct:free' // BEST FREE model - 24B parameters, excellent reasoning
+    this.model = 'deepseek/deepseek-chat-v3.1:free' // BEST FREE model - DeepSeek's latest with excellent reasoning
     this.freeModels = [
-      'mistralai/mistral-small-3.2-24b-instruct:free', // BEST FREE - 24B parameters, excellent reasoning and spiritual content
-      'meta-llama/llama-3.2-3b-instruct:free', // GOOD - Meta's efficient model
-      'google/gemma-2-9b-it:free' // GOOD - Google's lightweight model
+      'deepseek/deepseek-chat-v3.1:free' // BEST FREE - DeepSeek's latest model with excellent reasoning
     ]
     
     // Enhanced randomization and duplicate checking
@@ -419,7 +417,7 @@ RANDOMIZATION INSTRUCTIONS:
       - If topic is "Love" → choose verses about God's love, loving others, being loved by God (e.g., 1 John 4:19, Romans 5:8, John 3:16)
       - If topic is "Wisdom" → choose verses about divine wisdom, understanding, guidance, knowledge (e.g., Proverbs 2:6, James 1:5, Proverbs 9:10)
       - If topic is "Prosperity" → choose verses about God's provision, abundance, blessing, success (e.g., Deuteronomy 8:18, 3 John 1:2, Psalm 35:27)
-      - If topic is "Relationships" → choose verses about godly connections, fellowship, unity, marriage (e.g., Ecclesiastes 4:9-10, 1 Corinthians 13:4-7, Proverbs 18:24)
+      - If topic is "Relationships" → choose verses about godly connections, fellowship, unity, marriage, friendship (e.g., Ecclesiastes 4:9-10, 1 Corinthians 13:4-7, Proverbs 18:24)
       - If topic is "Healing" → choose verses about physical, emotional, spiritual healing (e.g., Isaiah 53:5, James 5:16, Psalm 103:3)
       - If topic is "Victory" → choose verses about overcoming, triumph, conquering, success (e.g., 1 Corinthians 15:57, Romans 8:37, 2 Corinthians 2:14)
       - If topic is "Hope" → choose verses about hope, expectation, future blessings, optimism (e.g., Romans 15:13, Jeremiah 29:11, Hebrews 6:19)
@@ -427,6 +425,7 @@ RANDOMIZATION INSTRUCTIONS:
       - DO NOT choose generic verses that could apply to any topic
       - Each verse must be a perfect match for the specific spiritual theme of "${topic}"
       - If you cannot find verses that directly relate to "${topic}", do not generate generic verses
+      - REJECT any verse that doesn't directly relate to "${topic}" - be strict about topic matching
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Choose from diverse biblical books (not just popular ones like John, Psalms)
@@ -543,7 +542,7 @@ RANDOMIZATION INSTRUCTIONS:
       - If topic is "Love" → confessions should be about God's love, loving others, being loved, unconditional love (e.g., "I declare that I am loved unconditionally by God", "I confess that love flows through me to others")
       - If topic is "Wisdom" → confessions should be about divine wisdom, understanding, guidance, knowledge, discernment (e.g., "I declare that God's wisdom guides my decisions", "I confess that I have the mind of Christ")
       - If topic is "Prosperity" → confessions should be about God's provision, abundance, blessing, success, financial breakthrough (e.g., "I declare that God supplies all my needs", "I confess that I am blessed to be a blessing")
-      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity, marriage, family harmony (e.g., "I declare that my relationships are blessed and harmonious", "I confess that I attract godly connections")
+      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity, marriage, family harmony, friendship (e.g., "I declare that my relationships are blessed and harmonious", "I confess that I attract godly connections", "I declare that my marriage is blessed")
       - If topic is "Healing" → confessions should be about physical, emotional, spiritual healing, wholeness, restoration (e.g., "I declare that I am healed by the stripes of Jesus", "I confess that divine health flows through me")
       - If topic is "Victory" → confessions should be about overcoming, triumph, conquering, success, breakthrough (e.g., "I declare that I am more than a conqueror", "I confess that victory is my portion")
       - If topic is "Hope" → confessions should be about hope, expectation, future blessings, optimism, anticipation (e.g., "I declare that my hope is anchored in God", "I confess that my future is bright")
@@ -552,6 +551,7 @@ RANDOMIZATION INSTRUCTIONS:
       - Each confession must be a personal declaration of the topic's specific spiritual truth
       - Make each confession laser-focused on the exact spiritual theme of "${topic}"
       - If you cannot create confessions that directly relate to "${topic}", do not generate generic confessions
+      - REJECT any confession that doesn't directly relate to "${topic}" - be strict about topic matching
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Each confession should be doctrinally sound and biblically accurate
