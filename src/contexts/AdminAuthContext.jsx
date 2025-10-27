@@ -16,6 +16,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false)
 
   // Admin email list - in production, this should be in a database
   const ADMIN_EMAILS = [
@@ -31,6 +32,15 @@ export const AdminAuthProvider = ({ children }) => {
       setAdminUser(null)
       return false
     }
+
+    // Prevent multiple simultaneous admin checks
+    if (isCheckingAdmin) {
+      console.log('Admin check already in progress, skipping...')
+      return false
+    }
+
+    setIsCheckingAdmin(true)
+    console.log('Starting admin status check for:', user.email)
 
     try {
       // Check if user email is in admin list
@@ -111,6 +121,9 @@ export const AdminAuthProvider = ({ children }) => {
       setIsAdmin(false)
       setAdminUser(null)
       return false
+    } finally {
+      setIsCheckingAdmin(false)
+      console.log('Admin status check completed')
     }
   }
 
@@ -203,8 +216,12 @@ export const AdminAuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email)
         if (event === 'SIGNED_IN' && session?.user) {
-          await checkAdminStatus(session.user)
+          // Only check admin status if we don't already have an admin user
+          if (!adminUser || adminUser.id !== session.user.id) {
+            await checkAdminStatus(session.user)
+          }
         } else if (event === 'SIGNED_OUT') {
           setIsAdmin(false)
           setAdminUser(null)
@@ -213,7 +230,7 @@ export const AdminAuthProvider = ({ children }) => {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [adminUser])
 
   const value = {
     adminUser,
