@@ -77,7 +77,7 @@ const AppRouter = () => {
   if (currentRoute === 'dashboard') {
     return (
       <AuthProvider>
-        <TestPage />
+        <Dashboard onNavigate={navigateTo} />
       </AuthProvider>
     )
   }
