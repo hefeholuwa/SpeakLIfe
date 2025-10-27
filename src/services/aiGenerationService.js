@@ -12,7 +12,6 @@ class AIGenerationService {
       'meta-llama/llama-3.1-8b-instruct', // VERY GOOD - Strong reasoning, 128K context
       'deepseek/deepseek-chat', // VERY GOOD - Strong reasoning, 128K context
       'google/gemini-flash-1.5', // GOOD - 1M token context, multimodal
-      'microsoft/phi-3-mini-4k-instruct', // GOOD - Microsoft's efficient model
       'meta-llama/llama-3.2-3b-instruct', // GOOD - Meta's efficient model
       'google/gemma-2-9b-it', // GOOD - Google's lightweight model
       'qwen/qwen-2.5-7b-instruct' // GOOD - Alibaba's multilingual model
