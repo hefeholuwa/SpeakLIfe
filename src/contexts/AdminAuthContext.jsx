@@ -111,6 +111,7 @@ export const AdminAuthProvider = ({ children }) => {
           return true
         }
       } else {
+        console.log('User is not an admin email')
         setIsAdmin(false)
         setAdminUser(null)
         return false
@@ -152,8 +153,10 @@ export const AdminAuthProvider = ({ children }) => {
       if (data.user) {
         const isAdminUser = await checkAdminStatus(data.user)
         if (isAdminUser) {
+          console.log('Admin sign in successful')
           return { success: true, data }
         } else {
+          console.log('User is not admin, signing out')
           // Sign out if not admin
           await supabase.auth.signOut()
           setError('Access denied. Admin privileges required.')
@@ -212,25 +215,7 @@ export const AdminAuthProvider = ({ children }) => {
     }
 
     getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email)
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Only check admin status if we don't already have an admin user
-          if (!adminUser || adminUser.id !== session.user.id) {
-            await checkAdminStatus(session.user)
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setIsAdmin(false)
-          setAdminUser(null)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [adminUser])
+  }, [])
 
   const value = {
     adminUser,
