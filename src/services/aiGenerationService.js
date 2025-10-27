@@ -495,13 +495,7 @@ RANDOMIZATION INSTRUCTIONS:
           }
         }
         
-        // If we have fewer unique verses than requested, generate more
-        if (uniqueVerses.length < count) {
-          const additionalCount = count - uniqueVerses.length
-          const additionalVerses = await this.generateTopicVerses(topic, additionalCount, [...existingVerses, ...uniqueVerses])
-          uniqueVerses.push(...additionalVerses)
-        }
-        
+        // Return what we got from the API call (no recursive generation to avoid duplicates)
         return uniqueVerses.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
@@ -610,13 +604,7 @@ RANDOMIZATION INSTRUCTIONS:
           }
         }
         
-        // If we have fewer unique confessions than requested, generate more
-        if (uniqueConfessions.length < count) {
-          const additionalCount = count - uniqueConfessions.length
-          const additionalConfessions = await this.generateTopicConfessions(topic, additionalCount, [...existingConfessions, ...uniqueConfessions])
-          uniqueConfessions.push(...additionalConfessions)
-        }
-        
+        // Return what we got from the API call (no recursive generation to avoid duplicates)
         return uniqueConfessions.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
