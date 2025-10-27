@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
+import AdminDashboard from './components/AdminDashboard.jsx'
 import TopicDetail from './components/TopicDetail.jsx'
 
 const AppRouter = () => {
@@ -85,25 +86,7 @@ const AppRouter = () => {
   }
 
   if (currentRoute === 'admin') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">🔧</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Admin Panel</h1>
-          <p className="text-lg text-gray-600 mb-6">
-            The admin panel is currently under development and will be available soon.
-          </p>
-          <button
-            onClick={() => navigateTo('landing')}
-            className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-blue-600 transition-all duration-200"
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
-    )
+    return <AdminDashboard onNavigate={navigateTo} />
   }
 
   if (currentRoute === 'topic') {
