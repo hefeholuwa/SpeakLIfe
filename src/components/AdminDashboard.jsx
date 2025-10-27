@@ -105,9 +105,8 @@ const AdminDashboard = ({ onNavigate }) => {
   const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
-    loadSystemData()
-    loadTopics()
-    loadDailyContent()
+    // Simplified initialization - no async calls that could hang
+    setIsLoading(false)
   }, [])
 
   // Load topic content when a topic is selected
@@ -644,6 +643,20 @@ const AdminDashboard = ({ onNavigate }) => {
                   Admin User
                 </span>
               </div>
+              
+              {/* Load Data Button */}
+              <Button
+                onClick={() => {
+                  loadSystemData()
+                  loadTopics()
+                  loadDailyContent()
+                }}
+                variant="outline"
+                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white/90"
+              >
+                <Database className="h-4 w-4" />
+                <span>Load Data</span>
+              </Button>
               
               {/* Back to App Button */}
               <Button
