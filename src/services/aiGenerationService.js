@@ -10,7 +10,6 @@ class AIGenerationService {
       'mistralai/mistral-small-3.2-24b-instruct:free', // BEST FREE - 24B parameters, excellent reasoning and spiritual content
       'meta-llama/llama-3.1-8b-instruct:free', // VERY GOOD - Strong reasoning, 128K context
       'deepseek/deepseek-chat:free', // VERY GOOD - Strong reasoning, 128K context
-      'google/gemini-flash-1.5:free', // GOOD - 1M token context, multimodal
       'meta-llama/llama-3.2-3b-instruct:free', // GOOD - Meta's efficient model
       'google/gemma-2-9b-it:free' // GOOD - Google's lightweight model
     ]
@@ -694,9 +693,14 @@ RANDOMIZATION INSTRUCTIONS:
     cleaned = cleaned.trim()
     
     // Try to find the JSON array/object in the response
-    const jsonMatch = cleaned.match(/\[[\s\S]*\]|{[\s\S]*}/)
-    if (jsonMatch) {
-      cleaned = jsonMatch[0]
+    const jsonArrayMatch = cleaned.match(/\[[\s\S]*\]/)
+    const jsonObjectMatch = cleaned.match(/{[\s\S]*}/)
+    
+    if (jsonArrayMatch) {
+      cleaned = jsonArrayMatch[0]
+    } else if (jsonObjectMatch) {
+      // If we found a single object but need an array, wrap it
+      cleaned = '[' + jsonObjectMatch[0] + ']'
     }
     
     // Fix common JSON issues
