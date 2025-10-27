@@ -68,34 +68,25 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    // Improved initial session check with longer timeout
+    // Simplified initial session check
     const getInitialSession = async () => {
       try {
-        // Increase timeout to 15 seconds for better reliability
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session loading timeout')), 15000)
-        )
-        
-        const sessionPromise = supabase.auth.getSession()
-        
-        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise])
+        const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
           console.error('Error getting session:', error)
           setError(error.message)
-          setLoading(false)
-          return
-        }
-        
-        setUser(session?.user || null)
-        
-        // Load user profile if user exists (simplified)
-        if (session?.user) {
-          try {
-            await loadUserProfile(session.user)
-          } catch (profileError) {
-            console.error('Error loading user profile:', profileError)
-            // Don't block the session loading if profile loading fails
+        } else {
+          setUser(session?.user || null)
+          
+          // Load user profile if user exists (simplified)
+          if (session?.user) {
+            try {
+              await loadUserProfile(session.user)
+            } catch (profileError) {
+              console.error('Error loading user profile:', profileError)
+              // Don't block the session loading if profile loading fails
+            }
           }
         }
         
@@ -103,10 +94,7 @@ export const AuthProvider = ({ children }) => {
         
       } catch (error) {
         console.error('Error in getInitialSession:', error)
-        // Don't set error for timeout, just continue without session
-        if (!error.message.includes('timeout')) {
-          setError(error.message)
-        }
+        setError(error.message)
         setLoading(false)
       }
     }

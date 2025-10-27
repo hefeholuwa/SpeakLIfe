@@ -6,21 +6,11 @@ import PremiumLoader from '../components/PremiumLoader.jsx'
 const Dashboard = ({ onNavigate }) => {
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
 
-
-  useEffect(() => {
-    // Ensure minimum loading duration of 2 seconds
-    const minTimer = setTimeout(() => {
-      setMinLoadingComplete(true)
-    }, 2000)
-
-    return () => clearTimeout(minTimer)
-  }, [])
 
   useEffect(() => {
     // Check if user is authenticated
-    if (!authLoading && minLoadingComplete) {
+    if (!authLoading) {
       if (!user) {
         // User is not authenticated, redirect to landing page
         onNavigate('landing')
@@ -28,7 +18,7 @@ const Dashboard = ({ onNavigate }) => {
       }
       setLoading(false)
     }
-  }, [user, authLoading, minLoadingComplete, onNavigate])
+  }, [user, authLoading, onNavigate])
 
   if (loading) {
     return <PremiumLoader message="Loading your dashboard..." />

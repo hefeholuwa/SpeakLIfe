@@ -9,7 +9,6 @@ import PremiumLoader from '../components/PremiumLoader.jsx'
 const LandingPage = ({ onNavigate }) => {
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
   const [topics, setTopics] = useState([])
   const [verses, setVerses] = useState([])
   const [selectedTopic, setSelectedTopic] = useState(null)
@@ -40,16 +39,14 @@ const LandingPage = ({ onNavigate }) => {
   }
 
   useEffect(() => {
-    // Ensure minimum loading duration of 2 seconds
-    const minTimer = setTimeout(() => {
-      setMinLoadingComplete(true)
-      setLoading(false)
-    }, 2000)
-
+    // Start fetching data immediately
     fetchData()
 
-    return () => clearTimeout(minTimer)
-  }, [])
+    // Set loading complete after auth loading is done
+    if (!authLoading) {
+      setLoading(false)
+    }
+  }, [authLoading])
 
   // Listen for email verification events
   useEffect(() => {
@@ -149,7 +146,7 @@ const LandingPage = ({ onNavigate }) => {
                     <span className="hidden sm:inline">Home</span>
                   </span>
                 </button>
-                <button
+                <button 
                   onClick={() => setActiveTab('bible')}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
                     activeTab === 'bible'
@@ -163,41 +160,41 @@ const LandingPage = ({ onNavigate }) => {
                     <span className="hidden sm:inline">Bible</span>
                   </span>
                 </button>
-              </div>
-
+            </div>
+            
               {/* Right: Auth Buttons */}
               {!user && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button 
+              <button
                     onClick={() => setShowLogin(true)}
                     className="text-purple-600 hover:bg-purple-50 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200"
                     style={{ minHeight: '32px' }}
                   >
                     <span className="hidden sm:inline">Sign in</span>
                     <span className="sm:hidden">Sign in</span>
-                  </button>
-                  <button 
+              </button>
+              <button
                     onClick={() => setShowRegistration(true)}
                     className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-lg"
                     style={{ minHeight: '32px' }}
                   >
                     <span className="hidden sm:inline">Start</span>
                     <span className="sm:hidden">Start</span>
-                  </button>
+              </button>
                 </div>
               )}
               
               {user && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button 
+                <button
                     onClick={() => onNavigate('dashboard')}
                     className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-lg"
                     style={{ minHeight: '32px' }}
                   >
                     <span className="hidden sm:inline">Dashboard</span>
                     <span className="sm:hidden">Go</span>
-                  </button>
-                </div>
+                </button>
+              </div>
               )}
             </div>
           </div>
@@ -411,7 +408,7 @@ const LandingPage = ({ onNavigate }) => {
                       <span className="text-white text-3xl sm:text-4xl md:text-5xl">🌟</span>
                     </div>
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white animate-pulse"></div>
-                  </div>
+                </div>
                   
                   <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 animate-fade-in-up">
                     Ready to Transform Your <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">Spiritual Life?</span>
@@ -421,13 +418,13 @@ const LandingPage = ({ onNavigate }) => {
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                    <button 
+                <button 
                       onClick={() => setShowRegistration(true)}
                       className="group bg-white text-purple-600 px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 rounded-2xl text-base sm:text-lg md:text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
-                    >
-                      <span className="flex items-center justify-center gap-3">
+                >
+                  <span className="flex items-center justify-center gap-3">
                         <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">🚀</span>
-                        <span>Start Your Journey</span>
+                    <span>Start Your Journey</span>
                         <span className="text-2xl group-hover:rotate-12 transition-transform duration-300">✨</span>
                       </span>
                     </button>
@@ -439,8 +436,8 @@ const LandingPage = ({ onNavigate }) => {
                         <span className="text-2xl">🔑</span>
                         <span>Sign In</span>
                         <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">→</span>
-                      </span>
-                    </button>
+                  </span>
+                </button>
                   </div>
                 </div>
               </div>
