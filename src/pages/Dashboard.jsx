@@ -22,15 +22,7 @@ const Dashboard = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Dashboard Content */}
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Dashboard Test</h1>
-          <p className="text-lg text-gray-600 mb-4">Dashboard wrapper loaded successfully</p>
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-2xl">✓</span>
-          </div>
-        </div>
-      </div>
+      <UserDashboard onNavigate={onNavigate} />
     </div>
   )
 }
