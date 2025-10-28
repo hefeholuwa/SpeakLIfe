@@ -20,6 +20,19 @@ class AIGenerationService {
   // Check for duplicate content in database
   async checkForDuplicates(contentType, content) {
     try {
+      // Enhanced validation
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        console.log('Invalid content for duplicate check:', { content, type: typeof content })
+        return false
+      }
+
+      // Clean the content
+      const cleanContent = content.trim()
+      if (cleanContent.length < 10) {
+        console.log('Content too short for duplicate check')
+        return false
+      }
+
       let tableName, fieldName
       
       switch (contentType) {
@@ -40,6 +53,7 @@ class AIGenerationService {
           fieldName = 'confession_text'
           break
         default:
+          console.log('Invalid type for duplicate check:', contentType)
           return false
       }
 
@@ -49,7 +63,7 @@ class AIGenerationService {
       const { data: exactMatches, error: exactError } = await supabase
         .from(tableName)
         .select(fieldName)
-        .eq(fieldName, content)
+        .eq(fieldName, cleanContent)
 
       if (exactError) {
         console.error('Error checking exact duplicates:', exactError)
@@ -62,8 +76,11 @@ class AIGenerationService {
       }
 
       // Check for similar content (first 50 characters for better detection)
-      const contentStart = content.substring(0, 50).trim()
-      if (contentStart.length < 15) return false // Too short to be meaningful
+      const contentStart = cleanContent.substring(0, 50).trim()
+      if (contentStart.length < 15) {
+        console.log('Content start too short for similarity check')
+        return false
+      }
 
       const { data: similarMatches, error: similarError } = await supabase
         .from(tableName)
@@ -188,12 +205,16 @@ RANDOMIZATION INSTRUCTIONS:
       ]
       const randomTranslation = translations[Math.floor(Math.random() * translations.length)]
       
-      const basePrompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, LESS COMMON Bible verse for today's daily devotion.
+      // Get recently used verses to avoid duplicates
+      const recentVerses = Array.from(this.usedVerses).slice(-10) // Last 10 used verses
+      const recentVersesText = recentVerses.length > 0 ? `\n\nAVOID THESE RECENT VERSES (already used): ${recentVerses.join(', ')}` : ''
+
+      const basePrompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, UNIQUE Bible verse for today's daily devotion.
 
       CRITICAL: You must provide the EXACT text of a REAL Bible verse, not a confession or interpretation.
 
       REQUIREMENTS:
-      - Choose ONE verse from this DIVERSE list of powerful, less common verses:
+      - Choose ONE verse from this DIVERSE list of powerful verses (avoid common ones like John 3:16, Philippians 4:13):
       - Isaiah 43:19, Isaiah 55:8-9, Isaiah 61:1, Isaiah 65:24, Isaiah 66:13
       - Jeremiah 1:5, Jeremiah 17:7-8, Jeremiah 31:3, Jeremiah 33:3
       - Psalm 18:2, Psalm 27:1, Psalm 34:8, Psalm 37:4, Psalm 46:10, Psalm 84:11, Psalm 91:4, Psalm 103:2-3, Psalm 139:13-14
@@ -212,10 +233,11 @@ RANDOMIZATION INSTRUCTIONS:
       - James 1:2-3, James 1:17, James 4:8, James 5:16
       - 1 John 1:9, 1 John 3:1, 1 John 4:4, 1 John 5:14-15
       - Revelation 3:20, Revelation 21:4, Revelation 22:17
-      - Use the ${randomTranslation} translation
+      - Use ONLY the ${randomTranslation} translation
       - Provide the EXACT verse text as it appears in that translation
       - Do NOT paraphrase, interpret, or create confessions
       - Focus on theme: "${randomTheme}"
+      - Choose a verse that has NOT been used recently${recentVersesText}
       
       EXAMPLES OF ACCURATE VERSES IN DIFFERENT TRANSLATIONS:
       - KJV: "For my thoughts are not your thoughts, neither are your ways my ways, saith the Lord."
@@ -225,7 +247,7 @@ RANDOMIZATION INSTRUCTIONS:
       - AMP: "For My thoughts are not your thoughts, nor are your ways My ways, declares the Lord."
       - NKJV: "For My thoughts are not your thoughts, nor are your ways My ways, says the Lord."
       
-      CRITICAL: You MUST include the translation field in your response. The translation field is REQUIRED.
+      CRITICAL: You MUST include the translation field in your response. The translation field is REQUIRED and must be exactly "${randomTranslation}".
       
       FORMAT: Return as JSON with fields: verse_text, reference, book, chapter, verse, translation, theme
       
@@ -325,7 +347,7 @@ RANDOMIZATION INSTRUCTIONS:
       // Track used style
       this.usedConfessions.add(randomStyle)
       
-      const prompt = `CRITICAL: Generate a confession that DIRECTLY aligns with this specific Bible verse: "${verseData.verse_text}" (${verseData.reference})
+      const prompt = `CRITICAL: Generate a UNIQUE confession that DIRECTLY aligns with this specific Bible verse: "${verseData.verse_text}" (${verseData.reference})
 
       VERSE ALIGNMENT REQUIREMENTS:
       - The confession MUST directly reflect the specific message, theme, and spiritual truth of this exact verse
@@ -335,6 +357,7 @@ RANDOMIZATION INSTRUCTIONS:
       - If the verse is about "peace that passes understanding", the confession should reflect that exact theme
       - DO NOT create generic confessions that could apply to any verse
       - The confession must be a personal declaration of the verse's specific truth
+      - Create something UNIQUE and POWERFUL that hasn't been used recently${recentConfessionsText}
 
       SPIRITUAL DEPTH & DOCTRINAL BALANCE:
       - Create a ${randomStyle} that directly connects to the verse's specific message
@@ -345,25 +368,15 @@ RANDOMIZATION INSTRUCTIONS:
       - Avoid generic or cliché confessions - create something unique and powerful
       
       CONFESSION REQUIREMENTS:
-      - Keep it SHORT: 1-2 sentences maximum (not a paragraph)
-      - Include "I declare", "I confess", "I believe", or similar powerful language
-      - DIRECTLY connect to the verse's specific theme and message
-      - Make it applicable to daily Christian walk
-      - Include elements of faith, hope, victory, and spiritual authority
-      - Sound spiritual but concise - not lengthy or verbose
+      - 1-2 sentences maximum
+      - Personal declaration format ("I declare...", "I confess...", "I believe...")
+      - Directly connected to the verse's specific message
+      - Powerful and faith-building
+      - Unique and not generic
       
-      EXAMPLES OF GOOD ALIGNMENT:
-      - Verse: "The Lord will fight for you; you need only to be still" → Confession: "I declare that the Lord fights my battles, and I rest in His victory while He works on my behalf"
-      - Verse: "I can do all things through Christ who strengthens me" → Confession: "I confess that Christ's strength flows through me, empowering me for every challenge"
-      - Verse: "Peace I leave with you" → Confession: "I receive the peace of Christ that surpasses all understanding and guards my heart"
+      FORMAT: Return as JSON with fields: confession_text, theme, style
       
-      FORMAT: Return as JSON:
-      {
-        "title": "Powerful confession title that reflects the verse's specific theme",
-        "confession_text": "Short, spiritually profound confession that directly aligns with the verse's message (1-2 sentences only)",
-        "theme": "Theme that matches the verse theme",
-        "style": "${randomStyle}"
-      }`
+      Example: {"confession_text": "I declare that I am still before the Lord, knowing that He fights for me and I need only be still.", "theme": "divine protection", "style": "prophetic declaration"}`
 
       const response = await this.callOpenRouter(prompt)
       const result = JSON.parse(this.cleanJsonResponse(response))
