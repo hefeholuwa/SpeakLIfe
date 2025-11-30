@@ -1,0 +1,28 @@
+
+> speaklife@0.1.0 build
+> vite build
+
+vite v7.1.10 building for production...
+transforming...
+✓ 1761 modules transformed.
+✗ Build failed in 3.35s
+error during build:
+src/components/admin/TopicsPanel.jsx (2:9): "adminService" is not exported by "src/services/adminService.js", imported by "src/components/admin/TopicsPanel.jsx".
+file: /Users/user/Desktop/speaklife/src/components/admin/TopicsPanel.jsx:2:9
+
+1: import React, { useState, useEffect, useRef } from 'react'
+2: import { adminService } from '../../services/adminService'
+            ^
+3: import {
+4:   Card,
+
+    at getRollupError (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:16939:16)
+    at Module.traceVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:17391:29)
+    at ModuleScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:15061:39)
+    at ReturnValueScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:5642:38)
+    at FunctionBodyScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:5642:38)
+    at ReturnValueScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:5642:38)
+    at FunctionBodyScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:5642:38)
+    at BlockScope.findVariable (file:///Users/user/Desktop/speaklife/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:5642:38)

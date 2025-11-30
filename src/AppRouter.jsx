@@ -4,7 +4,7 @@ import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
 import AdminDashboard from './components/AdminDashboard.jsx'
-import TopicDetail from './components/TopicDetail.jsx'
+
 
 const AppRouter = () => {
   const [currentRoute, setCurrentRoute] = useState('landing')
@@ -18,8 +18,7 @@ const AppRouter = () => {
       setCurrentRoute('bible')
     } else if (path === '/admin') {
       setCurrentRoute('admin')
-    } else if (path.startsWith('/topic/')) {
-      setCurrentRoute('topic')
+
     } else {
       setCurrentRoute('landing')
     }
@@ -33,8 +32,7 @@ const AppRouter = () => {
         setCurrentRoute('bible')
       } else if (path === '/admin') {
         setCurrentRoute('admin')
-      } else if (path.startsWith('/topic/')) {
-        setCurrentRoute('topic')
+
       } else {
         setCurrentRoute('landing')
       }
@@ -48,7 +46,7 @@ const AppRouter = () => {
 
     window.addEventListener('popstate', handlePopState)
     window.addEventListener('userLoggedOut', handleUserLoggedOut)
-    
+
     return () => {
       window.removeEventListener('popstate', handlePopState)
       window.removeEventListener('userLoggedOut', handleUserLoggedOut)
@@ -72,7 +70,7 @@ const AppRouter = () => {
   }
 
   // Pass navigation function to components
-  
+
   if (currentRoute === 'dashboard') {
     return (
       <AuthProvider>
@@ -89,13 +87,7 @@ const AppRouter = () => {
     return <AdminDashboard onNavigate={navigateTo} />
   }
 
-  if (currentRoute === 'topic') {
-    return (
-      <AuthProvider>
-        <TopicDetail />
-      </AuthProvider>
-    )
-  }
+
 
   return (
     <AuthProvider>

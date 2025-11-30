@@ -20,18 +20,18 @@ class AdminService {
       data,
       time: new Date()
     }
-    
+
     this.logs.unshift(logEntry)
-    
+
     // Keep only the last maxLogs entries
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(0, this.maxLogs)
     }
-    
+
     // Also log to console in development
     if (process.env.NODE_ENV === 'development') {
     }
-    
+
     return logEntry
   }
 
@@ -43,7 +43,7 @@ class AdminService {
     }
 
     if (searchTerm) {
-      filteredLogs = filteredLogs.filter(log => 
+      filteredLogs = filteredLogs.filter(log =>
         log.message.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
@@ -60,26 +60,28 @@ class AdminService {
   async getSystemStats() {
     try {
       this.addLog('Loading system statistics...', 'info')
-      
+
       const [
         { count: dailyVerseCount },
         { count: topicVerseCount },
         { count: topicConfessionCount },
         { count: bookmarkCount },
-        { count: highlightCount }
+        { count: highlightCount },
+        { count: userCount }
       ] = await Promise.all([
         supabase.from('daily_verses').select('*', { count: 'exact', head: true }),
         supabase.from('topic_verses').select('*', { count: 'exact', head: true }),
         supabase.from('topic_confessions').select('*', { count: 'exact', head: true }),
         supabase.from('bible_bookmarks').select('*', { count: 'exact', head: true }),
-        supabase.from('bible_highlights').select('*', { count: 'exact', head: true })
+        supabase.from('bible_highlights').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true })
       ])
 
       const totalVerses = (dailyVerseCount || 0) + (topicVerseCount || 0)
       const totalConfessions = topicConfessionCount || 0
 
       const stats = {
-        totalUsers: 'N/A', // Cannot access auth.users directly from client
+        totalUsers: userCount || 0,
         totalVerses: totalVerses,
         totalConfessions: totalConfessions,
         totalBookmarks: bookmarkCount || 0,
@@ -87,7 +89,7 @@ class AdminService {
         lastUpdated: new Date().toISOString()
       }
 
-      this.addLog(`System stats loaded: ${stats.totalVerses} verses (${dailyVerseCount} daily + ${topicVerseCount} topic), ${stats.totalConfessions} confessions`, 'success')
+      this.addLog(`System stats loaded: ${stats.totalUsers} users, ${stats.totalVerses} verses, ${stats.totalConfessions} confessions`, 'success')
       return stats
     } catch (error) {
       this.addLog(`Error loading system stats: ${error.message}`, 'error')
@@ -138,7 +140,7 @@ class AdminService {
   async createDailyContent(content) {
     try {
       this.addLog(`Creating daily content for ${content.date}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('daily_verses')
         .insert({
@@ -162,7 +164,7 @@ class AdminService {
   async updateDailyContent(id, updates) {
     try {
       this.addLog(`Updating daily content ${id}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('daily_verses')
         .update(updates)
@@ -182,7 +184,7 @@ class AdminService {
   async deleteDailyContent(id) {
     try {
       this.addLog(`Deleting daily content ${id}...`, 'info')
-      
+
       const { error } = await supabase
         .from('daily_verses')
         .delete()
@@ -201,9 +203,9 @@ class AdminService {
   async getDailyContent(date = null) {
     try {
       this.addLog(`Loading daily content${date ? ` for ${date}` : ''}...`, 'info')
-      
+
       let query = supabase.from('daily_verses').select('*')
-      
+
       if (date) {
         query = query.eq('date', date)
       } else {
@@ -226,7 +228,7 @@ class AdminService {
   getCacheInfo() {
     try {
       this.addLog('Analyzing cache...', 'info')
-      
+
       const cacheInfo = {
         localStorage: this.analyzeLocalStorage(),
         sessionStorage: this.analyzeSessionStorage(),
@@ -245,7 +247,7 @@ class AdminService {
   analyzeLocalStorage() {
     const items = []
     const size = localStorage.length
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
       const value = localStorage.getItem(key)
@@ -266,7 +268,7 @@ class AdminService {
   analyzeSessionStorage() {
     const items = []
     const size = sessionStorage.length
-    
+
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i)
       const value = sessionStorage.getItem(key)
@@ -305,35 +307,35 @@ class AdminService {
   async clearCache(type = 'all') {
     try {
       this.addLog(`Clearing cache (type: ${type})...`, 'warning')
-      
+
       let clearedItems = 0
-      
+
       if (type === 'all' || type === 'localStorage') {
         // Clear specific cache items
         const keysToRemove = []
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && (
-            key.includes('cache') || 
-            key.includes('daily') || 
+            key.includes('cache') ||
+            key.includes('daily') ||
             key.includes('bible') ||
             key.includes('user')
           )) {
             keysToRemove.push(key)
           }
         }
-        
+
         keysToRemove.forEach(key => {
           localStorage.removeItem(key)
           clearedItems++
         })
       }
-      
+
       if (type === 'all' || type === 'sessionStorage') {
         sessionStorage.clear()
         clearedItems += sessionStorage.length
       }
-      
+
       this.addLog(`Cache cleared: ${clearedItems} items removed`, 'success')
       return { clearedItems, type }
     } catch (error) {
@@ -370,6 +372,8 @@ class AdminService {
           icon: topic.icon,
           color: topic.color || '#6366f1',
           description: topic.description,
+          category: topic.category || 'General',
+          is_featured: topic.is_featured || false,
           usage_count: parseInt(topic.usage_count) || 0,
           popularity_score: parseFloat(topic.popularity_score) || 0.0
         }])
@@ -394,6 +398,8 @@ class AdminService {
           icon: updates.icon,
           color: updates.color,
           description: updates.description,
+          category: updates.category,
+          is_featured: updates.is_featured,
           usage_count: parseInt(updates.usage_count) || 0,
           popularity_score: parseFloat(updates.popularity_score) || 0.0
         })
@@ -431,7 +437,7 @@ class AdminService {
       // Since there's no is_active column, we'll update the usage_count to indicate activity
       const { data, error } = await supabase
         .from('topics')
-        .update({ 
+        .update({
           usage_count: isActive ? 1 : 0,
           updated_at: new Date().toISOString()
         })
@@ -451,7 +457,7 @@ class AdminService {
   async getTopicContent(topicId) {
     try {
       this.addLog(`Fetching content for topic ${topicId}...`, 'info')
-      
+
       const [versesResult, confessionsResult] = await Promise.all([
         supabase
           .from('topic_verses')
@@ -482,7 +488,7 @@ class AdminService {
   async addTopicVerse(topicId, verseData) {
     try {
       this.addLog(`Adding verse to topic ${topicId}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('topic_verses')
         .insert([{
@@ -501,7 +507,7 @@ class AdminService {
         this.addLog(`Database error: ${error.message}`, 'error')
         throw error
       }
-      
+
       this.addLog(`Verse added successfully`, 'success')
       return data[0]
     } catch (error) {
@@ -513,7 +519,7 @@ class AdminService {
   async addTopicConfession(topicId, confessionData) {
     try {
       this.addLog(`Adding confession to topic ${topicId}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('topic_confessions')
         .insert([{
@@ -528,7 +534,7 @@ class AdminService {
         this.addLog(`Database error: ${error.message}`, 'error')
         throw error
       }
-      
+
       this.addLog(`Confession added successfully`, 'success')
       return data[0]
     } catch (error) {
@@ -540,10 +546,10 @@ class AdminService {
   async createTopicVerse(verseData) {
     try {
       this.addLog(`Creating topic verse...`, 'info')
-      
+
       // Remove id field to prevent duplicate key constraint violation
       const { id, ...insertData } = verseData
-      
+
       const { data, error } = await supabase
         .from('topic_verses')
         .insert([insertData])
@@ -579,10 +585,10 @@ class AdminService {
   async createTopicConfession(confessionData) {
     try {
       this.addLog(`Creating topic confession...`, 'info')
-      
+
       // Remove id field to prevent duplicate key constraint violation
       const { id, ...insertData } = confessionData
-      
+
       const { data, error } = await supabase
         .from('topic_confessions')
         .insert([insertData])
@@ -651,7 +657,7 @@ class AdminService {
   async trackTopicView(topicId, userId = null) {
     try {
       this.addLog(`Tracking view for topic ${topicId}...`, 'info')
-      
+
       const { error } = await supabase.rpc('increment_topic_view', {
         topic_uuid: topicId,
         user_uuid: userId
@@ -668,7 +674,7 @@ class AdminService {
   async getTopicDailyViews(topicId) {
     try {
       this.addLog(`Getting daily views for topic ${topicId}...`, 'info')
-      
+
       const { data, error } = await supabase.rpc('get_topic_daily_views', {
         topic_uuid: topicId
       })
@@ -685,7 +691,7 @@ class AdminService {
   async getTopicViewsWithCounts() {
     try {
       this.addLog('Getting topics with daily view counts...', 'info')
-      
+
       const { data: topics, error: topicsError } = await supabase
         .from('topics')
         .select('*')
@@ -723,7 +729,7 @@ class AdminService {
   async getViewAnalytics() {
     try {
       this.addLog('Getting view analytics...', 'info')
-      
+
       // Get total daily views across all topics
       const { data: totalViews, error: totalError } = await supabase
         .from('topic_views')
@@ -751,7 +757,7 @@ class AdminService {
       // Get view trends for last 7 days
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      
+
       const { data: trendData, error: trendError } = await supabase
         .from('topic_views')
         .select('view_date, view_count')
@@ -793,10 +799,10 @@ class AdminService {
   async getTopicViewHistory(topicId, days = 7) {
     try {
       this.addLog(`Getting view history for topic ${topicId}...`, 'info')
-      
+
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - days)
-      
+
       const { data, error } = await supabase
         .from('topic_views')
         .select('view_date, view_count, user_id')
@@ -837,18 +843,18 @@ class AdminService {
   async generateDailyContentPreview() {
     try {
       this.addLog('🤖 Generating daily content preview with AI...', 'info')
-      
+
       const aiContent = await aiGenerationService.generateDailyContent()
-      
+
       this.addLog(`✅ AI generated daily content preview: ${aiContent.verse.reference}`, 'success')
       return aiContent
     } catch (error) {
       this.addLog(`❌ AI generation failed: ${error.message}`, 'error')
-      
+
       // Fallback to default content
       this.addLog('🔄 Using fallback content...', 'warning')
       const fallbackContent = aiGenerationService.getFallbackContent()
-      
+
       this.addLog('✅ Fallback content preview created', 'success')
       return fallbackContent
     }
@@ -857,7 +863,7 @@ class AdminService {
   async saveDailyContent(previewContent) {
     try {
       this.addLog('💾 Saving daily content to database...', 'info')
-      
+
       const { data, error } = await supabase
         .from('daily_verses')
         .insert([{
@@ -869,7 +875,7 @@ class AdminService {
         .select()
 
       if (error) throw error
-      
+
       this.addLog(`✅ Daily content saved: ${previewContent.verse.reference}`, 'success')
       return data[0]
     } catch (error) {
@@ -881,9 +887,9 @@ class AdminService {
   async generateDailyContentWithAI() {
     try {
       this.addLog('🤖 Generating daily content with AI...', 'info')
-      
+
       const aiContent = await aiGenerationService.generateDailyContent()
-      
+
       // Save to database
       const { data, error } = await supabase
         .from('daily_verses')
@@ -896,16 +902,16 @@ class AdminService {
         .select()
 
       if (error) throw error
-      
+
       this.addLog(`✅ AI generated daily content: ${aiContent.verse.reference}`, 'success')
       return data[0]
     } catch (error) {
       this.addLog(`❌ AI generation failed: ${error.message}`, 'error')
-      
+
       // Fallback to default content
       this.addLog('🔄 Using fallback content...', 'warning')
       const fallbackContent = aiGenerationService.getFallbackContent()
-      
+
       const { data, error: fallbackError } = await supabase
         .from('daily_verses')
         .insert([{
@@ -917,7 +923,7 @@ class AdminService {
         .select()
 
       if (fallbackError) throw fallbackError
-      
+
       this.addLog('✅ Fallback content created successfully', 'success')
       return data[0]
     }
@@ -926,7 +932,7 @@ class AdminService {
   async generateTopicContentPreview(topicId, contentType = 'both') {
     try {
       this.addLog(`🤖 Generating AI content preview for topic ${topicId}...`, 'info')
-      
+
       // Get topic details
       const { data: topic, error: topicError } = await supabase
         .from('topics')
@@ -950,7 +956,7 @@ class AdminService {
             translation: 'NIV',
             is_featured: false
           }))
-          
+
           this.addLog(`✅ Generated ${results.verses.length} AI verses preview for ${topic.title}`, 'success')
         } catch (error) {
           this.addLog(`❌ AI verse generation failed: ${error.message}`, 'error')
@@ -965,7 +971,7 @@ class AdminService {
             ...confession,
             is_featured: false
           }))
-          
+
           this.addLog(`✅ Generated ${results.confessions.length} AI confessions preview for ${topic.title}`, 'success')
         } catch (error) {
           this.addLog(`❌ AI confession generation failed: ${error.message}`, 'error')
@@ -982,7 +988,7 @@ class AdminService {
   async saveTopicContent(previewContent) {
     try {
       this.addLog('💾 Saving topic content to database...', 'info')
-      
+
       const results = { verses: [], confessions: [] }
 
       // Save verses
@@ -1037,7 +1043,7 @@ class AdminService {
   async generateTopicContentWithAI(topicId, contentType = 'both') {
     try {
       this.addLog(`🤖 Generating AI content for topic ${topicId}...`, 'info')
-      
+
       // Get topic details
       const { data: topic, error: topicError } = await supabase
         .from('topics')
@@ -1054,7 +1060,7 @@ class AdminService {
         try {
           this.addLog(`🎯 Generating verses for topic: "${topic.title}" (ID: ${topicId})`, 'info')
           const aiVerses = await aiGenerationService.generateTopicVerses(topic.title, 3)
-          
+
           for (const verseData of aiVerses) {
             // Validate required fields
             if (!verseData.book || !verseData.chapter || !verseData.verse) {
@@ -1065,7 +1071,7 @@ class AdminService {
             // Ensure chapter and verse are numbers
             const chapter = parseInt(verseData.chapter)
             const verse = parseInt(verseData.verse)
-            
+
             if (isNaN(chapter) || isNaN(verse)) {
               this.addLog(`❌ Skipping verse with invalid chapter/verse: ${JSON.stringify(verseData)}`, 'error')
               continue
@@ -1081,7 +1087,7 @@ class AdminService {
               translation: verseData.translation || 'KJV'
             })
           }
-          
+
           this.addLog(`✅ Generated ${results.verses.length} AI verses for ${topic.title}`, 'success')
         } catch (error) {
           this.addLog(`❌ AI verse generation failed: ${error.message}`, 'error')
@@ -1093,7 +1099,7 @@ class AdminService {
         try {
           this.addLog(`🎯 Generating confessions for topic: "${topic.title}" (ID: ${topicId})`, 'info')
           const aiConfessions = await aiGenerationService.generateTopicConfessions(topic.title, 3)
-          
+
           for (const confessionData of aiConfessions) {
             // Add to results without saving to database (preview mode)
             results.confessions.push({
@@ -1102,7 +1108,7 @@ class AdminService {
               is_featured: false
             })
           }
-          
+
           this.addLog(`✅ Generated ${results.confessions.length} AI confessions for ${topic.title}`, 'success')
         } catch (error) {
           this.addLog(`❌ AI confession generation failed: ${error.message}`, 'error')
@@ -1120,7 +1126,7 @@ class AdminService {
     try {
       this.addLog('🤖 Testing AI connection...', 'info')
       const result = await aiGenerationService.testAIConnection()
-      
+
       if (result.success) {
         this.addLog('✅ AI connection successful', 'success')
         return { success: true, data: result.data }
@@ -1339,16 +1345,16 @@ class AdminService {
   async generateTestUsers(count = 5) {
     try {
       this.addLog(`Generating ${count} test users...`, 'info')
-      
+
       // Note: User creation requires admin privileges and cannot be done from client side
       this.addLog('⚠️ User creation requires admin privileges. This feature is not available from the client side.', 'warning')
-      
+
       const results = []
       for (let i = 1; i <= count; i++) {
-        results.push({ 
-          success: false, 
-          email: `testuser${i}@example.com`, 
-          error: 'User creation requires admin privileges' 
+        results.push({
+          success: false,
+          email: `testuser${i}@example.com`,
+          error: 'User creation requires admin privileges'
         })
       }
 
@@ -1363,7 +1369,7 @@ class AdminService {
   async generateTestVerses(count = 7) {
     try {
       this.addLog(`Generating ${count} test verses...`, 'info')
-      
+
       const testVerses = [
         {
           verse: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
@@ -1407,7 +1413,7 @@ class AdminService {
         const verse = testVerses[i % testVerses.length]
         const date = new Date()
         date.setDate(date.getDate() + i)
-        
+
         try {
           const { data, error } = await supabase
             .from('daily_verses')
@@ -1441,7 +1447,7 @@ class AdminService {
   async checkSystemHealth() {
     try {
       this.addLog('Checking system health...', 'info')
-      
+
       const health = {
         database: await this.checkDatabaseHealth(),
         cache: await this.checkCacheHealth(),
@@ -1449,7 +1455,7 @@ class AdminService {
         timestamp: new Date().toISOString()
       }
 
-      const overallHealth = Object.values(health).every(check => 
+      const overallHealth = Object.values(health).every(check =>
         typeof check === 'object' ? check.status === 'healthy' : true
       ) ? 'healthy' : 'unhealthy'
 
@@ -1480,9 +1486,9 @@ class AdminService {
     try {
       const cacheInfo = this.getCacheInfo()
       const isHealthy = cacheInfo.localStorage.size < 1000 // Arbitrary limit
-      
-      return { 
-        status: isHealthy ? 'healthy' : 'warning', 
+
+      return {
+        status: isHealthy ? 'healthy' : 'warning',
         size: cacheInfo.localStorage.size,
         totalSize: cacheInfo.localStorage.totalSize
       }
@@ -1543,17 +1549,17 @@ class AdminService {
   async getAllExistingVerses() {
     try {
       this.addLog('Fetching existing verses for duplicate check...', 'info')
-      
+
       const { data: dailyVerses, error: dailyError } = await supabase
         .from('daily_verses')
         .select('verse_text, reference')
-      
+
       if (dailyError) throw dailyError
 
       const { data: topicVerses, error: topicError } = await supabase
         .from('topic_verses')
         .select('verse_text, reference, book, chapter, verse')
-      
+
       if (topicError) throw topicError
 
       const allVerses = [...(dailyVerses || []), ...(topicVerses || [])]
@@ -1569,11 +1575,11 @@ class AdminService {
   async getAllExistingConfessions() {
     try {
       this.addLog('Fetching existing confessions for duplicate check...', 'info')
-      
+
       const { data: topicConfessions, error: topicError } = await supabase
         .from('topic_confessions')
         .select('title, confession_text')
-      
+
       if (topicError) throw topicError
 
       this.addLog(`Found ${topicConfessions?.length || 0} existing confessions`, 'info')
@@ -1588,7 +1594,7 @@ class AdminService {
   async trackTopicUsage(topicId) {
     try {
       this.addLog(`Tracking usage for topic ${topicId}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('topics')
         .select('usage_count')
@@ -1619,7 +1625,7 @@ class AdminService {
   async getTopicContentCounts(topicId) {
     try {
       this.addLog(`Getting content counts for topic ${topicId}...`, 'info')
-      
+
       const [
         { count: verseCount },
         { count: confessionCount }
@@ -1646,7 +1652,7 @@ class AdminService {
   async getAllTopicsWithCounts() {
     try {
       this.addLog('Getting all topics with content counts...', 'info')
-      
+
       const { data: topics, error: topicsError } = await supabase
         .from('topics')
         .select('*')
@@ -1679,7 +1685,7 @@ class AdminService {
   async getAllUsers() {
     try {
       this.addLog('Fetching all users...', 'info')
-      
+
       const { data: users, error } = await supabase
         .from('users')
         .select(`
@@ -1718,7 +1724,7 @@ class AdminService {
   async getUserStats() {
     try {
       this.addLog('Getting user statistics...', 'info')
-      
+
       const { data: users, error } = await supabase
         .from('users')
         .select(`
@@ -1773,7 +1779,7 @@ class AdminService {
   async updateUserStatus(userId, updates) {
     try {
       this.addLog(`Updating user ${userId}...`, 'info')
-      
+
       const { data, error } = await supabase
         .from('users')
         .update(updates)
@@ -1793,7 +1799,7 @@ class AdminService {
   async deleteUser(userId) {
     try {
       this.addLog(`Soft deleting user ${userId}...`, 'warning')
-      
+
       // Soft delete by setting deleted_at timestamp
       const { data, error } = await supabase
         .from('users')
@@ -1811,33 +1817,63 @@ class AdminService {
     }
   }
 
+  // Get the next available date for daily content
+  async getNextAvailableDate() {
+    try {
+      const { data, error } = await supabase
+        .from('daily_verses')
+        .select('date')
+        .order('date', { ascending: false })
+        .limit(1)
+
+      if (error) throw error
+
+      if (data && data.length > 0) {
+        const lastDate = new Date(data[0].date)
+        const nextDate = new Date(lastDate)
+        nextDate.setDate(lastDate.getDate() + 1)
+        return nextDate.toISOString().split('T')[0]
+      }
+
+      // If no content exists, return today
+      return new Date().toISOString().split('T')[0]
+    } catch (error) {
+      console.error('Error getting next available date:', error)
+      return new Date().toISOString().split('T')[0]
+    }
+  }
+
   // Generate daily content with AI
   async generateDailyContent() {
     try {
       this.addLog('Starting AI content generation...', 'info')
-      
+
+      // Get the next available date
+      const targetDate = await this.getNextAvailableDate()
+      this.addLog(`Generating content for date: ${targetDate}`, 'info')
+
       const aiContent = await aiGenerationService.generateDailyContent()
-      
+
       if (aiContent && aiContent.verse && aiContent.confession) {
         // Check for duplicates before saving
         this.addLog('Checking for duplicate content...', 'info')
-        
+
         const verseText = aiContent.verse.verse_text || aiContent.verse.text || ''
         const confessionText = aiContent.confession.confession_text || aiContent.confession.text || ''
-        
+
         // Check if verse already exists
         const { data: existingVerses, error: verseError } = await supabase
           .from('daily_verses')
           .select('verse_text')
           .eq('verse_text', verseText)
-        
+
         if (verseError) {
           console.error('Error checking verse duplicates:', verseError)
         } else if (existingVerses && existingVerses.length > 0) {
           this.addLog('Duplicate verse detected, using fallback content', 'warning')
           const fallbackContent = this.getFallbackDailyContent()
           const contentData = {
-            date: new Date().toISOString().split('T')[0],
+            date: targetDate,
             verse_text: fallbackContent.verse_text,
             reference: fallbackContent.reference,
             confession_text: fallbackContent.confession_text,
@@ -1847,20 +1883,20 @@ class AdminService {
           this.addLog('Fallback content saved successfully', 'success')
           return contentData
         }
-        
+
         // Check if confession already exists
         const { data: existingConfessions, error: confessionError } = await supabase
           .from('daily_verses')
           .select('confession_text')
           .eq('confession_text', confessionText)
-        
+
         if (confessionError) {
           console.error('Error checking confession duplicates:', confessionError)
         } else if (existingConfessions && existingConfessions.length > 0) {
           this.addLog('Duplicate confession detected, using fallback content', 'warning')
           const fallbackContent = this.getFallbackDailyContent()
           const contentData = {
-            date: new Date().toISOString().split('T')[0],
+            date: targetDate,
             verse_text: fallbackContent.verse_text,
             reference: fallbackContent.reference,
             confession_text: fallbackContent.confession_text,
@@ -1870,57 +1906,58 @@ class AdminService {
           this.addLog('Fallback content saved successfully', 'success')
           return contentData
         }
-        
+
         // No duplicates found, save the generated content
         const contentData = {
-          date: new Date().toISOString().split('T')[0],
+          date: targetDate,
           verse_text: verseText,
           reference: aiContent.verse.reference || '',
           confession_text: confessionText,
           translation: aiContent.verse.translation || 'KJV'
         }
-        
+
         // Validate required fields
         if (!contentData.verse_text || !contentData.reference) {
           throw new Error('AI generated content is missing required fields (verse_text or reference)')
         }
-        
+
         await this.createDailyContent(contentData)
         this.addLog('AI content generated and saved successfully', 'success')
         return contentData
       } else {
         console.error('❌ AI content structure issue:', aiContent)
         this.addLog('AI generation failed, using fallback content', 'warning')
-        
+
         // Use fallback content
         const fallbackContent = this.getFallbackDailyContent()
         const contentData = {
-          date: new Date().toISOString().split('T')[0],
+          date: targetDate,
           verse_text: fallbackContent.verse_text,
           reference: fallbackContent.reference,
           confession_text: fallbackContent.confession_text,
           translation: fallbackContent.translation
         }
-        
+
         await this.createDailyContent(contentData)
         this.addLog('Fallback content saved successfully', 'success')
         return contentData
       }
     } catch (error) {
       this.addLog(`Error generating daily content: ${error.message}`, 'error')
-      
+
       // Try fallback content as last resort
       try {
         this.addLog('Attempting fallback content generation', 'info')
+        const targetDate = await this.getNextAvailableDate()
         const fallbackContent = this.getFallbackDailyContent()
         const contentData = {
-          date: new Date().toISOString().split('T')[0],
+          date: targetDate,
           verse_text: fallbackContent.verse_text,
           reference: fallbackContent.reference,
           confession_text: fallbackContent.confession_text,
           translation: fallbackContent.translation
         }
-        
+
         await this.createDailyContent(contentData)
         this.addLog('Fallback content saved successfully', 'success')
         return contentData

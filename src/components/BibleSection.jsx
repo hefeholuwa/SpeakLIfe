@@ -1,5 +1,5 @@
 import React from 'react'
-import ESVBibleReader from './bible/ESVBibleReader'
+import BibleReader from './BibleReader'
 
 const BibleSection = () => {
 
@@ -10,7 +10,7 @@ const BibleSection = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(120,119,198,0.1),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.1),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]"></div>
-      
+
       {/* Mobile-Responsive Header */}
       <div className="relative bg-white/90 backdrop-blur-sm border-b border-white/20 sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
@@ -42,7 +42,7 @@ const BibleSection = () => {
         <div className="w-full">
           {/* Mobile-Responsive Bible Reader Container */}
           <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            <ESVBibleReader />
+            <BibleReader />
           </div>
         </div>
       </div>

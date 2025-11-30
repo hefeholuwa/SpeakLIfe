@@ -1,14 +1,39 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '../supabaseClient.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import {
+  Book,
+  PenTool,
+  Plus,
+  Search,
+  Filter,
+  X,
+  MoreVertical,
+  Calendar,
+  Heart,
+  Smile,
+  Frown,
+  Meh,
+  Sun,
+  CloudRain,
+  Trash2,
+  Edit2,
+  Lock,
+  Unlock,
+  ChevronDown,
+  Sparkles,
+  Quote
+} from 'lucide-react';
 
-const ConfessionJournal = () => {
+const ConfessionJournal = ({ initialData }) => {
   const { user } = useAuth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -17,6 +42,18 @@ const ConfessionJournal = () => {
     mood: 'grateful',
     is_private: true
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        title: initialData.title || '',
+        content: initialData.content || '',
+        category: initialData.category || 'confession'
+      }));
+      setShowForm(true);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     loadEntries();
@@ -29,13 +66,13 @@ const ConfessionJournal = () => {
         setEntries([]);
         return;
       }
-      
+
       const { data, error } = await supabase
         .from('confession_journal')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       setEntries(data || []);
     } catch (error) {
@@ -47,63 +84,55 @@ const ConfessionJournal = () => {
 
   const saveEntry = async (e) => {
     e.preventDefault();
-    if (!user) {
-      alert('Please log in to save your confession journal entries.');
-      return;
-    }
-    
+    if (!user) return;
+
     try {
       const entryData = {
         ...formData,
         user_id: user.id
       };
-      
+
       if (editingEntry) {
-        // Update existing entry
         const { error } = await supabase
           .from('confession_journal')
           .update(entryData)
           .eq('id', editingEntry.id)
-          .eq('user_id', user.id); // Ensure user can only update their own entries
-        
+          .eq('user_id', user.id);
+
         if (error) throw error;
       } else {
-        // Create new entry
         const { error } = await supabase
           .from('confession_journal')
           .insert([entryData]);
-        
+
         if (error) throw error;
       }
-      
+
       await loadEntries();
       resetForm();
+      toast.success(editingEntry ? 'Entry updated successfully' : 'New entry created successfully');
     } catch (error) {
       console.error('Error saving entry:', error);
-      alert('Failed to save entry. Please try again.');
+      toast.error('Failed to save entry. Please try again.');
     }
   };
 
   const deleteEntry = async (entryId) => {
-    if (!user) {
-      alert('Please log in to delete entries.');
-      return;
-    }
-    
-    if (!confirm('Are you sure you want to delete this entry?')) return;
-    
+    if (!user || !confirm('Are you sure you want to delete this entry?')) return;
+
     try {
       const { error } = await supabase
         .from('confession_journal')
         .delete()
         .eq('id', entryId)
-        .eq('user_id', user.id); // Ensure user can only delete their own entries
-      
+        .eq('user_id', user.id);
+
       if (error) throw error;
       await loadEntries();
+      toast.success('Entry deleted successfully');
     } catch (error) {
       console.error('Error deleting entry:', error);
-      alert('Failed to delete entry. Please try again.');
+      toast.error('Failed to delete entry. Please try again.');
     }
   };
 
@@ -120,73 +149,20 @@ const ConfessionJournal = () => {
   };
 
   const handlePromptClick = (promptText) => {
-    setFormData(prev => ({
-      ...prev,
-      content: promptText
-    }));
+    setFormData(prev => ({ ...prev, content: promptText }));
     setShowForm(true);
   };
 
-
   const getRandomPrompt = () => {
-    const allPrompts = [
-      "What am I grateful for today? How has God blessed me in unexpected ways?",
-      "How has God shown His faithfulness in my life recently? What answered prayers can I celebrate?",
-      "What am I struggling with today? How can I surrender this to God and trust in His plan?",
-      "How did God speak to me today? What scripture, song, or moment touched my heart?",
-      "Who needs my prayers today? How can I intercede for others and be a blessing?",
-      "What am I praying for? How can I align my heart with God's will in this situation?",
-      "How am I growing in my faith? What spiritual disciplines am I practicing?",
-      "What sin or habit do I need to confess? How can I seek God's forgiveness and strength?",
-      "What is God teaching me through my current circumstances?",
-      "How can I be more like Jesus in my daily interactions?",
-      "What areas of my life need God's healing and restoration?",
-      "How can I better serve others and show God's love today?"
+    const prompts = [
+      "What am I grateful for today?",
+      "How has God shown His faithfulness recently?",
+      "What am I struggling with that I need to surrender?",
+      "Who needs my prayers today?",
+      "What is God teaching me in this season?",
+      "How can I be a blessing to someone today?"
     ];
-    
-    const randomPrompt = allPrompts[Math.floor(Math.random() * allPrompts.length)];
-    handlePromptClick(randomPrompt);
-  };
-
-  const getDailyPrompt = () => {
-    const dailyPrompts = [
-      "What am I grateful for today? How has God blessed me in unexpected ways?",
-      "How has God shown His faithfulness in my life recently? What answered prayers can I celebrate?",
-      "What am I struggling with today? How can I surrender this to God and trust in His plan?",
-      "How did God speak to me today? What scripture, song, or moment touched my heart?",
-      "Who needs my prayers today? How can I intercede for others and be a blessing?",
-      "What am I praying for? How can I align my heart with God's will in this situation?",
-      "How am I growing in my faith? What spiritual disciplines am I practicing?",
-      "What sin or habit do I need to confess? How can I seek God's forgiveness and strength?",
-      "What is God teaching me through my current circumstances?",
-      "How can I be more like Jesus in my daily interactions?",
-      "What areas of my life need God's healing and restoration?",
-      "How can I better serve others and show God's love today?",
-      "What is God's purpose for my life? How can I align with His calling?",
-      "How can I be a light for Christ in my workplace/community today?",
-      "What spiritual fruit am I developing? Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control?",
-      "How can I better steward the gifts and resources God has given me?",
-      "What relationships in my life need God's healing and restoration?",
-      "How can I practice forgiveness and extend grace to others today?",
-      "What fears or anxieties am I holding onto that I need to surrender to God?",
-      "How can I be more intentional about spending time with God today?",
-      "What is God revealing about my character through my current challenges?",
-      "How can I better love and serve my family/friends today?",
-      "What areas of my life need God's wisdom and guidance?",
-      "How can I be more generous with my time, talents, and resources?",
-      "What is God calling me to let go of or change in my life?",
-      "How can I better reflect God's character in my words and actions?",
-      "What spiritual disciplines do I need to develop or strengthen?",
-      "How can I be more aware of God's presence throughout my day?",
-      "What is God teaching me about trust and faith through my circumstances?",
-      "How can I be a better witness for Christ in my daily life?"
-    ];
-    
-    // Use the day of the year to get a consistent daily prompt
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-    const dailyPrompt = dailyPrompts[dayOfYear % dailyPrompts.length];
-    handlePromptClick(dailyPrompt);
+    handlePromptClick(prompts[Math.floor(Math.random() * prompts.length)]);
   };
 
   const startEdit = (entry) => {
@@ -203,600 +179,366 @@ const ConfessionJournal = () => {
 
   const filteredEntries = entries.filter(entry => {
     const matchesFilter = filter === 'all' || entry.category === filter;
-    const matchesSearch = true; // No search functionality
+    const matchesSearch = entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.content?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const getMoodEmoji = (mood) => {
-    const moodEmojis = {
-      grateful: '🙏',
-      repentant: '😔',
-      hopeful: '✨',
-      joyful: '😊',
-      peaceful: '🕊️',
-      anxious: '😰',
-      blessed: '🙌',
-      reflective: '🤔'
-    };
-    return moodEmojis[mood] || '😊';
+  const actionConfig = {
+    confession: {
+      label: 'Declare',
+      icon: Sparkles,
+      color: 'bg-purple-500',
+      lightColor: 'bg-purple-50',
+      textColor: 'text-purple-700',
+      borderColor: 'border-purple-200',
+      description: "Speak life over your situation",
+      defaultMood: 'hopeful'
+    },
+    prayer: {
+      label: 'Pray',
+      icon: Heart,
+      color: 'bg-blue-500',
+      lightColor: 'bg-blue-50',
+      textColor: 'text-blue-700',
+      borderColor: 'border-blue-200',
+      description: "Talk to God",
+      defaultMood: 'peaceful'
+    },
+    gratitude: {
+      label: 'Thank',
+      icon: Sun,
+      color: 'bg-amber-500',
+      lightColor: 'bg-amber-50',
+      textColor: 'text-amber-700',
+      borderColor: 'border-amber-200',
+      description: "Count your blessings",
+      defaultMood: 'grateful'
+    },
+    reflection: {
+      label: 'Reflect',
+      icon: Book,
+      color: 'bg-teal-500',
+      lightColor: 'bg-teal-50',
+      textColor: 'text-teal-700',
+      borderColor: 'border-teal-200',
+      description: "Process your thoughts",
+      defaultMood: 'reflective'
+    }
   };
 
-  const getCategoryEmoji = (category) => {
-    const categoryEmojis = {
-      prayer: '🙏',
-      confession: '💭',
-      reflection: '🤔',
-      testimony: '✨',
-      gratitude: '🙌',
-      request: '📝'
-    };
-    return categoryEmojis[category] || '📝';
+  const handleActionSelect = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      mood: actionConfig[category].defaultMood
+    }));
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your journal...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🔒</span>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">Please log in to access your confession journal.</p>
-          <button 
-            onClick={() => window.location.href = '/login'}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Go to Login
-          </button>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Premium Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(120,119,198,0.1),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.1),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]"></div>
-      
-      {/* Mobile-Responsive Header */}
-      <div className="relative bg-white/90 backdrop-blur-sm border-b border-white/20 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-              <div className="relative flex-shrink-0">
-                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 shadow-2xl">
-                  <span className="text-white text-lg sm:text-2xl">📝</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent truncate">
-                  Confession Journal
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">Your sacred space for reflection and growth</p>
-              </div>
-            </div>
-            <div className="flex space-x-2 sm:space-x-3 flex-shrink-0">
-                <button
-                  onClick={() => setShowForm(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold text-xs sm:text-sm"
-                >
-                  <span className="hidden sm:inline">✍️ New Entry</span>
-                  <span className="sm:hidden">✍️ New</span>
-                </button>
-            </div>
-          </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 mb-2">Spiritual Journal</h1>
+          <p className="text-gray-500">Your sacred space to speak, pray, and reflect.</p>
         </div>
+        {!showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10 flex items-center gap-2 active:scale-95 w-full md:w-auto justify-center"
+          >
+            <Plus size={20} />
+            New Entry
+          </button>
+        )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {/* Mobile-Responsive Filters */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-white/20">
-              <div className="flex flex-wrap gap-2 sm:gap-4 items-center justify-center sm:justify-start">
-                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start w-full sm:w-auto">
-                  <button
-                    onClick={() => setFilter('all')}
-                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
-                      filter === 'all' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                        : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
+      {showForm ? (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 animate-fade-in-up">
+          <div className="p-6 md:p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900">
+                  {editingEntry ? 'Edit Entry' : 'New Entry'}
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">What's on your heart today?</p>
+              </div>
+              <button
+                onClick={resetForm}
+                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={saveEntry} className="space-y-8">
+
+              {/* Visual Action Chips */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">I want to...</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(actionConfig).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isSelected = formData.category === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleActionSelect(key)}
+                        className={`relative p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${isSelected
+                          ? `${config.borderColor} ${config.lightColor}`
+                          : 'border-transparent bg-gray-50 hover:bg-gray-100'
+                          }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-white shadow-sm' : 'bg-gray-200'} transition-colors`}>
+                          <Icon size={20} className={isSelected ? config.textColor : 'text-gray-500'} />
+                        </div>
+                        <span className={`text-sm font-bold ${isSelected ? config.textColor : 'text-gray-600'}`}>
+                          {config.label}
+                        </span>
+                        {isSelected && (
+                          <div className={`absolute inset-0 rounded-2xl border-2 ${config.borderColor} pointer-events-none`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  {actionConfig[formData.category]?.description}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Content</label>
+                <div className={`relative rounded-2xl border-2 transition-colors focus-within:border-gray-900 focus-within:ring-0 ${actionConfig[formData.category].borderColor} ${actionConfig[formData.category].lightColor} bg-opacity-30`}>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full px-4 pt-4 pb-2 bg-transparent border-none focus:ring-0 text-lg font-bold text-gray-900 placeholder-gray-400"
+                    placeholder="Title (Optional)"
+                  />
+                  <textarea
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className="w-full px-4 pb-4 pt-2 bg-transparent border-none focus:ring-0 min-h-[150px] resize-y text-gray-700 placeholder-gray-400 leading-relaxed"
+                    placeholder={`Write your ${actionConfig[formData.category].label.toLowerCase()} here...`}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, is_private: !prev.is_private }))}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.is_private
+                    ? 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-50 text-gray-500'
                     }`}
+                >
+                  {formData.is_private ? <Lock size={16} /> : <Unlock size={16} />}
+                  {formData.is_private ? 'Private' : 'Public'}
+                </button>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="px-6 py-3 text-gray-500 font-bold hover:text-gray-700 transition-colors"
                   >
-                    📚 All ({entries.length})
+                    Cancel
                   </button>
                   <button
-                    onClick={() => setFilter('confession')}
-                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
-                      filter === 'confession' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                        : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
-                    }`}
+                    type="submit"
+                    className={`px-8 py-3 text-white rounded-xl font-bold shadow-lg transition-all transform active:scale-95 ${actionConfig[formData.category].color} hover:opacity-90`}
                   >
-                    💭 Confessions
-                  </button>
-                  <button
-                    onClick={() => setFilter('prayer')}
-                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
-                      filter === 'prayer' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                        : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
-                    }`}
-                  >
-                    🙏 Prayers
-                  </button>
-                  <button
-                    onClick={() => setFilter('reflection')}
-                    className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
-                      filter === 'reflection' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                        : 'bg-white/80 text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-gray-200'
-                    }`}
-                  >
-                    🤔 Reflections
+                    {editingEntry ? 'Save Changes' : 'Save Entry'}
                   </button>
                 </div>
               </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content - Entries List */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Search and Filter Bar */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search your journey..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border-transparent focus:bg-white focus:border-gray-200 rounded-xl transition-all outline-none text-sm"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${filter === 'all'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  All
+                </button>
+                {Object.entries(actionConfig).map(([key, config]) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${filter === key
+                      ? `${config.color} text-white`
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      }`}
+                  >
+                    <config.icon size={14} />
+                    {config.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Entries List */}
+            {/* Entries Grid */}
             <div className="space-y-4">
               {filteredEntries.length === 0 ? (
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-12 text-center border border-white/20">
-                  <div className="relative mb-8">
-                    <div className="text-8xl mb-4 animate-bounce">📝</div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 border-dashed">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <PenTool className="text-gray-400" size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Journey Awaits</h3>
-                  <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">
-                    Start your spiritual journey by writing your first entry. This is your sacred space for reflection and growth.
-                  </p>
-                  
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-8 border border-purple-100">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                      <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                    </div>
-                    <p className="text-purple-700 font-semibold text-lg mb-2">✨ Begin Your Story</p>
-                    <p className="text-purple-600 text-sm">Every journey starts with a single step</p>
-                  </div>
-                  
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">No entries found</h3>
+                  <p className="text-gray-500 text-sm mb-6">Start your spiritual journey today.</p>
                   <button
                     onClick={() => setShowForm(true)}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 font-bold text-lg"
+                    className="text-purple-600 font-bold text-sm hover:underline"
                   >
-                    ✍️ Write First Entry
+                    Create New Entry
                   </button>
                 </div>
               ) : (
-                filteredEntries.map((entry, index) => (
-                  <div 
-                    key={entry.id} 
-                    className="group relative bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/20 overflow-hidden"
-                    style={{ 
-                      animationDelay: `${index * 0.1}s`,
-                      animation: 'fadeInUp 0.6s ease-out forwards'
-                    }}
-                  >
-                    {/* Premium Background Effects */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-700"></div>
-                    
-                    <div className="relative z-10">
-                      <div className="flex items-start justify-between mb-4 sm:mb-6">
-                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                          <div className="relative flex-shrink-0">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 group-hover:scale-110 transition-transform duration-300">
-                              <span className="text-white text-lg sm:text-xl">{getCategoryEmoji(entry.category)}</span>
-                            </div>
-                            <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                filteredEntries.map((entry) => {
+                  const config = actionConfig[entry.category] || actionConfig.confession;
+                  const Icon = config.icon;
+
+                  return (
+                    <div key={entry.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${config.lightColor} ${config.textColor}`}>
+                            <Icon size={24} />
                           </div>
-                        <div className="min-w-0 flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300 truncate">
-                            {entry.title || 'Untitled Entry'}
-                          </h3>
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 mt-1">
-                              <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-semibold capitalize">
-                                {entry.category}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                {getMoodEmoji(entry.mood)} {entry.mood}
-                              </span>
-                            <span className="hidden sm:inline">•</span>
-                            <span className="text-xs sm:text-sm">{new Date(entry.created_at).toLocaleDateString()}</span>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg">{entry.title || config.label}</h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                              <span className={`${config.textColor}`}>{config.label}</span>
+                              <span>•</span>
+                              <span>{new Date(entry.created_at).toLocaleDateString()}</span>
+                              {entry.is_private && (
+                                <>
+                                  <span>•</span>
+                                  <Lock size={12} />
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => startEdit(entry)}
+                            className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => deleteEntry(entry.id)}
+                            className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex space-x-1 sm:space-x-2">
-                        <button
-                          onClick={() => startEdit(entry)}
-                            className="text-blue-600 hover:text-blue-800 p-2 sm:p-3 hover:bg-blue-50 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md text-sm sm:text-base"
-                            title="Edit entry"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => deleteEntry(entry.id)}
-                            className="text-red-600 hover:text-red-800 p-2 sm:p-3 hover:bg-red-50 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md text-sm sm:text-base"
-                            title="Delete entry"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    
-                      <div className="prose max-w-none mb-4 sm:mb-6">
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-base pl-16">
                         {entry.content}
                       </p>
                     </div>
-                    
-                      </div>
-                    
-                    {/* Hover Effect Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
 
-          {/* Premium Sidebar */}
+          {/* Sidebar - Prompts & Stats */}
           <div className="space-y-6">
-            {/* Journey Stats */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
-                  <span className="text-white text-lg">📊</span>
+            {/* Stats Card */}
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-6 text-white shadow-xl shadow-gray-900/20">
+              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <Sparkles size={18} className="text-yellow-400" />
+                Your Journey
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                  <div className="text-3xl font-black mb-1">{entries.length}</div>
+                  <div className="text-xs text-gray-300 font-medium">Total Entries</div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Your Journey</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <span className="text-gray-700 font-medium">Total Entries</span>
-                  <span className="text-2xl font-bold text-purple-600">{entries.length}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                  <span className="text-gray-700 font-medium">This Month</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                  <div className="text-3xl font-black mb-1">
                     {entries.filter(e => new Date(e.created_at).getMonth() === new Date().getMonth()).length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                  <span className="text-gray-700 font-medium">Confessions</span>
-                  <span className="text-2xl font-bold text-green-600">
-                    {entries.filter(e => e.category === 'confession').length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-100">
-                  <span className="text-gray-700 font-medium">Prayers</span>
-                  <span className="text-2xl font-bold text-orange-600">
-                    {entries.filter(e => e.category === 'prayer').length}
-                  </span>
+                  </div>
+                  <div className="text-xs text-gray-300 font-medium">This Month</div>
                 </div>
               </div>
             </div>
 
-            {/* Enhanced Writing Prompts */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
+            {/* Writing Prompts */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg">
-                    <span className="text-white text-lg">💡</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Writing Prompts</h3>
-                </div>
-                <button 
-                  onClick={getRandomPrompt}
-                  className="text-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
-                >
-                  Random
-                </button>
-              </div>
-              
-              {/* Prompt Categories */}
-              <div className="space-y-4">
-                {/* Gratitude Prompts */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span className="text-yellow-500">🙏</span> Gratitude & Blessings
-                  </h4>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handlePromptClick("What am I grateful for today? How has God blessed me in unexpected ways?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-100 hover:from-yellow-100 hover:to-orange-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-yellow-700">What am I grateful for today?</p>
-                      <p className="text-sm text-gray-600">Reflect on your blessings</p>
-                    </button>
-                    <button 
-                      onClick={() => handlePromptClick("How has God shown His faithfulness in my life recently? What answered prayers can I celebrate?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-100 hover:from-yellow-100 hover:to-orange-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-yellow-700">How has God been faithful?</p>
-                      <p className="text-sm text-gray-600">Celebrate answered prayers</p>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Reflection Prompts */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span className="text-blue-500">🤔</span> Reflection & Growth
-                  </h4>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handlePromptClick("What am I struggling with today? How can I surrender this to God and trust in His plan?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-blue-700">What am I struggling with?</p>
-                      <p className="text-sm text-gray-600">Be honest and open</p>
-                    </button>
-                    <button 
-                      onClick={() => handlePromptClick("How did God speak to me today? What scripture, song, or moment touched my heart?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-blue-700">How did God speak to me?</p>
-                      <p className="text-sm text-gray-600">Listen to His voice</p>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Prayer Prompts */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span className="text-green-500">🙏</span> Prayer & Intercession
-                  </h4>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handlePromptClick("Who needs my prayers today? How can I intercede for others and be a blessing?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-green-700">Who needs my prayers?</p>
-                      <p className="text-sm text-gray-600">Intercede for others</p>
-                    </button>
-                    <button 
-                      onClick={() => handlePromptClick("What am I praying for? How can I align my heart with God's will in this situation?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-green-700">What am I praying for?</p>
-                      <p className="text-sm text-gray-600">Align with God's will</p>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Spiritual Growth */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span className="text-purple-500">✨</span> Spiritual Growth
-                  </h4>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => handlePromptClick("How am I growing in my faith? What spiritual disciplines am I practicing?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-purple-700">How am I growing in faith?</p>
-                      <p className="text-sm text-gray-600">Spiritual disciplines</p>
-                    </button>
-                    <button 
-                      onClick={() => handlePromptClick("What sin or habit do I need to confess? How can I seek God's forgiveness and strength?")}
-                      className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 group"
-                    >
-                      <p className="font-medium text-gray-800 group-hover:text-purple-700">What do I need to confess?</p>
-                      <p className="text-sm text-gray-600">Seek forgiveness</p>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Entries */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
-                  <span className="text-white text-lg">📝</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Recent Entries</h3>
-                <span className="text-xs text-gray-500">({entries.length} total)</span>
-              </div>
-              <div className="space-y-4">
-                {(() => {
-                  const recentEntries = entries.slice(0, 3);
-                  
-                  if (recentEntries.length === 0) {
-                    return (
-                      <div className="text-center py-6">
-                        <div className="text-4xl mb-3">📝</div>
-                        <p className="text-gray-500 text-sm">No entries yet</p>
-                        <p className="text-gray-400 text-xs">Start your spiritual journey</p>
-                      </div>
-                    );
-                  }
-                  
-                  return recentEntries.map((entry, index) => (
-                    <div key={entry.id} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 cursor-pointer">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-gray-800 text-sm line-clamp-1">
-                          {entry.title || `Untitled ${entry.category}`}
-                        </h4>
-                        <span className="text-xs text-gray-500">
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
-                        {entry.content}
-                      </p>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-1 bg-purple-200 text-purple-700 rounded-full">
-                            {getCategoryEmoji(entry.category)} {entry.category}
-                          </span>
-                          <span className="text-xs px-2 py-1 bg-pink-200 text-pink-700 rounded-full">
-                            {getMoodEmoji(entry.mood)} {entry.mood}
-                  </span>
-                        </div>
-                        <button
-                          onClick={() => startEdit(entry)}
-                          className="text-xs text-purple-600 hover:text-purple-800 font-medium"
-                        >
-                          View →
-                        </button>
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-
-
-          </div>
-        </div>
-      </div>
-      
-      <style jsx="true">{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-
-      {/* Entry Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {editingEntry ? 'Edit Entry' : 'New Journal Entry'}
-                </h2>
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Quote size={18} className="text-purple-500" />
+                  Inspiration
+                </h3>
                 <button
-                  onClick={resetForm}
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={getRandomPrompt}
+                  className="text-xs font-bold text-purple-600 hover:text-purple-700"
                 >
-                  ✕
+                  Shuffle
                 </button>
               </div>
-
-              <form onSubmit={saveEntry} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Give your entry a title..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content *
-                  </label>
-                  <textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-40"
-                    placeholder="Share your thoughts, prayers, confessions, or reflections..."
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="confession">💭 Confession</option>
-                      <option value="prayer">🙏 Prayer</option>
-                      <option value="reflection">🤔 Reflection</option>
-                      <option value="testimony">✨ Testimony</option>
-                      <option value="gratitude">🙌 Gratitude</option>
-                      <option value="request">📝 Request</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mood
-                    </label>
-                    <select
-                      value={formData.mood}
-                      onChange={(e) => setFormData({...formData, mood: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="grateful">🙏 Grateful</option>
-                      <option value="repentant">😔 Repentant</option>
-                      <option value="hopeful">✨ Hopeful</option>
-                      <option value="joyful">😊 Joyful</option>
-                      <option value="peaceful">🕊️ Peaceful</option>
-                      <option value="anxious">😰 Anxious</option>
-                      <option value="blessed">🙌 Blessed</option>
-                      <option value="reflective">🤔 Reflective</option>
-                    </select>
-                  </div>
-                </div>
-
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="is_private"
-                    checked={formData.is_private}
-                    onChange={(e) => setFormData({...formData, is_private: e.target.checked})}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="is_private" className="ml-2 block text-sm text-gray-700">
-                    Keep this entry private
-                  </label>
-                </div>
-
-                <div className="flex space-x-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    {editingEntry ? 'Update Entry' : 'Save Entry'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handlePromptClick("What am I grateful for today?")}
+                  className="w-full text-left p-4 rounded-xl bg-gray-50 hover:bg-amber-50 hover:text-amber-700 transition-colors text-sm font-medium text-gray-600 group"
+                >
+                  <span className="block text-xs text-gray-400 mb-1 group-hover:text-amber-500">Gratitude</span>
+                  What am I grateful for today?
+                </button>
+                <button
+                  onClick={() => handlePromptClick("How has God shown His faithfulness?")}
+                  className="w-full text-left p-4 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-blue-700 transition-colors text-sm font-medium text-gray-600 group"
+                >
+                  <span className="block text-xs text-gray-400 mb-1 group-hover:text-blue-500">Reflection</span>
+                  How has God shown His faithfulness?
+                </button>
+                <button
+                  onClick={() => handlePromptClick("What is God teaching me right now?")}
+                  className="w-full text-left p-4 rounded-xl bg-gray-50 hover:bg-purple-50 hover:text-purple-700 transition-colors text-sm font-medium text-gray-600 group"
+                >
+                  <span className="block text-xs text-gray-400 mb-1 group-hover:text-purple-500">Growth</span>
+                  What is God teaching me right now?
+                </button>
+              </div>
             </div>
           </div>
         </div>

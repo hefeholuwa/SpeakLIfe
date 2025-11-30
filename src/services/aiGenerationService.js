@@ -5,11 +5,13 @@ class AIGenerationService {
     // Use import.meta.env for Vite or fallback to process.env for Vercel
     this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || ''
     this.baseURL = 'https://openrouter.ai/api/v1'
-    this.model = 'deepseek/deepseek-chat-v3.1:free' // BEST FREE model - DeepSeek's latest with excellent reasoning
+    this.model = 'x-ai/grok-4.1-fast:free' // Grok 4.1 Fast Free
     this.freeModels = [
-      'deepseek/deepseek-chat-v3.1:free' // BEST FREE - DeepSeek's latest model with excellent reasoning
+      'x-ai/grok-4.1-fast:free',
+      'deepseek/deepseek-r1-distill-llama-70b:free', // Fallback
+      'meta-llama/llama-3.3-70b-instruct:free' // Fallback
     ]
-    
+
     // Enhanced randomization and duplicate checking
     this.generatedContent = new Set() // Track generated content to avoid duplicates
     this.usedThemes = new Set() // Track used themes for better variety
@@ -34,7 +36,7 @@ class AIGenerationService {
       }
 
       let tableName, fieldName
-      
+
       switch (contentType) {
         case 'verse':
           tableName = 'daily_verses'
@@ -109,26 +111,26 @@ class AIGenerationService {
   // Get unused themes for better variety
   getUnusedThemes() {
     const allThemes = [
-        'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory', 
-        'prayer and communion', 'hope and restoration', 'wisdom and understanding',
-        'peace and comfort', 'strength and endurance', 'salvation and redemption',
-        'holiness and sanctification', 'worship and praise', 'servanthood and humility',
-        'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
-        'perseverance and patience', 'divine protection', 'spiritual growth',
+      'faith and trust in God', 'divine love and grace', 'spiritual warfare and victory',
+      'prayer and communion', 'hope and restoration', 'wisdom and understanding',
+      'peace and comfort', 'strength and endurance', 'salvation and redemption',
+      'holiness and sanctification', 'worship and praise', 'servanthood and humility',
+      'forgiveness and mercy', 'courage and boldness', 'joy and gladness',
+      'perseverance and patience', 'divine protection', 'spiritual growth',
       'kingdom principles', 'eternal perspective', 'divine purpose', 'spiritual authority',
       'divine timing', 'spiritual discernment', 'inner transformation', 'divine calling',
       'spiritual maturity', 'divine favor', 'spiritual breakthrough', 'divine alignment',
       'spiritual warfare', 'divine strategy', 'spiritual inheritance', 'divine restoration'
     ]
-    
+
     const unusedThemes = allThemes.filter(theme => !this.usedThemes.has(theme))
-    
+
     // If all themes used, reset and start fresh
     if (unusedThemes.length === 0) {
       this.usedThemes.clear()
       return allThemes
     }
-    
+
     return unusedThemes
   }
 
@@ -150,14 +152,14 @@ class AIGenerationService {
 
   // Get random model for variety
   getRandomModel() {
-    const availableModels = this.freeModels.filter(model => 
+    const availableModels = this.freeModels.filter(model =>
       model !== this.model // Don't use the same model twice in a row
     )
-    
+
     if (availableModels.length === 0) {
       return this.freeModels[Math.floor(Math.random() * this.freeModels.length)]
     }
-    
+
     return availableModels[Math.floor(Math.random() * availableModels.length)]
   }
 
@@ -166,7 +168,7 @@ class AIGenerationService {
     const timestamp = Date.now()
     const randomSeed = Math.floor(Math.random() * 1000000)
     const sessionId = Math.random().toString(36).substring(7)
-    
+
     return `${basePrompt}
 
 RANDOMIZATION INSTRUCTIONS:
@@ -184,32 +186,37 @@ RANDOMIZATION INSTRUCTIONS:
   async generateDailyVerse(retryCount = 0) {
     try {
       console.log(`🎲 Generating daily verse with AI... (attempt ${retryCount + 1})`)
-      
+
       // Prevent infinite recursion
       if (retryCount >= 3) {
         console.log('⚠️ Max retries reached, using fallback content')
         return this.getFallbackDailyVerse()
       }
-      
+
       // Get unused themes for better variety
       const availableThemes = this.getUnusedThemes()
       const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)]
-      
+
       console.log('🎯 Selected theme:', randomTheme)
-      
+
       // Track used theme
       this.usedThemes.add(randomTheme)
-      
+
       const translations = [
         'KJV', 'NKJV', 'NIV', 'AMP', 'ESV', 'NLT'
       ]
       const randomTranslation = translations[Math.floor(Math.random() * translations.length)]
-      
+
       // Get recently used verses to avoid duplicates
       const recentVerses = Array.from(this.usedVerses).slice(-10) // Last 10 used verses
       const recentVersesText = recentVerses.length > 0 ? `\n\nAVOID THESE RECENT VERSES (already used): ${recentVerses.join(', ')}` : ''
 
-      const basePrompt = `You are a Bible scholar with deep knowledge of Scripture. Generate a POWERFUL, UNIQUE Bible verse for today's daily devotion.
+      const basePrompt = `You are a wise spiritual mentor and Bible scholar. Generate a DEEPLY SPIRITUAL and RELEVANT Bible verse for today's daily devotion.
+      
+      USER CONTEXT:
+      - The user may be seeking guidance, comfort, strength, or a reminder of God's love.
+      - The verse should speak to the human condition and offer divine perspective.
+      - Avoid random selections; choose a verse that carries weight and transformative power.
 
       CRITICAL: You must provide the EXACT text of a REAL Bible verse, not a confession or interpretation.
 
@@ -236,7 +243,7 @@ RANDOMIZATION INSTRUCTIONS:
       - Use ONLY the ${randomTranslation} translation
       - Provide the EXACT verse text as it appears in that translation
       - Do NOT paraphrase, interpret, or create confessions
-      - Focus on theme: "${randomTheme}"
+      - Focus on theme: "${randomTheme}" - ensure the verse truly embodies this theme
       - Choose a verse that has NOT been used recently${recentVersesText}
       
       EXAMPLES OF ACCURATE VERSES IN DIFFERENT TRANSLATIONS:
@@ -258,15 +265,15 @@ RANDOMIZATION INSTRUCTIONS:
       const prompt = this.getRandomizedPrompt(basePrompt, 'daily_verse')
       const response = await this.callOpenRouter(prompt)
       const cleanedResponse = this.cleanJsonResponse(response)
-      
-      
+
+
       const result = JSON.parse(cleanedResponse)
-      
+
       // Ensure translation field is present
       if (!result.translation) {
         result.translation = randomTranslation
       }
-      
+
       // Check for duplicates in database
       const isDuplicate = await this.checkForDuplicates('verse', result.verse_text)
       if (isDuplicate) {
@@ -276,13 +283,13 @@ RANDOMIZATION INSTRUCTIONS:
         // Generate alternative with different approach
         return await this.generateDailyVerse(retryCount + 1) // Recursive call with retry count
       }
-      
+
       // Track used verse reference
       this.usedVerses.add(result.reference)
-      
+
       // Clear used content to prevent memory buildup
       this.clearUsedContent()
-      
+
       return result
     } catch (error) {
       console.error('Error generating daily verse:', error)
@@ -322,7 +329,7 @@ RANDOMIZATION INSTRUCTIONS:
         theme: "faith and trust"
       }
     ]
-    
+
     const randomFallback = fallbackVerses[Math.floor(Math.random() * fallbackVerses.length)]
     console.log('📖 Using fallback verse:', randomFallback.reference)
     return randomFallback
@@ -337,50 +344,59 @@ RANDOMIZATION INSTRUCTIONS:
         'healing and restoration', 'victory and triumph', 'divine protection',
         'spiritual breakthrough', 'kingdom advancement', 'spiritual authority'
       ]
-      
+
       // Get unused confession styles for variety
       const availableStyles = confessionStyles.filter(style => !this.usedConfessions.has(style))
-      const randomStyle = availableStyles.length > 0 
+      const randomStyle = availableStyles.length > 0
         ? availableStyles[Math.floor(Math.random() * availableStyles.length)]
         : confessionStyles[Math.floor(Math.random() * confessionStyles.length)]
-      
+
       // Track used style
       this.usedConfessions.add(randomStyle)
-      
-      const prompt = `CRITICAL: Generate a UNIQUE confession that DIRECTLY aligns with this specific Bible verse: "${verseData.verse_text}" (${verseData.reference})
 
-      VERSE ALIGNMENT REQUIREMENTS:
-      - The confession MUST directly reflect the specific message, theme, and spiritual truth of this exact verse
-      - Extract the core spiritual principle from the verse and make it personal
-      - If the verse is about "being still" and "God fighting for you", the confession should reflect that exact theme
-      - If the verse is about "strength in weakness", the confession should reflect that exact theme
-      - If the verse is about "peace that passes understanding", the confession should reflect that exact theme
-      - DO NOT create generic confessions that could apply to any verse
-      - The confession must be a personal declaration of the verse's specific truth
-      - Create something UNIQUE and POWERFUL that hasn't been used recently${recentConfessionsText}
+      const recentConfessions = Array.from(this.usedConfessions).slice(-10)
+      const recentConfessionsText = recentConfessions.length > 0 ? `\n\nAVOID THESE RECENT THEMES/STYLES (already used): ${recentConfessions.join(', ')}` : ''
 
-      SPIRITUAL DEPTH & DOCTRINAL BALANCE:
-      - Create a ${randomStyle} that directly connects to the verse's specific message
-      - Ensure doctrinal soundness and biblical accuracy
-      - Make it personal, powerful, and faith-building
-      - Use spiritual language that resonates with believers
-      - Include elements of: divine identity, spiritual authority, kingdom inheritance, prophetic declaration
-      - Avoid generic or cliché confessions - create something unique and powerful
+      const prompt = `CRITICAL: Generate a UNIQUE, DEEPLY PERSONAL confession that applies the spiritual truth of this verse to the user's life: "${verseData.verse_text}" (${verseData.reference})
+
+      USER NEEDS & CONTEXT:
+      - The user wants to internalize this scripture to transform their mindset and reality.
+      - The confession should bridge the gap between ancient scripture and modern daily life.
+      - It should feel like a "soul anchor" - something they can repeat to find peace, strength, or direction.
+
+      STRICT ALIGNMENT RULE:
+      - The confession MUST be derived 100% from the content and meaning of this specific verse.
+      - Do NOT generate a generic Christian confession. It must be specific to this scripture.
+      - Use KEYWORDS and PHRASES from the verse itself in the confession.
+      - If the verse says "The Lord is my shepherd", the confession MUST say "The Lord is MY shepherd".
+      - If the verse says "By his stripes we are healed", the confession MUST say "By His stripes I AM healed".
       
-      CONFESSION REQUIREMENTS:
-      - 1-2 sentences maximum
-      - Personal declaration format ("I declare...", "I confess...", "I believe...")
-      - Directly connected to the verse's specific message
-      - Powerful and faith-building
-      - Unique and not generic
+      TRANSFORMATION PROCESS:
+      1. Read the verse carefully: "${verseData.verse_text}"
+      2. Identify the core promise, truth, or command.
+      3. Ask: "How does this truth solve a human problem (fear, lack, confusion)?"
+      4. Rewrite that truth as a first-person present-tense declaration ("I am...", "I have...", "I believe...").
+      5. Ensure the tone matches the ${randomStyle} style.
+
+      EXAMPLES OF PERFECT ALIGNMENT:
+      - Verse: "The Lord is my light and my salvation; whom shall I fear?" (Psalm 27:1)
+      -> Confession: "I declare that because the Lord is MY light and MY salvation, I am liberated from all fear and darkness."
       
-      FORMAT: Return as JSON with fields: confession_text, theme, style
+      - Verse: "My God shall supply all your need according to his riches in glory." (Phil 4:19)
+      -> Confession: "I confess that God is actively supplying all MY needs according to His limitless riches in glory by Christ Jesus."
+
+      REQUIREMENTS:
+      - 1-2 sentences maximum.
+      - Must be personal ("I", "My", "Me").
+      - Must be powerful, faith-filled, and authoritative.
+      - AVOID generic phrases like "I love God" unless the verse is specifically about loving God.
+      - Create something UNIQUE that hasn't been used recently${recentConfessionsText}
       
-      Example: {"confession_text": "I declare that I am still before the Lord, knowing that He fights for me and I need only be still.", "theme": "divine protection", "style": "prophetic declaration"}`
+      FORMAT: Return as JSON with fields: confession_text, theme, style`
 
       const response = await this.callOpenRouter(prompt)
       const result = JSON.parse(this.cleanJsonResponse(response))
-      
+
       // Check for duplicates in database
       const isDuplicate = await this.checkForDuplicates('confession', result.confession_text)
       if (isDuplicate) {
@@ -388,7 +404,7 @@ RANDOMIZATION INSTRUCTIONS:
         // Generate alternative with different approach
         return await this.generateConfessionForVerse(verseData) // Recursive call with different randomization
       }
-      
+
       return result
     } catch (error) {
       console.error('Error generating confession:', error)
@@ -399,7 +415,7 @@ RANDOMIZATION INSTRUCTIONS:
   // Generate topic-specific content
   async generateTopicContent(topic, contentType = 'verse') {
     try {
-      const prompt = contentType === 'verse' 
+      const prompt = contentType === 'verse'
         ? `Generate a Bible verse specifically related to the topic "${topic}". The verse should be encouraging and directly applicable to this theme. Include the verse text, reference, and a brief explanation of how it relates to ${topic}.`
         : `Generate a confession/declaration specifically for the topic "${topic}". Make it personal, powerful, and faith-building. The confession should be 2-3 sentences and directly relate to ${topic}.`
 
@@ -415,26 +431,31 @@ RANDOMIZATION INSTRUCTIONS:
   async generateTopicVerses(topic, count = 3, existingVerses = []) {
     try {
       const translations = ['KJV', 'NIV', 'ESV', 'NASB', 'NLT', 'NKJV', 'AMP', 'MSG', 'CEV', 'NRSV']
-      
+
       // Create a list of existing verses to avoid
-      const existingVersesList = existingVerses.length > 0 
+      const existingVersesList = existingVerses.length > 0
         ? `\n\nEXISTING VERSES TO AVOID (do not use these):\n${existingVerses.map(v => `- "${v.verse_text}" (${v.reference})`).join('\n')}`
         : ''
 
       const prompt = `Generate ${count} different spiritually profound Bible verses specifically related to the topic "${topic}". CRITICAL: You must use REAL, EXISTING Bible verses only. Do not create or make up any verse references.
 
+      USER NEEDS & EMOTIONAL CONTEXT:
+      - Users exploring the topic "${topic}" are likely seeking specific spiritual answers, comfort, or empowerment.
+      - Select verses that address the *root* of the human need associated with "${topic}".
+      - Avoid surface-level verses; choose ones that offer deep theological insight or practical spiritual application.
+
       TOPIC-SPECIFIC FOCUS - MUST MATCH EXACTLY:
       - Each verse MUST directly relate to the spiritual theme of "${topic}"
-      - If topic is "Faith" → choose verses about believing, trusting, having faith in God (e.g., Hebrews 11:1, Romans 4:20-21, Mark 9:23)
-      - If topic is "Peace" → choose verses about peace, tranquility, God's protection, rest (e.g., Philippians 4:7, Isaiah 26:3, John 14:27)
-      - If topic is "Love" → choose verses about God's love, loving others, being loved by God (e.g., 1 John 4:19, Romans 5:8, John 3:16)
-      - If topic is "Wisdom" → choose verses about divine wisdom, understanding, guidance, knowledge (e.g., Proverbs 2:6, James 1:5, Proverbs 9:10)
-      - If topic is "Prosperity" → choose verses about God's provision, abundance, blessing, success (e.g., Deuteronomy 8:18, 3 John 1:2, Psalm 35:27)
-      - If topic is "Relationships" → choose verses about godly connections, fellowship, unity, marriage, friendship (e.g., Ecclesiastes 4:9-10, 1 Corinthians 13:4-7, Proverbs 18:24)
-      - If topic is "Healing" → choose verses about physical, emotional, spiritual healing (e.g., Isaiah 53:5, James 5:16, Psalm 103:3)
-      - If topic is "Victory" → choose verses about overcoming, triumph, conquering, success (e.g., 1 Corinthians 15:57, Romans 8:37, 2 Corinthians 2:14)
-      - If topic is "Hope" → choose verses about hope, expectation, future blessings, optimism (e.g., Romans 15:13, Jeremiah 29:11, Hebrews 6:19)
-      - If topic is "Forgiveness" → choose verses about forgiving others, being forgiven, mercy (e.g., Matthew 6:14, Ephesians 4:32, 1 John 1:9)
+      - If topic is "Faith" → choose verses that build confidence in God's character during uncertainty (e.g., Hebrews 11:1, Romans 4:20-21).
+      - If topic is "Peace" → choose verses that address anxiety, turmoil, and the need for divine rest (e.g., Philippians 4:7, Isaiah 26:3).
+      - If topic is "Love" → choose verses about the depth of God's love or the call to sacrificial love (e.g., 1 John 4:19, Romans 5:8).
+      - If topic is "Wisdom" → choose verses about divine direction, discernment, and understanding God's will (e.g., James 1:5, Proverbs 3:5-6).
+      - If topic is "Prosperity" → choose verses about stewardship, God's provision, and spiritual abundance (e.g., 2 Corinthians 9:8, Philippians 4:19).
+      - If topic is "Relationships" → choose verses about unity, forgiveness, and godly conduct in community (e.g., Ephesians 4:2-3, Colossians 3:13).
+      - If topic is "Healing" → choose verses about God's power to restore body, soul, and spirit (e.g., Psalm 103:2-3, Jeremiah 30:17).
+      - If topic is "Victory" → choose verses about overcoming spiritual battles and standing firm (e.g., Ephesians 6:10-11, Romans 8:37).
+      - If topic is "Hope" → choose verses about future glory, endurance, and God's faithfulness (e.g., Lamentations 3:22-23, Romans 15:13).
+      - If topic is "Forgiveness" → choose verses about the freedom of letting go and God's mercy (e.g., Psalm 103:12, Micah 7:18-19).
       - DO NOT choose generic verses that could apply to any topic
       - Each verse must be a perfect match for the specific spiritual theme of "${topic}"
       - If you cannot find verses that directly relate to "${topic}", do not generate generic verses
@@ -486,15 +507,15 @@ RANDOMIZATION INSTRUCTIONS:
 
       const response = await this.callOpenRouter(prompt)
       const cleanedResponse = this.cleanJsonResponse(response)
-      
+
       try {
         const parsed = JSON.parse(cleanedResponse)
-        
+
         // If it's not an array, wrap it in an array
         if (!Array.isArray(parsed)) {
           return [parsed]
         }
-        
+
         // Check for duplicates in each verse
         const uniqueVerses = []
         for (const verse of parsed) {
@@ -507,14 +528,14 @@ RANDOMIZATION INSTRUCTIONS:
             console.log(`Duplicate verse detected: ${verse.reference}`)
           }
         }
-        
+
         // Return what we got from the API call (no recursive generation to avoid duplicates)
         return uniqueVerses.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
         console.error('Raw response:', response)
         console.error('Cleaned response:', cleanedResponse)
-        
+
         // Try to return fallback content
         return [{
           verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
@@ -540,26 +561,31 @@ RANDOMIZATION INSTRUCTIONS:
         'spiritual authority', 'divine protection', 'spiritual breakthrough',
         'faith declaration', 'hope proclamation', 'love manifestation'
       ]
-      
+
       // Create a list of existing confessions to avoid
-      const existingConfessionsList = existingConfessions.length > 0 
+      const existingConfessionsList = existingConfessions.length > 0
         ? `\n\nEXISTING CONFESSIONS TO AVOID (do not use these):\n${existingConfessions.map(c => `- "${c.title}": "${c.confession_text}"`).join('\n')}`
         : ''
-      
+
       const prompt = `Generate ${count} different short, powerful spiritual confessions/declarations specifically for the topic "${topic}". 
+
+      USER NEEDS & TRANSFORMATIONAL GOAL:
+      - The goal is to help the user SHIFT their mindset and spiritual reality regarding "${topic}".
+      - Address the specific pain points or desires associated with "${topic}" (e.g., fear, loneliness, lack, confusion).
+      - The confession should feel like a spiritual weapon or a comforting embrace.
 
       TOPIC-SPECIFIC ALIGNMENT - MUST MATCH EXACTLY:
       - Each confession must DIRECTLY relate to the specific spiritual theme of "${topic}"
-      - If topic is "Faith" → confessions should be about believing, trusting, having faith, walking by faith (e.g., "I declare that I walk by faith and not by sight", "I confess that my faith moves mountains")
-      - If topic is "Peace" → confessions should be about peace, tranquility, God's protection, rest, calm (e.g., "I declare that God's peace guards my heart and mind", "I confess that I dwell in perfect peace")
-      - If topic is "Love" → confessions should be about God's love, loving others, being loved, unconditional love (e.g., "I declare that I am loved unconditionally by God", "I confess that love flows through me to others")
-      - If topic is "Wisdom" → confessions should be about divine wisdom, understanding, guidance, knowledge, discernment (e.g., "I declare that God's wisdom guides my decisions", "I confess that I have the mind of Christ")
-      - If topic is "Prosperity" → confessions should be about God's provision, abundance, blessing, success, financial breakthrough (e.g., "I declare that God supplies all my needs", "I confess that I am blessed to be a blessing")
-      - If topic is "Relationships" → confessions should be about godly connections, fellowship, unity, marriage, family harmony, friendship (e.g., "I declare that my relationships are blessed and harmonious", "I confess that I attract godly connections", "I declare that my marriage is blessed")
-      - If topic is "Healing" → confessions should be about physical, emotional, spiritual healing, wholeness, restoration (e.g., "I declare that I am healed by the stripes of Jesus", "I confess that divine health flows through me")
-      - If topic is "Victory" → confessions should be about overcoming, triumph, conquering, success, breakthrough (e.g., "I declare that I am more than a conqueror", "I confess that victory is my portion")
-      - If topic is "Hope" → confessions should be about hope, expectation, future blessings, optimism, anticipation (e.g., "I declare that my hope is anchored in God", "I confess that my future is bright")
-      - If topic is "Forgiveness" → confessions should be about forgiving others, being forgiven, mercy, grace, reconciliation (e.g., "I declare that I forgive as I have been forgiven", "I confess that mercy triumphs over judgment")
+      - If topic is "Faith" → confessions should replace doubt with unshakeable confidence (e.g., "I declare that my faith is an anchor in the storm, holding me steady in God's promises").
+      - If topic is "Peace" → confessions should silence internal noise and anxiety (e.g., "I release all anxiety and receive the supernatural peace of God that surpasses all understanding").
+      - If topic is "Love" → confessions should affirm self-worth and the capacity to love others (e.g., "I am securely rooted in God's love, and I overflow with compassion for those around me").
+      - If topic is "Wisdom" → confessions should claim clarity and divine direction (e.g., "I possess the mind of Christ, and I make decisions with clarity and divine insight").
+      - If topic is "Prosperity" → confessions should align with stewardship and trust in God's provision (e.g., "I am a faithful steward, and God's abundance flows through me to bless others").
+      - If topic is "Relationships" → confessions should speak life into connections and unity (e.g., "I cultivate healthy, God-honoring relationships that bring life and encouragement").
+      - If topic is "Healing" → confessions should enforce the reality of restoration (e.g., "Every cell in my body aligns with the healing power of God's Word").
+      - If topic is "Victory" → confessions should declare triumph over specific struggles (e.g., "I stand in victory, for the One in me is greater than any challenge I face").
+      - If topic is "Hope" → confessions should reignite expectation for the future (e.g., "I look forward with joyful expectation, knowing God's plans for me are good").
+      - If topic is "Forgiveness" → confessions should release the weight of bitterness (e.g., "I choose to forgive freely, releasing all bitterness and walking in the freedom of grace").
       - DO NOT create generic confessions that could apply to any topic
       - Each confession must be a personal declaration of the topic's specific spiritual truth
       - Make each confession laser-focused on the exact spiritual theme of "${topic}"
@@ -583,6 +609,7 @@ RANDOMIZATION INSTRUCTIONS:
       - Include elements of faith, hope, victory, and spiritual authority
       - Use different confession types: ${confessionTypes.join(', ')}
       - Sound spiritual but concise - not lengthy or verbose
+      - CRITICAL: You MUST provide a valid Bible verse reference (Book Chapter:Verse) AND the full text of that verse.
       ${existingConfessionsList}
       
       IMPORTANT: Return ONLY valid JSON. Do not include any markdown formatting, explanations, or additional text. Just the JSON array.
@@ -590,22 +617,26 @@ RANDOMIZATION INSTRUCTIONS:
       FORMAT: Return as JSON array:
       [
         {
-          "title": "Powerful confession title (e.g., 'Declaration of Divine Authority', 'Confession of Kingdom Inheritance')",
-          "confession_text": "Short, spiritually profound confession/declaration text (1-2 sentences only)"
+          "title": "Powerful confession title",
+          "confession_text": "Short, spiritually profound confession/declaration text",
+          "reference": "Book Chapter:Verse (e.g., Philippians 4:13)",
+          "verse_text": "The full text of the bible verse..."
         }
       ]`
 
+
+
       const response = await this.callOpenRouter(prompt)
       const cleanedResponse = this.cleanJsonResponse(response)
-      
+
       try {
         const parsed = JSON.parse(cleanedResponse)
-        
+
         // If it's not an array, wrap it in an array
         if (!Array.isArray(parsed)) {
           return [parsed]
         }
-        
+
         // Check for duplicates in each confession
         const uniqueConfessions = []
         for (const confession of parsed) {
@@ -615,17 +646,17 @@ RANDOMIZATION INSTRUCTIONS:
             // Track used confession pattern
             this.usedConfessions.add(confession.title)
           } else {
-            console.log(`Duplicate confession detected: ${confession.title}`)
+            console.log(`Duplicate confession detected: ${confession.title} `)
           }
         }
-        
+
         // Return what we got from the API call (no recursive generation to avoid duplicates)
         return uniqueConfessions.slice(0, count)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
         console.error('Raw response:', response)
         console.error('Cleaned response:', cleanedResponse)
-        
+
         // Try to return fallback content
         return [{
           title: `Powerful ${topic} Declaration`,
@@ -643,23 +674,37 @@ RANDOMIZATION INSTRUCTIONS:
   async generateDailyContent() {
     try {
       console.log('🎯 Starting complete daily content generation...')
-      
+
       // Generate verse first
       console.log('📖 Generating daily verse...')
       const verseData = await this.generateDailyVerse()
+
+      // Validate verse data
+      if (!verseData || !verseData.verse_text || !verseData.reference) {
+        console.error('❌ Invalid verse data generated:', verseData)
+        throw new Error('Failed to generate valid verse data')
+      }
+
       console.log('✅ Daily verse generated:', verseData.reference)
-      
+
       // Generate confession based on the verse
       console.log('🙏 Generating confession for verse...')
       const confessionData = await this.generateConfessionForVerse(verseData)
+
+      // Validate confession data
+      if (!confessionData || !confessionData.confession_text) {
+        console.error('❌ Invalid confession data generated:', confessionData)
+        throw new Error('Failed to generate valid confession data')
+      }
+
       console.log('✅ Confession generated:', confessionData.title)
-      
+
       const result = {
         verse: verseData,
         confession: confessionData,
         theme: verseData.theme
       }
-      
+
       console.log('🎉 Complete daily content generated successfully')
       return result
     } catch (error) {
@@ -678,7 +723,7 @@ RANDOMIZATION INSTRUCTIONS:
   cleanJsonResponse(response) {
     // Remove markdown code blocks if present
     let cleaned = response.trim()
-    
+
     // Remove ```json and ``` markers
     if (cleaned.startsWith('```json')) {
       cleaned = cleaned.replace(/^```json\s*/, '')
@@ -689,29 +734,28 @@ RANDOMIZATION INSTRUCTIONS:
     if (cleaned.endsWith('```')) {
       cleaned = cleaned.replace(/\s*```$/, '')
     }
-    
+
     // Additional cleaning for common JSON issues
     cleaned = cleaned.trim()
-    
+
     // Try to find the JSON array/object in the response
     const jsonArrayMatch = cleaned.match(/\[[\s\S]*\]/)
-    const jsonObjectMatch = cleaned.match(/{[\s\S]*}/)
-    
+    const jsonObjectMatch = cleaned.match(/\{[\s\S]*\}/)
+
     if (jsonArrayMatch) {
       cleaned = jsonArrayMatch[0]
     } else if (jsonObjectMatch) {
-      // If we found a single object but need an array, wrap it
-      cleaned = '[' + jsonObjectMatch[0] + ']'
+      cleaned = jsonObjectMatch[0]
     }
-    
+
     // Fix common JSON issues
     // Fix unquoted translation values (e.g., "translation": NIV -> "translation": "NIV")
     cleaned = cleaned.replace(/"translation":\s*([A-Z0-9]+)(?=\s*[,}])/g, '"translation": "$1"')
-    
+
     // Fix other unquoted string values that should be quoted
     cleaned = cleaned.replace(/"book":\s*([A-Za-z0-9\s]+)(?=\s*[,}])/g, '"book": "$1"')
     cleaned = cleaned.replace(/"reference":\s*([A-Za-z0-9\s:]+)(?=\s*[,}])/g, '"reference": "$1"')
-    
+
     // Handle incomplete JSON by finding the last complete object
     if (cleaned.includes('"verse_text"') && !cleaned.endsWith('}') && !cleaned.endsWith(']')) {
       // Find the last complete object
@@ -721,8 +765,14 @@ RANDOMIZATION INSTRUCTIONS:
         cleaned = '[' + objects.join(',') + ']'
       }
     }
-    
+
     return cleaned.trim()
+  }
+
+  // Get random model for variety
+  getRandomModel() {
+    // Return any available free model
+    return this.freeModels[Math.floor(Math.random() * this.freeModels.length)]
   }
 
   // Call OpenRouter API with free models
@@ -733,13 +783,14 @@ RANDOMIZATION INSTRUCTIONS:
         apiKeyLength: this.apiKey ? this.apiKey.length : 0,
         apiKeyStart: this.apiKey ? this.apiKey.substring(0, 10) + '...' : 'none'
       })
-      
+
       if (!this.apiKey) {
         throw new Error('OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY or REACT_APP_OPENROUTER_API_KEY in your environment variables.')
       }
 
-      // Use specified model, random model for variety, or default model
-      const selectedModel = model || this.getRandomModel() || this.model
+      // Use specified model or default model (Grok)
+      // We prioritize the default model as requested by the user
+      const selectedModel = model || this.model
 
       console.log('📡 Making API call to OpenRouter...', {
         model: selectedModel,
@@ -784,12 +835,12 @@ RANDOMIZATION INSTRUCTIONS:
         if (response.status === 429 && retryCount < 3) {
           const retryAfter = response.headers.get('Retry-After')
           const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, retryCount) * 1000 // Exponential backoff
-          
+
           console.log(`Rate limited, retrying in ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           return this.callOpenRouter(prompt, model, retryCount + 1)
         }
-        
+
         const errorText = await response.text()
         console.error('❌ API Error:', {
           status: response.status,
@@ -806,10 +857,10 @@ RANDOMIZATION INSTRUCTIONS:
         hasContent: !!data.choices?.[0]?.message?.content,
         contentLength: data.choices?.[0]?.message?.content?.length || 0
       })
-      
+
       const content = data.choices[0].message.content
       console.log('📝 Raw AI content:', content.substring(0, 200) + '...')
-      
+
       return content
     } catch (error) {
       console.error('OpenRouter API call failed:', error)
@@ -853,7 +904,7 @@ RANDOMIZATION INSTRUCTIONS:
     ]
 
     const randomVerse = fallbackVerses[Math.floor(Math.random() * fallbackVerses.length)]
-    
+
     // Generate confession that aligns with the specific verse
     let alignedConfession
     if (randomVerse.reference === "Jeremiah 29:11") {
@@ -894,6 +945,227 @@ RANDOMIZATION INSTRUCTIONS:
       return { success: true, data: parsed }
     } catch (error) {
       return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Generate a complete reading plan based on a topic
+   * @param {string} topic - The topic or theme for the reading plan
+   * @param {number} duration - Number of days (default 7)
+   * @returns {Promise<Object>} - The generated plan with days
+   */
+  async generateReadingPlan(topic, duration = 7) {
+    try {
+      console.log(`🤖 Generating ${duration}-day reading plan for: ${topic}`)
+
+      // Bible book data for smart prompting
+      const bookChapterCounts = {
+        'genesis': 50, 'exodus': 40, 'leviticus': 27, 'numbers': 36, 'deuteronomy': 34,
+        'joshua': 24, 'judges': 21, 'ruth': 4, '1samuel': 31, '2samuel': 24,
+        '1kings': 22, '2kings': 25, '1chronicles': 29, '2chronicles': 36, 'ezra': 10,
+        'nehemiah': 13, 'esther': 10, 'job': 42, 'psalms': 150, 'proverbs': 31,
+        'ecclesiastes': 12, 'songofsolomon': 8, 'isaiah': 66, 'jeremiah': 52, 'lamentations': 5,
+        'ezekiel': 48, 'daniel': 12, 'hosea': 14, 'joel': 3, 'amos': 9,
+        'obadiah': 1, 'jonah': 4, 'micah': 7, 'nahum': 3, 'habakkuk': 3,
+        'zephaniah': 3, 'haggai': 2, 'zechariah': 14, 'malachi': 4,
+        'matthew': 28, 'mark': 16, 'luke': 24, 'john': 21, 'acts': 28,
+        'romans': 16, '1corinthians': 16, '2corinthians': 13, 'galatians': 6, 'ephesians': 6,
+        'philippians': 4, 'colossians': 4, '1thessalonians': 5, '2thessalonians': 3,
+        '1timothy': 6, '2timothy': 4, 'titus': 3, 'philemon': 1, 'hebrews': 13,
+        'james': 5, '1peter': 5, '2peter': 3, '1john': 5, '2john': 1,
+        '3john': 1, 'jude': 1, 'revelation': 22
+      }
+
+      const bookNameMap = {
+        'genesis': 'Genesis', 'exodus': 'Exodus', 'leviticus': 'Leviticus', 'numbers': 'Numbers', 'deuteronomy': 'Deuteronomy',
+        'joshua': 'Joshua', 'judges': 'Judges', 'ruth': 'Ruth', '1samuel': '1 Samuel', '2samuel': '2 Samuel',
+        '1kings': '1 Kings', '2kings': '2 Kings', '1chronicles': '1 Chronicles', '2chronicles': '2 Chronicles', 'ezra': 'Ezra',
+        'nehemiah': 'Nehemiah', 'esther': 'Esther', 'job': 'Job', 'psalms': 'Psalms', 'proverbs': 'Proverbs',
+        'ecclesiastes': 'Ecclesiastes', 'songofsolomon': 'Song of Solomon', 'isaiah': 'Isaiah', 'jeremiah': 'Jeremiah', 'lamentations': 'Lamentations',
+        'ezekiel': 'Ezekiel', 'daniel': 'Daniel', 'hosea': 'Hosea', 'joel': 'Joel', 'amos': 'Amos',
+        'obadiah': 1, 'jonah': 'Jonah', 'micah': 'Micah', 'nahum': 'Nahum', 'habakkuk': 'Habakkuk',
+        'zephaniah': 'Zephaniah', 'haggai': 'Haggai', 'zechariah': 'Zechariah', 'malachi': 'Malachi',
+        'matthew': 'Matthew', 'mark': 'Mark', 'luke': 'Luke', 'john': 'John', 'acts': 'Acts',
+        'romans': 'Romans', '1corinthians': '1 Corinthians', '2corinthians': '2 Corinthians', 'galatians': 'Galatians', 'ephesians': 'Ephesians',
+        'philippians': 'Philippians', 'colossians': 'Colossians', '1thessalonians': '1 Thessalonians', '2thessalonians': '2 Thessalonians',
+        '1timothy': '1 Timothy', '2timothy': '2 Timothy', 'titus': 'Titus', 'philemon': 'Philemon', 'hebrews': 'Hebrews',
+        'james': 'James', '1peter': '1 Peter', '2peter': '2 Peter', '1john': '1 John', '2john': '2 John',
+        '3john': '3 John', 'jude': 'Jude', 'revelation': 'Revelation'
+      }
+
+      // Helper to normalize book names
+      const normalizeBookName = (input) => {
+        return input.toLowerCase()
+          .replace(/the /g, '')
+          .replace(/book of /g, '')
+          .replace(/gospel of /g, '')
+          .replace(/epistle of /g, '')
+          .replace(/first /g, '1')
+          .replace(/second /g, '2')
+          .replace(/third /g, '3')
+          .replace(/\s+/g, '') // Remove all spaces: "1 john" -> "1john"
+          .trim()
+      }
+
+      // Detect if topic is a book by checking if any book name is contained in the topic
+      const normalizedTopic = normalizeBookName(topic)
+
+      // Sort books by length (descending) so we match "1john" before "john"
+      const sortedBooks = Object.keys(bookChapterCounts).sort((a, b) => b.length - a.length)
+      const matchedBook = sortedBooks.find(book => normalizedTopic.includes(book))
+
+      const isBookStudy = !!matchedBook
+      const totalChapters = isBookStudy ? bookChapterCounts[matchedBook] : 0
+
+      console.log(`📚 Book Study Check: "${topic}" -> "${normalizedTopic}" (Matched: ${matchedBook}, Chapters: ${totalChapters})`)
+
+      let prompt = ''
+      let preDefinedSchedule = []
+
+      if (isBookStudy) {
+        // Deterministic Schedule Calculation
+        const ratio = totalChapters / duration
+        let currentChapter = 1
+
+        for (let day = 1; day <= duration; day++) {
+          let targetEndChapter = Math.round(day * ratio)
+
+          // Clamp to total chapters
+          if (targetEndChapter > totalChapters) targetEndChapter = totalChapters
+
+          let endChapter = targetEndChapter
+
+          // If we are "squeezing" (duration < chapters), ensure we move forward
+          if (endChapter < currentChapter) {
+            endChapter = currentChapter
+          }
+
+          // If we run out of chapters (duration > chapters), clamp to max
+          if (currentChapter > totalChapters) {
+            currentChapter = totalChapters
+            endChapter = totalChapters
+          }
+
+          const start = currentChapter
+          const end = endChapter
+
+          let ref = ''
+          const bookName = bookNameMap[matchedBook] || topic
+
+          if (start === end) {
+            ref = `${bookName} ${start}`
+          } else {
+            ref = `${bookName} ${start}-${end}`
+          }
+
+          preDefinedSchedule.push({
+            day_number: day,
+            reading_reference: ref
+          })
+
+          currentChapter = end + 1
+        }
+
+        console.log('📅 Calculated Schedule:', preDefinedSchedule)
+
+        prompt = `
+          I have a specific Bible reading schedule for the "${topic}".
+          
+          Here is the schedule you MUST use for context:
+          ${JSON.stringify(preDefinedSchedule, null, 2)}
+
+          Your task is to generate the metadata and devotional content for this schedule.
+
+          Return ONLY a valid JSON object with this structure:
+          {
+            "title": "A catchy title for this study",
+            "description": "An inspiring description...",
+            "duration_days": ${duration},
+            "image_gradient": "from-blue-500 to-cyan-500",
+            "days": [
+              {
+                "day_number": 1,
+                "devotional_content": "A short, encouraging devotional thought (2-3 sentences) specific to the reading for this day."
+              }
+              // ... for all ${duration} days
+            ]
+          }
+          `
+      } else {
+        // Thematic Plan (Original Logic)
+        prompt = `
+          Create a ${duration}-day Bible reading plan on the topic: "${topic}".
+          
+          The plan should be structured, spiritually enriching, and suitable for a mobile app.
+          
+          Return ONLY a valid JSON object with this exact structure:
+          {
+            "title": "A catchy, short title for the plan",
+            "description": "A 2-3 sentence inspiring description...",
+            "duration_days": ${duration},
+            "image_gradient": "from-blue-500 to-cyan-500",
+            "days": [
+              {
+                "day_number": 1,
+                "reading_reference": "Book Chapter:Verse-Verse",
+                "devotional_content": "A short, encouraging devotional thought (2-3 sentences) related to this reading."
+              }
+              // ... for all ${duration} days
+            ]
+          }
+
+          Rules:
+          1. "reading_reference" must be a valid standard Bible reference.
+          2. Do NOT include any explanation or text outside the JSON.
+          3. Ensure the readings are relevant to the topic.
+          4. Vary the books (OT and NT) if appropriate for the topic.
+          `
+      }
+
+      const response = await this.callOpenRouter(prompt)
+
+      // Parse the response
+      let planData
+      try {
+        // Clean up markdown code blocks if present
+        const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim()
+        planData = JSON.parse(cleanJson)
+      } catch (e) {
+        console.error('Failed to parse AI response:', response)
+        throw new Error('AI returned invalid JSON format')
+      }
+
+      // Validate structure
+      if (!planData.title || !planData.days || !Array.isArray(planData.days)) {
+        throw new Error('AI returned incomplete plan structure')
+      }
+
+      // If it was a book study, FORCE the correct references back into the plan
+      if (isBookStudy && preDefinedSchedule.length > 0) {
+        console.log('🔄 Merging deterministic schedule with AI content...')
+
+        // Use the deterministic schedule as the MASTER list
+        const mergedDays = preDefinedSchedule.map((scheduleItem, index) => {
+          // Try to find matching content from AI, or fallback to index
+          const aiDay = planData.days.find(d => d.day_number === scheduleItem.day_number) || planData.days[index]
+
+          return {
+            day_number: scheduleItem.day_number,
+            reading_reference: scheduleItem.reading_reference,
+            // Use AI content if available, otherwise generic fallback
+            devotional_content: aiDay?.devotional_content || `Reflect on God's word in ${scheduleItem.reading_reference} today.`
+          }
+        })
+
+        planData.days = mergedDays
+        planData.duration_days = preDefinedSchedule.length
+      }
+
+      return planData
+
+    } catch (error) {
+      console.error('Error generating reading plan:', error)
+      throw error
     }
   }
 }

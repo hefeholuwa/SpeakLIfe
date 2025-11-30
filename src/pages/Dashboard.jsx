@@ -9,9 +9,12 @@ const Dashboard = ({ onNavigate }) => {
 
 
   useEffect(() => {
-    // Simplified authentication check - no complex logic that could hang
+    // Simplified authentication check with minimum delay
     if (!authLoading) {
-      setLoading(false)
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 1500)
+      return () => clearTimeout(timer)
     }
   }, [authLoading])
 

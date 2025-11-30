@@ -1,20 +1,16 @@
 import AppRouter from './AppRouter.jsx'
-import { useEffect } from 'react'
+import { Toaster } from 'sonner'
 
 function App() {
-  useEffect(() => {
-    // Register service worker for background tasks
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-        })
-        .catch(error => {
-          console.error('❌ Service Worker registration failed:', error)
-        })
-    }
-  }, [])
+  // Service Worker removed for hard cache cleanup
 
-  return <AppRouter />
+
+  return (
+    <>
+      <AppRouter />
+      <Toaster position="top-center" richColors />
+    </>
+  )
 }
 
 export default App
