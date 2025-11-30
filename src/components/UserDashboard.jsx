@@ -17,18 +17,15 @@ const UserDashboard = ({ onNavigate }) => {
   const [bibleReaderConfig, setBibleReaderConfig] = useState(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [greeting, setGreeting] = useState('')
-  const [dailyVerse, setDailyVerse] = useState({
-    text: "I can do all things through Christ who strengthens me.",
-    reference: "Philippians 4:13",
-    version: "NKJV",
-    confession: "I have strength for all things in Christ who empowers me."
-  })
+  const [dailyVerse, setDailyVerse] = useState(null)
+  const [loadingVerse, setLoadingVerse] = useState(true)
   const [currentPlan, setCurrentPlan] = useState(null)
   const [journalConfig, setJournalConfig] = useState(null) // Added journalConfig state
   const [isLiked, setIsLiked] = useState(false)
 
   // Moved fetchDailyVerse and fetchCurrentPlan outside useEffect for better structure
   const fetchDailyVerse = async () => {
+    setLoadingVerse(true)
     try {
       const data = await adminService.getDailyContent(new Date().toISOString().split('T')[0])
       if (data && data.length > 0) {
@@ -38,9 +35,14 @@ const UserDashboard = ({ onNavigate }) => {
           version: data[0].translation || 'KJV',
           confession: data[0].confession_text
         })
+      } else {
+        setDailyVerse(null)
       }
     } catch (error) {
       console.error('Error fetching daily verse:', error)
+      setDailyVerse(null)
+    } finally {
+      setLoadingVerse(false)
     }
   }
 
@@ -315,103 +317,130 @@ const UserDashboard = ({ onNavigate }) => {
               </div>
 
               {/* Daily Verse Card */}
-              <div className="relative overflow-hidden bg-gray-900 rounded-3xl p-8 text-white shadow-xl group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none" />
+              {/* Daily Verse Card */}
+              {loadingVerse ? (
+                <div className="relative overflow-hidden bg-gray-100 rounded-3xl p-8 h-64 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-32 mb-6"></div>
+                  <div className="h-8 bg-gray-200 rounded w-full mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded w-3/4 mb-6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-48"></div>
+                </div>
+              ) : dailyVerse ? (
+                <div className="relative overflow-hidden bg-gray-900 rounded-3xl p-8 text-white shadow-xl group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none" />
 
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-sm border border-white/10">
-                      Verse of the Day
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleShare}
-                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
-                      >
-                        <Share2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => setIsLiked(!isLiked)}
-                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
-                      >
-                        <Heart size={18} className={isLiked ? "fill-red-500 text-red-500" : ""} />
-                      </button>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-sm border border-white/10">
+                        Verse of the Day
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleShare}
+                          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                        >
+                          <Share2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => setIsLiked(!isLiked)}
+                          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                        >
+                          <Heart size={18} className={isLiked ? "fill-red-500 text-red-500" : ""} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mb-8">
-                    <h3 className="text-2xl md:text-3xl font-serif font-medium leading-relaxed mb-4">
-                      "{dailyVerse.text}"
-                    </h3>
-                    <p className="text-white/60 font-medium tracking-wide flex items-center gap-2 mb-6">
-                      {dailyVerse.reference} <span className="w-1 h-1 rounded-full bg-white/40" /> {dailyVerse.version}
-                    </p>
+                    <div className="mb-8">
+                      <h3 className="text-2xl md:text-3xl font-serif font-medium leading-relaxed mb-4">
+                        "{dailyVerse.text}"
+                      </h3>
+                      <p className="text-white/60 font-medium tracking-wide flex items-center gap-2 mb-6">
+                        {dailyVerse.reference}
+                        {!dailyVerse.reference.includes('(') && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-white/40" />
+                            {dailyVerse.version}
+                          </>
+                        )}
+                      </p>
 
-                    {dailyVerse.confession && (
-                      <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
-                        <div className="text-purple-300 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                          <Sparkles size={12} />
-                          Say it aloud
-                        </div>
-                        <p className="text-lg text-white/90 italic font-medium leading-relaxed">
+                      <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
+                        <p className="text-sm font-medium text-white/90 mb-2 flex items-center gap-2">
+                          <Sparkles size={14} className="text-yellow-400" />
+                          Daily Confession
+                        </p>
+                        <p className="text-lg font-bold leading-relaxed">
                           "{dailyVerse.confession}"
                         </p>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={() => {
-                        // Clean reference by removing version in parentheses e.g. " (NIV)"
-                        const cleanRef = dailyVerse.reference.replace(/\s*\(.*?\)\s*/g, '').trim();
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={() => {
+                          const cleanRef = dailyVerse.reference.replace(/\s*\(.*?\)\s*/g, '').trim();
+                          const match = cleanRef.match(/^((?:[123]\s)?[a-zA-Z\s\.]+)\s+([\d,\-\s:]+)$/);
 
-                        // Parse reference (e.g., "Proverbs 1", "1 John 1", "Colossians 1:11")
-                        // Regex matches: Book (Group 1) and Numbers (Group 2)
-                        const match = cleanRef.match(/^((?:[123]\s)?[a-zA-Z\s\.]+)\s+([\d,\-\s:]+)$/);
+                          if (match) {
+                            const book = match[1].trim();
+                            const numbersPart = match[2];
+                            let chapter = 1;
 
-                        if (match) {
-                          const book = match[1].trim();
-                          const numbersPart = match[2];
-                          let chapter = 1;
+                            if (numbersPart.includes(':')) {
+                              chapter = parseInt(numbersPart.split(':')[0]);
+                            } else {
+                              const nums = numbersPart.match(/\d+/);
+                              if (nums) chapter = parseInt(nums[0]);
+                            }
 
-                          if (numbersPart.includes(':')) {
-                            chapter = parseInt(numbersPart.split(':')[0]);
+                            setBibleReaderConfig({ book, chapter, fromTab: 'home' });
+                            setActiveTab('bible');
                           } else {
-                            const nums = numbersPart.match(/\d+/);
-                            if (nums) chapter = parseInt(nums[0]);
+                            toast.error('Could not open chapter');
                           }
-
-                          setBibleReaderConfig({ book, chapter, fromTab: 'home' });
-                          setActiveTab('bible');
-                        } else {
-                          console.error('Failed to parse reference:', dailyVerse.reference);
-                          toast.error('Could not open chapter');
-                        }
-                      }}
-                      className="flex-1 bg-white text-gray-900 py-3.5 px-6 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <BookOpen size={18} />
-                      Read Chapter
-                    </button>
+                        }}
+                        className="flex-1 bg-white text-gray-900 py-3.5 px-6 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <BookOpen size={18} />
+                        Read Chapter
+                      </button>
+                      <button
+                        onClick={() => {
+                          setJournalConfig({
+                            title: `Reflection on ${dailyVerse.reference}`,
+                            content: `Verse: "${dailyVerse.text}"\n\nConfession: ${dailyVerse.confession || ''}\n\nMy thoughts: `,
+                            category: 'confession'
+                          });
+                          setActiveTab('journal');
+                        }}
+                        className="flex-1 bg-white/10 text-white py-3.5 px-6 rounded-xl font-bold hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2"
+                      >
+                        <PenTool size={18} />
+                        Journal This
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative overflow-hidden bg-gray-50 rounded-3xl p-8 text-center border border-gray-100 border-dashed">
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                      <Calendar size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Verse for Today</h3>
+                    <p className="text-gray-500 max-w-md mx-auto">
+                      Check back later for today's spiritual nourishment, or explore the Bible tab.
+                    </p>
                     <button
-                      onClick={() => {
-                        setJournalConfig({
-                          title: `Reflection on ${dailyVerse.reference}`,
-                          content: `Verse: "${dailyVerse.text}"\n\nConfession: ${dailyVerse.confession || ''}\n\nMy thoughts: `,
-                          category: 'confession'
-                        });
-                        setActiveTab('journal');
-                      }}
-                      className="flex-1 bg-white/10 text-white py-3.5 px-6 rounded-xl font-bold hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/10 flex items-center justify-center gap-2"
+                      onClick={() => setActiveTab('bible')}
+                      className="mt-6 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
                     >
-                      <PenTool size={18} />
-                      Journal This
+                      Open Bible
                     </button>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Mood Check-in Widget */}
               <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
@@ -703,7 +732,7 @@ const UserDashboard = ({ onNavigate }) => {
       </main >
 
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-[#1a1b1e]/90 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 z-50 border border-white/10">
+      < div className="md:hidden fixed bottom-6 left-6 right-6 bg-[#1a1b1e]/90 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 z-50 border border-white/10" >
         <div className="flex justify-between items-center px-6 py-4">
           <button
             onClick={() => setActiveTab('home')}
@@ -735,7 +764,7 @@ const UserDashboard = ({ onNavigate }) => {
             <Users size={24} strokeWidth={activeTab === 'community' ? 2.5 : 2} className={activeTab === 'community' ? 'fill-white/10' : ''} />
           </button>
         </div>
-      </div>
+      </div >
 
       <style jsx="true">{`
         @keyframes fadeInUp {
