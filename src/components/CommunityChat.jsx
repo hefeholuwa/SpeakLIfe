@@ -316,18 +316,29 @@ const CommunityChat = () => {
     };
 
     const openPostDetails = async (post) => {
+        window.history.pushState({ view: 'postDetails', postId: post.id }, '');
         setSelectedPost(post);
         fetchComments(post.id);
 
         // Record unique view
         try {
             await supabase.rpc('record_post_view', { post_id_param: post.id });
-            // Note: We don't optimistically update views here because the RPC handles uniqueness.
-            // The real-time subscription will update the view count if it changes.
         } catch (error) {
             console.error('Error recording view:', error);
         }
     };
+
+    // Handle browser back button
+    useEffect(() => {
+        const handlePopState = (event) => {
+            if (selectedPost) {
+                setSelectedPost(null);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [selectedPost]);
 
     const filteredPosts = filter === 'all'
         ? posts
@@ -347,7 +358,7 @@ const CommunityChat = () => {
                 {/* Detail Header */}
                 <div className="flex items-center gap-3 mb-6 sticky top-0 bg-[#FDFCF8] z-10 py-2">
                     <button
-                        onClick={() => setSelectedPost(null)}
+                        onClick={() => window.history.back()}
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors -ml-2"
                     >
                         <ArrowLeft size={24} className="text-gray-600" />
