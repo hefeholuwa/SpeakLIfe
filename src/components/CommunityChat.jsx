@@ -498,7 +498,7 @@ const CommunityChat = () => {
                     />
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar w-full md:w-auto">
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar w-full md:w-auto mb-4 md:mb-0">
                             {categories.map(cat => (
                                 <button
                                     key={cat.id}
