@@ -14,7 +14,8 @@ import {
     BookOpen,
     PenTool,
     ChevronRight,
-    Loader2
+    Loader2,
+    X
 } from 'lucide-react';
 
 const UserProfile = () => {
@@ -25,6 +26,11 @@ const UserProfile = () => {
         full_name: '',
         username: '',
         bio: ''
+    });
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        newPassword: '',
+        confirmPassword: ''
     });
 
     useEffect(() => {
@@ -72,6 +78,32 @@ const UserProfile = () => {
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error('Failed to update profile');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast.error("Passwords don't match");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: passwordData.newPassword
+            });
+
+            if (error) throw error;
+
+            toast.success('Password updated successfully');
+            setShowPrivacyModal(false);
+            setPasswordData({ newPassword: '', confirmPassword: '' });
+        } catch (error) {
+            console.error('Error updating password:', error);
+            toast.error(error.message || 'Failed to update password');
         } finally {
             setLoading(false);
         }
@@ -254,36 +286,7 @@ const UserProfile = () => {
                 </form>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center">
-                        <Calendar size={24} />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-black text-gray-900">{userProfile?.current_streak || 0}</p>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Day Streak</p>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center">
-                        <BookOpen size={24} />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-black text-gray-900">0</p>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Chapters Read</p>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center">
-                        <PenTool size={24} />
-                    </div>
-                    <div>
-                        <p className="text-2xl font-black text-gray-900">0</p>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Journal Entries</p>
-                    </div>
-                </div>
-            </div>
+
 
             {/* Account Actions */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
@@ -291,7 +294,10 @@ const UserProfile = () => {
                     <h3 className="font-bold text-gray-900">Account Settings</h3>
                 </div>
                 <div className="divide-y divide-gray-50">
-                    <button className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors text-left">
+                    <button
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors text-left"
+                    >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center">
                                 <Shield size={20} />
@@ -320,6 +326,59 @@ const UserProfile = () => {
                     </button>
                 </div>
             </div>
+            {/* Privacy Section (Inline) */}
+            {showPrivacyModal && (
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mt-4 animate-fade-in-up">
+                    <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                            <Shield size={18} className="text-purple-600" />
+                            Change Password
+                        </h3>
+                        <button
+                            onClick={() => setShowPrivacyModal(false)}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <X size={20} className="text-gray-500" />
+                        </button>
+                    </div>
+
+                    <div className="p-6">
+                        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700 ml-1">New Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordData.newPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:border-gray-200 focus:ring-0 rounded-xl transition-all font-medium"
+                                    placeholder="Min. 6 characters"
+                                    minLength={6}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700 ml-1">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordData.confirmPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                    className="w-full px-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:border-gray-200 focus:ring-0 rounded-xl transition-all font-medium"
+                                    placeholder="Re-enter new password"
+                                    minLength={6}
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Update Password'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -525,7 +525,7 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
   }, [searchQuery])
 
   return (
-    <div className="h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] flex flex-col bg-[#FDFCF8] overflow-hidden rounded-3xl border border-gray-100 shadow-xl">
+    <div className="flex flex-col bg-[#FDFCF8] overflow-hidden min-h-screen">
 
       {/* Search Overlay */}
       {showSearchResults && (

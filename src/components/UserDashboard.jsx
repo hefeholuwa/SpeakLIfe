@@ -23,6 +23,8 @@ const UserDashboard = ({ onNavigate }) => {
   const [currentPlan, setCurrentPlan] = useState(null)
   const [journalConfig, setJournalConfig] = useState(null) // Added journalConfig state
   const [isLiked, setIsLiked] = useState(false)
+  const [selectedMood, setSelectedMood] = useState(null)
+  const [showAllActivity, setShowAllActivity] = useState(false)
 
   // Moved fetchDailyVerse and fetchCurrentPlan outside useEffect for better structure
   const fetchDailyVerse = async () => {
@@ -451,43 +453,7 @@ const UserDashboard = ({ onNavigate }) => {
                 </div>
               )}
 
-              {/* Mood Check-in Widget */}
-              <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="text-amber-400 fill-amber-400" size={18} />
-                  How is your heart today?
-                </h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { id: 'anxious', label: 'Anxious', emoji: '😰', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-                    { id: 'tired', label: 'Tired', emoji: '😫', color: 'bg-purple-50 text-purple-600 border-purple-100' },
-                    { id: 'grateful', label: 'Grateful', emoji: '🙏', color: 'bg-amber-50 text-amber-600 border-amber-100' },
-                    { id: 'confident', label: 'Confident', emoji: '💪', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' }
-                  ].map(mood => (
-                    <button
-                      key={mood.id}
-                      onClick={() => {
-                        const confessions = {
-                          anxious: "I cast all my cares on the Lord, for He cares for me. His peace guards my heart and mind.",
-                          tired: "Those who wait on the Lord shall renew their strength. I will run and not be weary.",
-                          grateful: "I will bless the Lord at all times; His praise shall continually be in my mouth.",
-                          confident: "I can do all things through Christ who strengthens me. I am more than a conqueror."
-                        };
-                        toast(confessions[mood.id], {
-                          icon: mood.emoji,
-                          duration: 5000,
-                          className: 'font-serif text-lg'
-                        });
-                      }}
-                      className={`${mood.color} border p-3 rounded-2xl flex items-center justify-center gap-2 font-bold transition-transform hover:scale-105 active:scale-95`}
-                    >
-                      <span className="text-xl">{mood.emoji}</span>
-                      {mood.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Stats & Quick Actions Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -572,34 +538,43 @@ const UserDashboard = ({ onNavigate }) => {
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-black text-gray-900">Recent Activity</h2>
-                  <button className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">View All</button>
+                  {recentActivity.length > 3 && (
+                    <button
+                      onClick={() => setShowAllActivity(!showAllActivity)}
+                      className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
+                    >
+                      {showAllActivity ? 'Show Less' : 'View All'}
+                    </button>
+                  )}
                 </div>
                 <div className="space-y-3">
                   {recentActivity.length > 0 ? (
-                    recentActivity.map((activity, i) => (
-                      <div key={i} className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300 cursor-default">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors duration-300 ${activity.type === 'reading' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-100' :
-                          activity.type === 'confession' ? 'bg-purple-50 text-purple-600 group-hover:bg-purple-100' :
-                            'bg-orange-50 text-orange-600 group-hover:bg-orange-100'
-                          }`}>
-                          {activity.type === 'reading' ? <BookOpen size={20} className="fill-current opacity-20" /> :
-                            activity.type === 'confession' ? <PenTool size={20} className="fill-current opacity-20" /> :
-                              <Calendar size={20} className="fill-current opacity-20" />}
-                          <div className="absolute">
-                            {activity.type === 'reading' ? <BookOpen size={20} /> :
-                              activity.type === 'confession' ? <PenTool size={20} /> :
-                                <Calendar size={20} />}
+                    recentActivity
+                      .slice(0, showAllActivity ? undefined : 3)
+                      .map((activity, i) => (
+                        <div key={i} className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300 cursor-default animate-fade-in">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors duration-300 ${activity.type === 'reading' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-100' :
+                            activity.type === 'confession' ? 'bg-purple-50 text-purple-600 group-hover:bg-purple-100' :
+                              'bg-orange-50 text-orange-600 group-hover:bg-orange-100'
+                            }`}>
+                            {activity.type === 'reading' ? <BookOpen size={20} className="fill-current opacity-20" /> :
+                              activity.type === 'confession' ? <PenTool size={20} className="fill-current opacity-20" /> :
+                                <Calendar size={20} className="fill-current opacity-20" />}
+                            <div className="absolute">
+                              {activity.type === 'reading' ? <BookOpen size={20} /> :
+                                activity.type === 'confession' ? <PenTool size={20} /> :
+                                  <Calendar size={20} />}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-900 truncate group-hover:text-purple-600 transition-colors">{activity.title}</h4>
+                            <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mt-0.5">{activity.time}</p>
+                          </div>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 group-hover:bg-gray-50 group-hover:text-gray-600 transition-all">
+                            <ChevronRight size={18} />
                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-gray-900 truncate group-hover:text-purple-600 transition-colors">{activity.title}</h4>
-                          <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mt-0.5">{activity.time}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 group-hover:bg-gray-50 group-hover:text-gray-600 transition-all">
-                          <ChevronRight size={18} />
-                        </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
                     <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm text-gray-300">
