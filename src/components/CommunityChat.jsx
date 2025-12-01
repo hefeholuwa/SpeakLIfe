@@ -194,7 +194,31 @@ const CommunityChat = () => {
             toast.error('Failed to delete post');
         }
     };
+    const handlePost = async (e) => {
+        e.preventDefault();
+        if (!newPost.trim() || !user) return;
 
+        try {
+            setSubmitting(true);
+            const { error } = await supabase
+                .from('community_posts')
+                .insert({
+                    user_id: user.id,
+                    content: newPost.trim(),
+                    category: category
+                });
+
+            if (error) throw error;
+
+            setNewPost('');
+            toast.success('Message posted!');
+        } catch (error) {
+            console.error('Error posting:', error);
+            toast.error('Failed to post message');
+        } finally {
+            setSubmitting(false);
+        }
+    };
     const handleDeleteComment = async (commentId) => {
         if (!confirm('Delete this comment?')) return;
         try {
