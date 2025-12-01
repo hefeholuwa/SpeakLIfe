@@ -497,32 +497,34 @@ const CommunityChat = () => {
                         maxLength={500}
                     />
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex flex-wrap gap-2 w-full md:w-auto mb-2 md:mb-0">
+                    <div className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3">
                             {categories.map(cat => (
                                 <button
                                     key={cat.id}
                                     type="button"
                                     onClick={() => setCategory(cat.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${category === cat.id
-                                        ? `${cat.bg} ${cat.color} ring-2 ring-offset-1 ring-${cat.color.split('-')[1]}-200`
-                                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                                    className={`flex items-center justify-center md:justify-start gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${category === cat.id
+                                        ? `${cat.bg} ${cat.color} ring-2 ring-offset-1 ring-${cat.color.split('-')[1]}-200 shadow-sm`
+                                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-transparent'
                                         }`}
                                 >
-                                    <cat.icon size={16} />
+                                    <cat.icon size={18} />
                                     {cat.label}
                                 </button>
                             ))}
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={!newPost.trim() || submitting}
-                            className="w-full md:w-auto bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-900/20"
-                        >
-                            <Send size={18} />
-                            Post
-                        </button>
+                        <div className="flex justify-end mt-2">
+                            <button
+                                type="submit"
+                                disabled={!newPost.trim() || submitting}
+                                className="w-full md:w-auto bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-900/20 active:scale-95"
+                            >
+                                <Send size={18} />
+                                Post Message
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
