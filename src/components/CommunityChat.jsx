@@ -94,7 +94,87 @@ const CommunityChat = () => {
         };
     }, [selectedPost?.id]); // Only re-subscribe if the post ID changes
 
-    // ... (fetchSinglePost and fetchSingleComment remain unchanged)
+    const fetchSinglePost = async (id) => {
+        const { data } = await supabase
+            .from('community_posts')
+            .select(`
+        *,
+        profiles (full_name, avatar_url),
+        community_likes (user_id)
+      `)
+            .eq('id', id)
+            .single();
+
+        if (data) {
+            return {
+                ...data,
+                isLiked: data.community_likes?.some(like => like.user_id === user?.id)
+            };
+        }
+        return null;
+    };
+
+    const fetchSingleComment = async (id) => {
+        const { data } = await supabase
+            .from('community_comments')
+            .select(`
+                *,
+                profiles (full_name, avatar_url)
+            `)
+            .eq('id', id)
+            .single();
+        return data;
+    };
+
+    const fetchComments = async (postId) => {
+        try {
+            setLoadingComments(true);
+            const { data, error } = await supabase
+                .from('community_comments')
+                .select(`
+                    *,
+                    profiles (full_name, avatar_url)
+                `)
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+            setComments(data || []);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            toast.error('Could not load comments');
+        } finally {
+            setLoadingComments(false);
+        }
+    };
+
+    const fetchPosts = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('community_posts')
+                .select(`
+          *,
+          profiles (full_name, avatar_url),
+          community_likes (user_id)
+        `)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+
+            const formattedPosts = data.map(post => ({
+                ...post,
+                isLiked: post.community_likes?.some(like => like.user_id === user?.id)
+            }));
+
+            setPosts(formattedPosts);
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleComment = async (e) => {
         e.preventDefault();
