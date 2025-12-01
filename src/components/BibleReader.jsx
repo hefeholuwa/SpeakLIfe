@@ -20,6 +20,7 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
   const [devotionalContent, setDevotionalContent] = useState(null)
   const [currentDayNumber, setCurrentDayNumber] = useState(null)
   const [targetEndChapter, setTargetEndChapter] = useState(null)
+  const [interactingVerse, setInteractingVerse] = useState(null)
 
   const readerRef = useRef(null)
 
@@ -377,7 +378,7 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
     }
   }
 
-  const toggleBookmark = async (verseNum, verseText) => {
+  const toggleBookmark = async (verseNum, verseText, note = '') => {
     if (!user) return
 
     try {
@@ -410,7 +411,8 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error)
-      alert('Failed to save bookmark. Please try again.')
+      console.error('Error details:', error.message, error.details, error.hint)
+      alert(`Failed to save bookmark: ${error.message}`)
     }
   }
 
@@ -478,48 +480,6 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
     }
   }
 
-  const [allHighlights, setAllHighlights] = useState([])
-
-  // Fetch all user highlights
-  const fetchAllHighlights = async () => {
-    if (!user) return
-    try {
-      const { data, error } = await supabase
-        .from('bible_highlights')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setAllHighlights(data || [])
-    } catch (error) {
-      console.error('Error fetching highlights:', error)
-    }
-  }
-
-  // Handle opening highlights view
-  const openHighlights = () => {
-    fetchAllHighlights()
-    setViewMode('highlights')
-  }
-
-  // Handle clicking a highlight from the list
-  const handleHighlightClick = (highlight) => {
-    const bookKey = Object.keys(bookNameMap).find(key => bookNameMap[key] === highlight.book)
-    if (bookKey) {
-      const bookData = {
-        name: highlight.book,
-        chapters: bookChapterCounts[bookKey] || 1,
-        category: allBibleBooks.indexOf(bookKey) < 39 ? 'Old Testament' : 'New Testament'
-      }
-      setSelectedBook(bookData)
-      setSelectedChapter(highlight.chapter)
-      fetchChapterContent(highlight.book, highlight.chapter)
-      setHighlightedVerse(highlight.verse)
-      setTimeout(() => setHighlightedVerse(null), 5000)
-    }
-  }
-
   useEffect(() => {
     if (searchQuery) searchBible(searchQuery)
   }, [searchQuery])
@@ -563,16 +523,10 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
       <div className="flex-1 overflow-hidden relative">
 
         {/* View Mode: Books List */}
-        <div className={`absolute inset-0 overflow-y-auto transition-transform duration-300 ${viewMode === 'books' ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`absolute inset-0 overflow-y-auto transition-transform duration-300 [&::-webkit-scrollbar]:hidden ${viewMode === 'books' ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-6 pb-24">
             <div className="flex items-center justify-between mb-6 sticky top-0 bg-[#FDFCF8]/95 backdrop-blur-sm py-2 z-20">
               <h2 className="text-2xl font-black text-gray-900">Bible</h2>
-              <button
-                onClick={openHighlights}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-full text-sm font-bold hover:bg-yellow-100 transition-colors"
-              >
-                <Highlighter size={16} /> My Highlights
-              </button>
             </div>
 
             <h3 className="text-lg font-bold text-gray-500 mb-4 uppercase tracking-wider">Old Testament</h3>
@@ -599,48 +553,7 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
           </div>
         </div>
 
-        {/* View Mode: Highlights */}
-        <div className={`absolute inset-0 bg-[#FDFCF8] overflow-y-auto transition-transform duration-300 ${viewMode === 'highlights' ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-8 sticky top-0 bg-[#FDFCF8]/95 backdrop-blur-sm py-4 z-10 border-b border-gray-100">
-              <button onClick={() => setViewMode('books')} className="p-2 hover:bg-gray-100 rounded-full -ml-2">
-                <ArrowLeft size={24} className="text-gray-600" />
-              </button>
-              <h2 className="text-2xl font-black text-gray-900">My Highlights</h2>
-            </div>
 
-            {allHighlights.length > 0 ? (
-              <div className="space-y-4">
-                {allHighlights.map((highlight) => (
-                  <div
-                    key={highlight.id}
-                    onClick={() => handleHighlightClick(highlight)}
-                    className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-yellow-200 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full bg-${highlight.color || 'yellow'}-400`} />
-                        <span className="font-bold text-gray-900">{highlight.book} {highlight.chapter}:{highlight.verse}</span>
-                      </div>
-                      <span className="text-xs text-gray-400">{new Date(highlight.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-gray-600 font-serif leading-relaxed group-hover:text-gray-900 transition-colors">
-                      "{highlight.text}"
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-400 text-center">
-                <div className="p-4 bg-gray-50 rounded-full mb-4">
-                  <Highlighter size={32} className="text-gray-300" />
-                </div>
-                <p className="font-medium">No highlights yet</p>
-                <p className="text-sm mt-1">Select any verse while reading to highlight it.</p>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* View Mode: Chapters */}
         <div className={`absolute inset-0 bg-[#FDFCF8] overflow-y-auto transition-transform duration-300 ${viewMode === 'chapters' ? 'translate-x-0' : viewMode === 'books' || viewMode === 'highlights' ? 'translate-x-full' : '-translate-x-full'}`}>
@@ -769,49 +682,27 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
               </div>
             ) : (
               <div className="max-w-2xl mx-auto space-y-6">
+                {/* Verse Content */}
                 {bibleContent?.verses.map((verse) => (
                   <div
                     key={verse.verse}
                     id={`verse-${verse.verse}`}
-                    className={`relative pl-4 transition-all duration-500 rounded-xl p-3 group hover:bg-gray-50 ${highlightedVerse === verse.verse ? 'bg-purple-50 ring-1 ring-purple-200' : ''
-                      } ${highlights.find(h => h.verse === verse.verse) ? 'bg-yellow-50/50' : ''
-                      }`}
+                    className="relative pl-4 transition-all duration-300 rounded-xl p-3 hover:bg-gray-50"
                   >
-                    <span className="absolute left-0 top-3.5 text-xs font-bold text-gray-300 select-none w-6 text-right pr-2 group-hover:text-purple-400 transition-colors">
+                    <span className="absolute left-0 top-3.5 text-xs font-bold w-6 text-right pr-2 text-gray-300">
                       {verse.verse}
                     </span>
-                    <p className="text-xl leading-8 text-gray-800 font-serif">
+                    <p className="text-xl leading-8 font-serif text-gray-800">
                       {verse.text}
                     </p>
-
-                    {/* Verse Actions */}
-                    <div className="absolute right-2 -top-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-1 bg-white shadow-lg border border-gray-100 p-1 rounded-full scale-90 group-hover:scale-100">
-                      <button
-                        onClick={() => toggleBookmark(verse.verse, verse.text)}
-                        className={`p-2 rounded-full transition-colors ${bookmarks.includes(verse.verse) ? 'text-purple-600 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'
-                          }`}
-                        title="Bookmark"
-                      >
-                        <Bookmark size={14} fill={bookmarks.includes(verse.verse) ? "currentColor" : "none"} />
-                      </button>
-                      <button
-                        onClick={() => toggleHighlight(verse.verse, verse.text)}
-                        className={`p-2 rounded-full transition-colors ${highlights.find(h => h.verse === verse.verse) ? 'text-yellow-600 bg-yellow-50' : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50'
-                          }`}
-                        title="Highlight"
-                      >
-                        <Highlighter size={14} />
-                      </button>
-                      <button
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                        title="Share"
-                      >
-                        <Share2 size={14} />
-                      </button>
-                    </div>
                   </div>
                 ))}
+              </div>
+            )}
 
+            {/* Plan Completion and Navigation - Only show when not loading */}
+            {!bibleLoading && (
+              <>
                 {/* Plan Completion Button */}
                 {onExternalComplete && (
                   <div className="mt-16 mb-8 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-900/20 animate-fade-in">
@@ -875,12 +766,12 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
                     Next Chapter <ArrowRight size={18} />
                   </button>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
-
       </div>
+
     </div>
   )
 }
