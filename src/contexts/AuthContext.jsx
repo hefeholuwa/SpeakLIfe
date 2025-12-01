@@ -28,24 +28,25 @@ export const AuthProvider = ({ children }) => {
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        
+
         if (error) {
           console.error('Error getting session:', error)
           setError(error.message)
         } else {
           setUser(session?.user || null)
-          
+
           // Load user profile if user exists (simplified)
           if (session?.user) {
             setUserProfile(null)
           }
         }
-        
+
         setLoading(false)
-        
+
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         setError(error.message)
+      } finally {
         setLoading(false)
       }
     }
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user || null)
-        
+
         // Load user profile on auth changes
         if (session?.user) {
           try {
@@ -69,22 +70,22 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUserProfile(null)
         }
-        
+
         setLoading(false)
-        
+
         // If user just verified their email, dispatch a custom event
         if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
           setHasDispatchedVerified(true)
-          window.dispatchEvent(new CustomEvent('userVerified', { 
-            detail: { user: session.user, session } 
+          window.dispatchEvent(new CustomEvent('userVerified', {
+            detail: { user: session.user, session }
           }))
         }
-        
+
         // Also check for TOKEN_REFRESHED event which happens after email verification
         if (event === 'TOKEN_REFRESHED' && session?.user?.email_confirmed_at && !hasDispatchedVerified) {
           setHasDispatchedVerified(true)
-          window.dispatchEvent(new CustomEvent('userVerified', { 
-            detail: { user: session.user, session } 
+          window.dispatchEvent(new CustomEvent('userVerified', {
+            detail: { user: session.user, session }
           }))
         }
       }
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null)
       setLoading(true)
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -117,9 +118,9 @@ export const AuthProvider = ({ children }) => {
 
       // Check if email confirmation is required
       if (data.user && !data.session) {
-        return { 
-          success: true, 
-          data, 
+        return {
+          success: true,
+          data,
           requiresVerification: true,
           message: 'Please check your email to verify your account before signing in.'
         }
@@ -139,7 +140,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null)
       setLoading(true)
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -173,19 +174,19 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setError(null)
-      
+
       // Clear user state immediately
       setUser(null)
       setUserProfile(null)
-      
+
       // Try Supabase logout but don't wait for it
       supabase.auth.signOut().catch(err => {
         // Supabase logout failed, but continuing with local logout
       })
-      
+
       // Dispatch custom event to notify components of logout
       window.dispatchEvent(new CustomEvent('userLoggedOut'))
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error in signOut:', error)
@@ -200,7 +201,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (email) => {
     try {
       setError(null)
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       })
@@ -221,7 +222,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (updates) => {
     try {
       setError(null)
-      
+
       const { data, error } = await supabase.auth.updateUser({
         data: updates
       })
@@ -243,7 +244,7 @@ export const AuthProvider = ({ children }) => {
   const resendVerification = async (email) => {
     try {
       setError(null)
-      
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email
