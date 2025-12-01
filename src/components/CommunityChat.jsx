@@ -15,7 +15,8 @@ import {
     X,
     MessageSquare,
     ArrowLeft,
-    ChevronRight
+    ChevronRight,
+    Shield
 } from 'lucide-react';
 
 const CommunityChat = () => {
@@ -99,7 +100,7 @@ const CommunityChat = () => {
             .from('community_posts')
             .select(`
         *,
-        profiles (full_name, avatar_url, username),
+        profiles (full_name, avatar_url, username, is_admin),
         community_likes (user_id)
       `)
             .eq('id', id)
@@ -119,7 +120,7 @@ const CommunityChat = () => {
             .from('community_comments')
             .select(`
                 *,
-                profiles (full_name, avatar_url, username)
+                profiles (full_name, avatar_url, username, is_admin)
             `)
             .eq('id', id)
             .single();
@@ -133,7 +134,7 @@ const CommunityChat = () => {
                 .from('community_comments')
                 .select(`
                     *,
-                    profiles (full_name, avatar_url, username)
+                    profiles (full_name, avatar_url, username, is_admin)
                 `)
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
@@ -155,7 +156,7 @@ const CommunityChat = () => {
                 .from('community_posts')
                 .select(`
           *,
-          profiles (full_name, avatar_url, username),
+          profiles (full_name, avatar_url, username, is_admin),
           community_likes (user_id)
         `)
                 .order('created_at', { ascending: false })
@@ -377,7 +378,12 @@ const CommunityChat = () => {
                             )}
                         </div>
                         <div>
-                            <h4 className="font-bold text-gray-900 text-lg">{selectedPost.profiles?.username || selectedPost.profiles?.full_name || 'Anonymous'}</h4>
+                            <h4 className="font-bold text-gray-900 text-lg flex items-center gap-1">
+                                {selectedPost.profiles?.username || selectedPost.profiles?.full_name || 'Anonymous'}
+                                {selectedPost.profiles?.is_admin && (
+                                    <Shield size={16} className="text-gray-900 fill-current" />
+                                )}
+                            </h4>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <span>{new Date(selectedPost.created_at).toLocaleString()}</span>
                                 {categories.find(c => c.id === selectedPost.category) && (
@@ -438,7 +444,12 @@ const CommunityChat = () => {
                                     <div className="flex-1">
                                         <div className="bg-gray-50 p-4 rounded-2xl rounded-tl-none">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="font-bold text-gray-900">{comment.profiles?.username || comment.profiles?.full_name || 'Anonymous'}</span>
+                                                <span className="font-bold text-gray-900 flex items-center gap-1">
+                                                    {comment.profiles?.username || comment.profiles?.full_name || 'Anonymous'}
+                                                    {comment.profiles?.is_admin && (
+                                                        <Shield size={12} className="text-gray-900 fill-current" />
+                                                    )}
+                                                </span>
                                                 <span className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleDateString()}</span>
                                             </div>
                                             <p className="text-gray-800 leading-relaxed">{comment.content}</p>
@@ -591,7 +602,12 @@ const CommunityChat = () => {
                                             )}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-900 text-sm">{post.profiles?.username || post.profiles?.full_name || 'Anonymous'}</h4>
+                                            <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1">
+                                                {post.profiles?.username || post.profiles?.full_name || 'Anonymous'}
+                                                {post.profiles?.is_admin && (
+                                                    <Shield size={12} className="text-gray-900 fill-current" />
+                                                )}
+                                            </h4>
                                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                                 <span>{new Date(post.created_at).toLocaleDateString()}</span>
                                                 <span>•</span>

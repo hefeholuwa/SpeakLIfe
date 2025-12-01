@@ -9,14 +9,19 @@ const Dashboard = ({ onNavigate }) => {
 
 
   useEffect(() => {
-    // Simplified authentication check with minimum delay
+    // Authentication check
     if (!authLoading) {
+      if (!user) {
+        onNavigate('landing')
+        return
+      }
+
       const timer = setTimeout(() => {
         setLoading(false)
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [authLoading])
+  }, [authLoading, user, onNavigate])
 
   if (loading) {
     return <PremiumLoader message="Loading your dashboard..." minDuration={0} />

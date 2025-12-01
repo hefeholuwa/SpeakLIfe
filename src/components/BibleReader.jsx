@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, ChevronLeft, ChevronRight, Book, ArrowLeft, X, Bookmark, Share2, Highlighter, CheckCircle, Sparkles, ArrowRight } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Book, ArrowLeft, X, Bookmark, Share2, Highlighter, CheckCircle, Sparkles, ArrowRight, Volume2, Square } from 'lucide-react'
 import { supabase } from '../supabaseClient.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
@@ -21,8 +21,19 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
   const [currentDayNumber, setCurrentDayNumber] = useState(null)
   const [targetEndChapter, setTargetEndChapter] = useState(null)
   const [interactingVerse, setInteractingVerse] = useState(null)
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
   const readerRef = useRef(null)
+  const speechRef = useRef(null)
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
 
   // Handle external configuration (e.g. from Reading Plans)
   useEffect(() => {
@@ -296,7 +307,60 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
     }
   }
 
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    } else {
+      if (!bibleContent?.verses) return
+
+      const fullText = bibleContent.verses.map(v => `${v.verse}. ${v.text}`).join(' ')
+      const utterance = new SpeechSynthesisUtterance(fullText)
+
+      // Attempt to find a better voice
+      const voices = window.speechSynthesis.getVoices()
+
+      // Priority list for better sounding voices
+      const preferredVoices = [
+        'Google US English',
+        'Samantha',
+        'Daniel',
+        'Microsoft Zira',
+        'Google UK English Female'
+      ]
+
+      const selectedVoice = voices.find(voice =>
+        preferredVoices.some(preferred => voice.name.includes(preferred))
+      ) || voices.find(voice => voice.lang.startsWith('en'))
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+
+      utterance.rate = 0.95 // Just slightly slower than normal
+      utterance.pitch = 1.05 // A tiny bit higher often sounds clearer
+
+      utterance.onend = () => {
+        setIsSpeaking(false)
+      }
+
+      utterance.onerror = () => {
+        setIsSpeaking(false)
+      }
+
+      speechRef.current = utterance
+      window.speechSynthesis.speak(utterance)
+      setIsSpeaking(true)
+    }
+  }
+
   const fetchChapterContent = async (bookName, chapterNumber, preserveViewMode = false) => {
+    // Stop any ongoing speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+
     setBibleLoading(true)
     setBibleContent(null)
     if (!preserveViewMode) setViewMode('reader')
@@ -664,7 +728,13 @@ const BibleReader = ({ searchQuery = '', hideContent = false, externalConfig = n
               <span className="text-xs text-gray-500 font-medium tracking-wider">KING JAMES VERSION</span>
             </div>
             <div className="w-10 flex justify-end">
-              {/* Optional: Add font size toggle or settings here later */}
+              <button
+                onClick={toggleSpeech}
+                className={`p-2 rounded-full transition-colors ${isSpeaking ? 'bg-purple-100 text-purple-600 animate-pulse' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-900'}`}
+                title={isSpeaking ? "Stop Listening" : "Listen to Chapter"}
+              >
+                {isSpeaking ? <Square size={20} fill="currentColor" /> : <Volume2 size={24} />}
+              </button>
             </div>
           </div>
 

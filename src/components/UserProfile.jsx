@@ -59,6 +59,7 @@ const UserProfile = () => {
                 full_name: formData.full_name,
                 username: formData.username,
                 bio: formData.bio,
+                email: user.email, // Required for creating new profile if it doesn't exist
                 updated_at: new Date(),
             };
 
@@ -77,7 +78,7 @@ const UserProfile = () => {
             toast.success('Profile updated successfully');
         } catch (error) {
             console.error('Error updating profile:', error);
-            toast.error('Failed to update profile');
+            toast.error(error.message || 'Failed to update profile');
         } finally {
             setLoading(false);
         }
@@ -229,6 +230,12 @@ const UserProfile = () => {
                             <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-100">
                                 Free Plan
                             </span>
+                            {userProfile?.is_admin && (
+                                <span className="px-3 py-1 bg-gray-900 text-white rounded-full text-xs font-bold border border-gray-800 flex items-center gap-1">
+                                    <Shield size={12} />
+                                    Admin
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

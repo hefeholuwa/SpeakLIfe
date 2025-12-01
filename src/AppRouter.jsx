@@ -3,6 +3,8 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
+
 import AdminDashboard from './components/AdminDashboard.jsx'
 
 
@@ -18,7 +20,8 @@ const AppRouter = () => {
       setCurrentRoute('bible')
     } else if (path === '/admin') {
       setCurrentRoute('admin')
-
+    } else if (path === '/admin-login') {
+      setCurrentRoute('admin-login')
     } else {
       setCurrentRoute('landing')
     }
@@ -32,7 +35,8 @@ const AppRouter = () => {
         setCurrentRoute('bible')
       } else if (path === '/admin') {
         setCurrentRoute('admin')
-
+      } else if (path === '/admin-login') {
+        setCurrentRoute('admin-login')
       } else {
         setCurrentRoute('landing')
       }
@@ -63,6 +67,9 @@ const AppRouter = () => {
     } else if (route === 'admin') {
       window.history.pushState({}, '', '/admin')
       setCurrentRoute('admin')
+    } else if (route === 'admin-login') {
+      window.history.pushState({}, '', '/admin-login')
+      setCurrentRoute('admin-login')
     } else {
       window.history.pushState({}, '', '/')
       setCurrentRoute('landing')
@@ -84,10 +91,16 @@ const AppRouter = () => {
   }
 
   if (currentRoute === 'admin') {
-    return <AdminDashboard onNavigate={navigateTo} />
+    return (
+      <AuthProvider>
+        <AdminDashboard onNavigate={navigateTo} />
+      </AuthProvider>
+    )
   }
 
-
+  if (currentRoute === 'admin-login') {
+    return <AdminLogin onNavigate={navigateTo} />
+  }
 
   return (
     <AuthProvider>

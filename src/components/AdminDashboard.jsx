@@ -32,8 +32,10 @@ import ContentManagementPanel from './admin/ContentManagementPanel'
 import ReadingPlansPanel from './admin/ReadingPlansPanel'
 import AITest from './AITest'
 import adminService from '../services/adminService'
+import { useAuth } from '../contexts/AuthContext'
 
 const AdminDashboard = ({ onNavigate }) => {
+  const { user, userProfile, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [systemStats, setSystemStats] = useState({
@@ -72,13 +74,23 @@ const AdminDashboard = ({ onNavigate }) => {
   })
   const [editingContent, setEditingContent] = useState(null)
 
-
+  useEffect(() => {
+    // Auth Check
+    if (!authLoading) {
+      if (!user || !userProfile?.is_admin) {
+        onNavigate('admin-login')
+        return
+      }
+    }
+  }, [user, userProfile, authLoading, onNavigate])
 
   useEffect(() => {
-    // Simplified initialization - no async calls that could hang
-    setIsLoading(false)
-    loadSystemData() // Load initial data
-  }, [])
+    if (user && userProfile?.is_admin) {
+      // Simplified initialization - no async calls that could hang
+      setIsLoading(false)
+      loadSystemData() // Load initial data
+    }
+  }, [user, userProfile])
 
 
 
@@ -343,8 +355,8 @@ const AdminDashboard = ({ onNavigate }) => {
         </div>
 
         <div className="mt-auto p-8 border-t border-gray-100">
-          <button onClick={() => onNavigate('landing')} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors">
-            <LogOut size={18} />
+          <button onClick={() => onNavigate('landing')} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-purple-600 transition-colors">
+            <Home size={18} />
             Back to App
           </button>
         </div>
