@@ -99,7 +99,7 @@ const CommunityChat = () => {
             .from('community_posts')
             .select(`
         *,
-        profiles (full_name, avatar_url),
+        profiles (full_name, avatar_url, username),
         community_likes (user_id)
       `)
             .eq('id', id)
@@ -119,7 +119,7 @@ const CommunityChat = () => {
             .from('community_comments')
             .select(`
                 *,
-                profiles (full_name, avatar_url)
+                profiles (full_name, avatar_url, username)
             `)
             .eq('id', id)
             .single();
@@ -133,7 +133,7 @@ const CommunityChat = () => {
                 .from('community_comments')
                 .select(`
                     *,
-                    profiles (full_name, avatar_url)
+                    profiles (full_name, avatar_url, username)
                 `)
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
@@ -155,7 +155,7 @@ const CommunityChat = () => {
                 .from('community_posts')
                 .select(`
           *,
-          profiles (full_name, avatar_url),
+          profiles (full_name, avatar_url, username),
           community_likes (user_id)
         `)
                 .order('created_at', { ascending: false })
@@ -369,11 +369,15 @@ const CommunityChat = () => {
                 {/* Original Post */}
                 <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm mb-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-lg">
-                            {selectedPost.profiles?.full_name?.[0] || 'U'}
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden">
+                            {selectedPost.profiles?.avatar_url ? (
+                                <img src={selectedPost.profiles.avatar_url} alt={selectedPost.profiles.username || 'User'} className="w-full h-full object-cover" />
+                            ) : (
+                                selectedPost.profiles?.full_name?.[0] || 'U'
+                            )}
                         </div>
                         <div>
-                            <h4 className="font-bold text-gray-900 text-lg">{selectedPost.profiles?.full_name || 'Anonymous'}</h4>
+                            <h4 className="font-bold text-gray-900 text-lg">{selectedPost.profiles?.username || selectedPost.profiles?.full_name || 'Anonymous'}</h4>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <span>{new Date(selectedPost.created_at).toLocaleString()}</span>
                                 {categories.find(c => c.id === selectedPost.category) && (
@@ -424,13 +428,17 @@ const CommunityChat = () => {
                         ) : comments.length > 0 ? (
                             comments.map(comment => (
                                 <div key={comment.id} className="flex gap-4 group">
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-600">
-                                        {comment.profiles?.full_name?.[0] || 'U'}
+                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 overflow-hidden">
+                                        {comment.profiles?.avatar_url ? (
+                                            <img src={comment.profiles.avatar_url} alt={comment.profiles.username || 'User'} className="w-full h-full object-cover" />
+                                        ) : (
+                                            comment.profiles?.full_name?.[0] || 'U'
+                                        )}
                                     </div>
                                     <div className="flex-1">
                                         <div className="bg-gray-50 p-4 rounded-2xl rounded-tl-none">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="font-bold text-gray-900">{comment.profiles?.full_name}</span>
+                                                <span className="font-bold text-gray-900">{comment.profiles?.username || comment.profiles?.full_name || 'Anonymous'}</span>
                                                 <span className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleDateString()}</span>
                                             </div>
                                             <p className="text-gray-800 leading-relaxed">{comment.content}</p>
@@ -575,11 +583,15 @@ const CommunityChat = () => {
                             >
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-sm">
-                                            {post.profiles?.full_name?.[0] || 'U'}
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden">
+                                            {post.profiles?.avatar_url ? (
+                                                <img src={post.profiles.avatar_url} alt={post.profiles.username || 'User'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                post.profiles?.full_name?.[0] || 'U'
+                                            )}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-gray-900 text-sm">{post.profiles?.full_name || 'Anonymous'}</h4>
+                                            <h4 className="font-bold text-gray-900 text-sm">{post.profiles?.username || post.profiles?.full_name || 'Anonymous'}</h4>
                                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                                 <span>{new Date(post.created_at).toLocaleDateString()}</span>
                                                 <span>•</span>

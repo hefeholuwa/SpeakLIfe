@@ -18,13 +18,29 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
   const [hasDispatchedVerified, setHasDispatchedVerified] = useState(false)
 
-  // Simplified user profile loading - just set to null for now
+  // Load user profile
   const loadUserProfile = async (authUser) => {
-    setUserProfile(null)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle() // Use maybeSingle to avoid error if no row exists
+
+      if (error) {
+        console.error('Error loading user profile:', error)
+        setUserProfile(null)
+      } else {
+        setUserProfile(data)
+      }
+    } catch (error) {
+      console.error('Error in loadUserProfile:', error)
+      setUserProfile(null)
+    }
   }
 
   useEffect(() => {
-    // Simplified initial session check
+    // Initial session check
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
@@ -35,14 +51,11 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(session?.user || null)
 
-          // Load user profile if user exists (simplified)
+          // Load user profile if user exists
           if (session?.user) {
-            setUserProfile(null)
+            await loadUserProfile(session.user)
           }
         }
-
-        setLoading(false)
-
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         setError(error.message)
@@ -61,12 +74,14 @@ export const AuthProvider = ({ children }) => {
 
         // Load user profile on auth changes
         if (session?.user) {
-          try {
-            await loadUserProfile(session.user)
-          } catch (error) {
-            console.error('Error loading user profile in auth change:', error)
-            setUserProfile(null)
-          }
+          // Create a promise that resolves after 3 seconds to prevent hanging
+          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+
+          // Race the profile load against the timeout
+          await Promise.race([
+            loadUserProfile(session.user),
+            timeoutPromise
+          ]);
         } else {
           setUserProfile(null)
         }
@@ -278,7 +293,8 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateProfile,
     resendVerification,
-    setError
+    setError,
+    refreshProfile: () => user ? loadUserProfile(user) : Promise.resolve()
   }
 
 

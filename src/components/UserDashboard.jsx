@@ -6,13 +6,14 @@ import BibleReader from './BibleReader'
 import BiblePlans from './BiblePlans'
 import ConfessionJournal from './ConfessionJournal'
 import CommunityChat from './CommunityChat'
+import UserProfile from './UserProfile'
 
 
 import adminService from '../services/adminService.js'
 import { supabase } from '../supabaseClient'
 
 const UserDashboard = ({ onNavigate }) => {
-  const { user, signOut } = useAuth()
+  const { user, userProfile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('home')
   const [bibleReaderConfig, setBibleReaderConfig] = useState(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -230,6 +231,10 @@ const UserDashboard = ({ onNavigate }) => {
               <Users size={20} />
               <span className="font-medium">Community</span>
             </button>
+            <button onClick={() => setActiveTab('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <User size={20} />
+              <span className="font-medium">Profile</span>
+            </button>
 
           </nav>
         </div>
@@ -240,7 +245,9 @@ const UserDashboard = ({ onNavigate }) => {
               {user?.email?.[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">{user?.user_metadata?.full_name || 'User'}</p>
+              <p className="text-sm font-bold text-gray-900 truncate">
+                {userProfile?.username ? userProfile.username : (user?.user_metadata?.full_name || 'User')}
+              </p>
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
           </div>
@@ -303,7 +310,9 @@ const UserDashboard = ({ onNavigate }) => {
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-1">{greeting}, {user?.user_metadata?.full_name?.split(' ')[0] || 'Friend'}</h1>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-1">
+                    {greeting}, {userProfile?.username ? userProfile.username : (user?.user_metadata?.full_name?.split(' ')[0] || 'Friend')}
+                  </h1>
                   <p className="text-gray-500">Ready to speak life today?</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -726,7 +735,11 @@ const UserDashboard = ({ onNavigate }) => {
             </div>
           )}
 
-
+          {activeTab === 'profile' && (
+            <div className="animate-fade-in-up">
+              <UserProfile />
+            </div>
+          )}
 
         </div>
       </main >
@@ -762,6 +775,13 @@ const UserDashboard = ({ onNavigate }) => {
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'community' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
           >
             <Users size={24} strokeWidth={activeTab === 'community' ? 2.5 : 2} className={activeTab === 'community' ? 'fill-white/10' : ''} />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'profile' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} className={activeTab === 'profile' ? 'fill-white/10' : ''} />
           </button>
         </div>
       </div >
