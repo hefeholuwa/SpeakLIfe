@@ -37,43 +37,22 @@ const Register = ({ onClose, onSuccess, onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!validateForm()) return
+
+    if (!validateForm()) {
+      return
+    }
 
     setError(null)
     const result = await signUp(formData.email, formData.password, formData.fullName)
 
     if (result.success) {
-      setRegistrationSuccess(true)
-      setUserEmail(formData.email)
-      setShowVerification(true)
+      // Pass the email to parent so it can show verification
+      onSuccess?.(formData.email)
+      // Close the registration modal
+      onClose()
     } else {
       // Handle specific errors gracefully
-      if (result.error && (
-        result.error.toLowerCase().includes('email not confirmed') ||
-        result.error.toLowerCase().includes('user already registered')
-      )) {
-        // If user exists or is unconfirmed, guide them to verification
-        setUserEmail(formData.email)
-        setShowVerification(true)
-      }
     }
-  }
-
-  if (showVerification) {
-    return (
-      <EmailVerification
-        email={userEmail}
-        onClose={() => {
-          setShowVerification(false)
-          onClose()
-        }}
-        onVerified={() => {
-          setShowVerification(false)
-          onSuccess?.()
-          onClose()
-        }}
-      />
-    )
   }
 
   return (
@@ -231,22 +210,7 @@ const Register = ({ onClose, onSuccess, onSwitchToLogin }) => {
           </p>
         </div>
       </div>
-
-      {showVerification && (
-        <EmailVerification
-          email={userEmail}
-          onClose={() => {
-            setShowVerification(false)
-            onClose()
-          }}
-          onVerified={() => {
-            setShowVerification(false)
-            onSuccess?.()
-            onClose()
-          }}
-        />
-      )}
-    </div>
+    </div >
   )
 }
 

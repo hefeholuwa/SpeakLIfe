@@ -17,6 +17,7 @@ const LandingPage = ({ onNavigate }) => {
   const [showRegistration, setShowRegistration] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [dailyVerse, setDailyVerse] = useState({
     text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
@@ -248,9 +249,10 @@ const LandingPage = ({ onNavigate }) => {
       {showRegistration && (
         <Register
           onClose={() => setShowRegistration(false)}
-          onSuccess={() => {
+          onSuccess={(email) => {
             setShowRegistration(false)
-            onNavigate('dashboard')
+            setVerificationEmail(email)
+            setShowVerification(true)
           }}
           onSwitchToLogin={() => {
             setShowRegistration(false)
@@ -273,10 +275,14 @@ const LandingPage = ({ onNavigate }) => {
         />
       )}
 
-      {showVerification && user && (
+      {showVerification && (
         <EmailVerification
-          email={user.email}
+          email={verificationEmail || user?.email}
           onClose={() => setShowVerification(false)}
+          onLogin={() => {
+            setShowVerification(false)
+            setShowLogin(true)
+          }}
           onVerified={() => {
             setShowVerification(false)
             onNavigate('dashboard')
