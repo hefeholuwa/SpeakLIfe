@@ -35,10 +35,11 @@ const PushNotificationManager = () => {
                                 setIsVisible(false);
                                 return 'Notifications enabled! You\'ll receive daily inspiration.';
                             } else {
-                                return 'Failed to subscribe. Please try again.';
+                                // If it returns false, it failed
+                                return 'Failed to subscribe. Please try reloading.';
                             }
                         },
-                        error: 'Something went wrong.'
+                        error: 'Something went wrong. Check console.'
                     }
                 );
             } else {

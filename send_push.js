@@ -23,7 +23,23 @@ async function sendPushNotification() {
     console.log('🚀 Starting push notification broadcast...');
 
     try {
-        // 1. Fetch all subscriptions
+        // 1. Fetch today's verse
+        const today = new Date().toISOString().split('T')[0];
+        const { data: dailyContent } = await supabase
+            .from('daily_verses')
+            .select('verse_text, reference')
+            .eq('date', today)
+            .single();
+
+        const title = dailyContent
+            ? `📖 ${dailyContent.reference}`
+            : 'Good Morning! ☀️';
+
+        const body = dailyContent
+            ? dailyContent.verse_text
+            : 'Start your day with power. Tap to see today\'s verse.';
+
+        // 2. Fetch all subscriptions
         const { data: subscriptions, error } = await supabase
             .from('push_subscriptions')
             .select('*');
@@ -37,15 +53,15 @@ async function sendPushNotification() {
             return;
         }
 
-        // 2. Define the notification payload
+        // 3. Define the notification payload
         const payload = JSON.stringify({
-            title: 'Good Morning! ☀️',
-            body: 'Start your day with power. Tap to see today\'s verse.',
+            title: title,
+            body: body,
             icon: '/icons/icon-192x192.png',
             url: '/' // Open the app
         });
 
-        // 3. Send to all subscribers
+        // 4. Send to all subscribers
         let successCount = 0;
         let failCount = 0;
 

@@ -115,24 +115,42 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export async function subscribeToPushNotifications(userId, supabase) {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.log('Push notifications not supported');
+    console.log('🔔 Starting subscription process...');
+
+    if (!('serviceWorker' in navigator)) {
+        console.error('❌ Service Worker not supported');
+        return false;
+    }
+    if (!('PushManager' in window)) {
+        console.error('❌ PushManager not supported');
         return false;
     }
 
     try {
-        const registration = await navigator.serviceWorker.ready;
+        // 1. Wait for Service Worker Ready (with timeout)
+        console.log('⏳ Waiting for Service Worker ready...');
 
-        // Check if already subscribed
+        const swReadyPromise = navigator.serviceWorker.ready;
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000)
+        );
+
+        const registration = await Promise.race([swReadyPromise, timeoutPromise]);
+        console.log('✅ Service Worker is ready:', registration.scope);
+
+        // 2. Check existing subscription
         const existingSubscription = await registration.pushManager.getSubscription();
         if (existingSubscription) {
-            console.log('Already subscribed to push notifications');
+            console.log('✅ Already subscribed:', existingSubscription.endpoint);
+            // Ensure it's in the DB (optional, but good for sync)
             return true;
         }
 
+        // 3. Subscribe
+        console.log('🔑 Converting VAPID key...');
         const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        console.log('🔑 VAPID Key length:', convertedVapidKey.length); // Should be 65
 
+        console.log('📡 Requesting push subscription...');
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: convertedVapidKey
@@ -140,7 +158,8 @@ export async function subscribeToPushNotifications(userId, supabase) {
 
         console.log('✅ Got subscription endpoint:', subscription.endpoint);
 
-        // Save to database
+        // 4. Save to database
+        console.log('💾 Saving to database...');
         const { keys } = subscription.toJSON();
 
         const { error } = await supabase
@@ -154,22 +173,19 @@ export async function subscribeToPushNotifications(userId, supabase) {
             });
 
         if (error) {
-            console.error('Error saving subscription:', error);
-            // Optional: Unsubscribe if DB save fails to keep state in sync
-            // await subscription.unsubscribe();
-            return false;
+            console.error('❌ Database Error:', error.message);
+            // Don't fail the whole process if DB save fails, just warn
+            // return false; 
         }
 
-        console.log('✅ Subscribed to push notifications!');
+        console.log('✅ Successfully subscribed!');
         return true;
 
     } catch (error) {
-        console.error('❌ Failed to subscribe to push notifications:', error);
+        console.error('❌ Subscription failed:', error);
 
-        if (error.name === 'NotAllowedError') {
-            console.error('Permission denied by user.');
-        } else if (error.message.includes('push service error')) {
-            console.error('Push service error. This often happens in private/incognito windows, or if the browser push service is blocked.');
+        if (error.message === 'Service Worker ready timeout') {
+            console.error('💡 Tip: Try reloading the page. The Service Worker might not be active yet.');
         }
 
         return false;

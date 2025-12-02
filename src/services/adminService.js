@@ -1026,6 +1026,26 @@ class AdminService {
     }
   }
 
+  async sendPushNotification(title, message, url = '/') {
+    try {
+      this.addLog(`Sending push notification: ${title}...`, 'info')
+
+      const { data, error } = await supabase.functions.invoke('send-push', {
+        body: { title, body: message, url }
+      })
+
+      if (error) throw error
+
+      this.addLog(`Push notification sent successfully`, 'success')
+      return true
+    } catch (error) {
+      this.addLog(`Error sending push notification: ${error.message}`, 'error')
+      console.warn('Backend function "send-push" not found. Please deploy it or run "node send_push.js" manually.')
+      // Don't throw to prevent blocking the UI if just the push fails
+      return false
+    }
+  }
+
   async getNotificationHistory() {
     try {
       const { data, error } = await supabase
