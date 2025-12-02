@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import EmailVerification from './EmailVerification.jsx'
 import { X, Mail, Lock, AlertCircle, ArrowRight, Loader2 } from 'lucide-react'
 
 const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
@@ -11,6 +12,7 @@ const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
 
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [validationErrors, setValidationErrors] = useState({})
+  const [showVerification, setShowVerification] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -37,8 +39,8 @@ const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
     if (result.success) {
       onSuccess?.()
       onClose()
-    } else if (result.error && result.error.includes('email not confirmed')) {
-      safeSetError('Please verify your email address before signing in.')
+    } else if (result.error && (result.error.includes('email not confirmed') || result.error.includes('Email not confirmed'))) {
+      setShowVerification(true)
     }
   }
 
@@ -50,6 +52,20 @@ const Login = ({ onClose, onSuccess, onSwitchToRegister }) => {
     safeSetError(null)
     const result = await safeResetPassword(formData.email)
     if (result.success) alert('Password reset email sent! Please check your inbox.')
+  }
+
+  if (showVerification) {
+    return (
+      <EmailVerification
+        email={formData.email}
+        onClose={() => setShowVerification(false)}
+        onVerified={() => {
+          setShowVerification(false)
+          onSuccess?.()
+          onClose()
+        }}
+      />
+    )
   }
 
   return (

@@ -56,6 +56,23 @@ const Register = ({ onClose, onSuccess, onSwitchToLogin }) => {
     }
   }
 
+  if (showVerification) {
+    return (
+      <EmailVerification
+        email={userEmail}
+        onClose={() => {
+          setShowVerification(false)
+          onClose()
+        }}
+        onVerified={() => {
+          setShowVerification(false)
+          onSuccess?.()
+          onClose()
+        }}
+      />
+    )
+  }
+
   return (
     <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in relative max-h-[90vh] overflow-y-auto">
