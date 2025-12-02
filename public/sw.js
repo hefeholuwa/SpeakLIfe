@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speaklife-v1';
+const CACHE_NAME = 'speaklife-v2';
 const STATIC_CACHE = 'speaklife-static-v1';
 const DYNAMIC_CACHE = 'speaklife-dynamic-v1';
 
@@ -53,16 +53,49 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip cross-origin requests
-    if (url.origin !== location.origin) {
-        return;
-    }
-
-    // Skip Supabase API requests (always fetch fresh)
+    // 1. Handle Supabase API requests - Network Only
     if (url.hostname.includes('supabase.co')) {
+        return; // Let browser handle it (no caching)
+    }
+
+    // 2. Handle Navigation requests (HTML) - Network First, then Cache (index.html), then Offline
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .catch(() => {
+                    return caches.match('/index.html')
+                        .then((response) => {
+                            if (response) return response;
+                            return caches.match('/offline.html');
+                        });
+                })
+        );
         return;
     }
 
+    // 3. Handle Static Assets (JS, CSS, Images) - Stale-While-Revalidate
+    // This means serve from cache immediately, but update cache in background
+    if (request.destination === 'script' ||
+        request.destination === 'style' ||
+        request.destination === 'image') {
+        event.respondWith(
+            caches.match(request).then((cachedResponse) => {
+                const fetchPromise = fetch(request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(DYNAMIC_CACHE).then((cache) => {
+                            cache.put(request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                });
+                return cachedResponse || fetchPromise;
+            })
+        );
+        return;
+    }
+
+    // 4. Default Strategy - Cache First, Fallback to Network
     event.respondWith(
         caches.match(request)
             .then((cachedResponse) => {
@@ -72,15 +105,12 @@ self.addEventListener('fetch', (event) => {
 
                 return fetch(request)
                     .then((response) => {
-                        // Don't cache if not a success response
-                        if (!response || response.status !== 200 || response.type === 'error') {
+                        // Don't cache if not a success response or cross-origin
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
                             return response;
                         }
 
-                        // Clone the response
                         const responseToCache = response.clone();
-
-                        // Cache dynamic content
                         caches.open(DYNAMIC_CACHE)
                             .then((cache) => {
                                 cache.put(request, responseToCache);
@@ -89,14 +119,8 @@ self.addEventListener('fetch', (event) => {
                         return response;
                     })
                     .catch(() => {
-                        // Return offline page for navigation requests
-                        if (request.mode === 'navigate') {
-                            return caches.match('/offline.html');
-                        }
-                        return new Response('Offline', {
-                            status: 503,
-                            statusText: 'Service Unavailable'
-                        });
+                        // If image fails, return placeholder?
+                        // For now just fail
                     });
             })
     );

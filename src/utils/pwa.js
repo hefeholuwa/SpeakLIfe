@@ -1,5 +1,5 @@
 // Service Worker Registration
-export function registerServiceWorker() {
+export function registerServiceWorker(onUpdate) {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker
@@ -19,8 +19,8 @@ export function registerServiceWorker() {
                         newWorker?.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                 // New service worker available
-                                if (confirm('New version available! Reload to update?')) {
-                                    window.location.reload();
+                                if (onUpdate) {
+                                    onUpdate(registration);
                                 }
                             }
                         });
