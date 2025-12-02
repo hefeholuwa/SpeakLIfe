@@ -3,6 +3,7 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../supabaseClient.jsx'
+import { toast } from 'sonner'
 
 const DailyVerseHero = () => {
   const { user } = useAuth()
@@ -24,19 +25,19 @@ const DailyVerseHero = () => {
 
   const loadTodaysContent = async () => {
     if (hasLoaded) return // Prevent multiple calls
-    
+
     try {
       setIsLoading(true)
       setHasLoaded(true)
-      
+
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0]
-      
+
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Database query timeout')), 5000)
       )
-      
+
       const dbPromise = supabase
         .from('daily_verses')
         .select('*')
@@ -59,8 +60,8 @@ const DailyVerseHero = () => {
         const translationMatch = data.reference.match(/\(([^)]+)\)$/)
         const translation = translationMatch ? translationMatch[1] : null
         const cleanReference = data.reference.replace(/ \(.*\)$/, '')
-        
-        
+
+
         setDailyVerse({
           text: data.verse_text,
           reference: cleanReference,
@@ -68,9 +69,9 @@ const DailyVerseHero = () => {
         })
         setDailyConfession(data.confession_text)
       }
-      
+
       setIsLoading(false)
-      
+
     } catch (error) {
       console.error('Error loading content:', error)
       setError('Failed to load content.')
@@ -81,7 +82,7 @@ const DailyVerseHero = () => {
   const saveToFavorites = async () => {
     try {
       if (!user) return
-      
+
       const { error } = await supabase
         .from('user_favorites')
         .insert({
@@ -106,15 +107,15 @@ const DailyVerseHero = () => {
 
       if (navigator.share) {
         await navigator.share({
-          title: 'Daily Scripture - SpeakLife',
-          text: `"${dailyVerse.text}" - ${dailyVerse.reference}`,
+          title: 'Daily Scripture & Confession - SpeakLife',
+          text: `✨ *Verse of the Day* ✨\n"${dailyVerse.text}" - ${dailyVerse.reference}\n\n💭 *Confession* 💭\n${dailyConfession}\n\n📲 *Shared via SpeakLife App*\n${window.location.origin}`,
           url: window.location.origin
         })
       } else {
         // Fallback: copy to clipboard
-        const shareText = `"${dailyVerse.text}" - ${dailyVerse.reference}\n\nShared from SpeakLife App`
+        const shareText = `✨ *Verse of the Day* ✨\n"${dailyVerse.text}" - ${dailyVerse.reference}\n\n💭 *Confession* 💭\n${dailyConfession}\n\n📲 *Shared via SpeakLife App*\n${window.location.origin}`
         await navigator.clipboard.writeText(shareText)
-        alert('Verse copied to clipboard!')
+        toast.success('Copied to clipboard!')
       }
     } catch (error) {
       console.error('Error sharing verse:', error)
@@ -129,20 +130,20 @@ const DailyVerseHero = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.1),transparent_50%)]"></div>
-      
+
       <Card className="relative p-4 sm:p-6 border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
         {/* Premium Header */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6">
           <div className="flex items-center gap-4 mb-4 lg:mb-0">
             <div className="relative">
               <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
-            <span className="text-white text-2xl">✨</span>
+                <span className="text-white text-2xl">✨</span>
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
-          </div>
-          <div>
+            </div>
+            <div>
               <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-indigo-900 bg-clip-text text-transparent">
-              Today's Scripture
+                Today's Scripture
               </h2>
               <p className="text-sm text-gray-600 mt-1">Divine Word for Today</p>
             </div>
@@ -155,7 +156,7 @@ const DailyVerseHero = () => {
             {/* Premium Background Effects */}
             <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-700"></div>
-            
+
             <div className="relative z-10 space-y-4">
               {/* Premium Icon */}
               <div className="relative">
@@ -164,74 +165,74 @@ const DailyVerseHero = () => {
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
               </div>
-              
+
               {/* Premium Content */}
               <div className="space-y-3">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
                     Today's Scripture
                   </h3>
-              {isLoading ? (
+                  {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-4 space-y-3">
                       <div className="w-6 h-6 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                  <div className="text-center">
+                      <div className="text-center">
                         <span className="text-gray-600 text-sm font-medium">
-                      Loading today's scripture...
-                    </span>
-                  </div>
-                </div>
-              ) : error ? (
+                          Loading today's scripture...
+                        </span>
+                      </div>
+                    </div>
+                  ) : error ? (
                     <div className="text-center py-4">
                       <div className="text-gray-400 mb-3">
                         <span className="text-2xl">⚠️</span>
-                  </div>
+                      </div>
                       <p className="text-gray-600 mb-3 text-sm">{error}</p>
-                  <Button 
-                    onClick={() => {
-                      setError(null)
-                      setIsLoading(true)
-                      loadTodaysContent()
-                    }}
+                      <Button
+                        onClick={() => {
+                          setError(null)
+                          setIsLoading(true)
+                          loadTodaysContent()
+                        }}
                         className="bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-4"
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              ) : dailyVerse ? (
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  ) : dailyVerse ? (
                     <p className="text-gray-800 text-sm leading-relaxed font-medium">
-                  "{dailyVerse.text}"
-                </p>
-              ) : (
+                      "{dailyVerse.text}"
+                    </p>
+                  ) : (
                     <div className="text-center py-4">
                       <div className="text-gray-400 mb-3">
                         <span className="text-2xl">📖</span>
-                  </div>
+                      </div>
                       <p className="text-gray-600 text-sm">No verse available for today</p>
                       <p className="text-gray-400 text-xs mt-1">Check back later or contact admin</p>
+                    </div>
+                  )}
                 </div>
-              )}
-                </div>
-                
+
                 {dailyVerse && (
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-semibold text-purple-600">
-                  {dailyVerse.reference}
-                  {dailyVerse.translation && (
+                        {dailyVerse.reference}
+                        {dailyVerse.translation && (
                           <span className="text-gray-500 text-sm ml-2">({dailyVerse.translation})</span>
-                  )}
-                </span>
+                        )}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <span>Scripture</span>
                       <div className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300">→</div>
                     </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
             </div>
-            
+
             {/* Hover Effect Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
           </Card>
@@ -241,7 +242,7 @@ const DailyVerseHero = () => {
             {/* Premium Background Effects */}
             <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-700"></div>
-            
+
             <div className="relative z-10 space-y-4">
               {/* Premium Icon */}
               <div className="relative">
@@ -250,50 +251,50 @@ const DailyVerseHero = () => {
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
               </div>
-              
+
               {/* Premium Content */}
               <div className="space-y-3">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
-                Today's Confession
+                    Today's Confession
                   </h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="w-6 h-6 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
                       <span className="ml-3 text-gray-600">
-                  Loading confession...
-                </span>
-              </div>
-            ) : error ? (
-              <div className="text-center py-4">
-                <p className="text-gray-600 mb-2">Failed to load confession</p>
-                <Button 
-                  onClick={() => {
-                    setError(null)
-                    setIsLoading(true)
-                    loadTodaysContent()
-                  }}
-                  size="sm"
-                  variant="outline"
-                  className="text-purple-600 border-purple-300 hover:bg-purple-50"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : dailyConfession ? (
-              <p className="text-gray-800 leading-relaxed text-lg">
-                {dailyConfession}
-              </p>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-gray-400 mb-2">
-                  <span className="text-2xl">💭</span>
-                </div>
+                        Loading confession...
+                      </span>
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-2">Failed to load confession</p>
+                      <Button
+                        onClick={() => {
+                          setError(null)
+                          setIsLoading(true)
+                          loadTodaysContent()
+                        }}
+                        size="sm"
+                        variant="outline"
+                        className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  ) : dailyConfession ? (
+                    <p className="text-gray-800 leading-relaxed text-lg">
+                      {dailyConfession}
+                    </p>
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="text-gray-400 mb-2">
+                        <span className="text-2xl">💭</span>
+                      </div>
                       <p className="text-gray-600">No confession available for today</p>
                       <p className="text-gray-400 text-sm mt-1">Check back later or contact admin</p>
-              </div>
-            )}
-          </div>
+                    </div>
+                  )}
+                </div>
 
                 {dailyConfession && (
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -311,7 +312,7 @@ const DailyVerseHero = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Hover Effect Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
           </Card>
@@ -348,7 +349,7 @@ const DailyVerseHero = () => {
           </div>
         )}
       </Card>
-      
+
       <style jsx="true">{`
         @keyframes fadeInUp {
           from {
@@ -361,7 +362,7 @@ const DailyVerseHero = () => {
           }
         }
       `}</style>
-      </div>
+    </div>
   )
 }
 

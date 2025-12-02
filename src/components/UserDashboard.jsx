@@ -8,6 +8,7 @@ import ConfessionJournal from './ConfessionJournal'
 import CommunityChat from './CommunityChat'
 import UserProfile from './UserProfile'
 import NotificationInbox from './NotificationInbox'
+import PushNotificationManager from './PushNotificationManager'
 
 
 
@@ -198,12 +199,18 @@ const UserDashboard = ({ onNavigate }) => {
   }
 
   const handleShare = async () => {
-    const text = `"${dailyVerse.text}" - ${dailyVerse.reference}\n\nShared via SpeakLife`;
+    const text = `✨ *Verse of the Day* ✨\n"${dailyVerse.text}" - ${dailyVerse.reference}\n\n💭 *Confession* 💭\n${dailyVerse.confession}\n\n📲 *Shared via SpeakLife App*\n${window.location.origin}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Verse of the Day', text });
+        await navigator.share({
+          title: 'Daily Scripture & Confession - SpeakLife',
+          text,
+          url: window.location.origin
+        });
       } catch (error) {
-        console.error('Error sharing:', error);
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
       }
     } else {
       navigator.clipboard.writeText(text);
@@ -734,6 +741,9 @@ const UserDashboard = ({ onNavigate }) => {
 
         </div>
       </main >
+
+      {/* Push Notification Manager */}
+      <PushNotificationManager />
 
       {/* Mobile Bottom Nav */}
       < div className="md:hidden fixed bottom-6 left-6 right-6 bg-[#1a1b1e]/90 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 z-50 border border-white/10" >
