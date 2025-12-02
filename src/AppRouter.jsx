@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import BibleSection from './components/BibleSection.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 
 import AdminDashboard from './components/AdminDashboard.jsx'
 
@@ -22,6 +23,8 @@ const AppRouter = () => {
       setCurrentRoute('admin')
     } else if (path === '/admin-login') {
       setCurrentRoute('admin-login')
+    } else if (path === '/reset-password') {
+      setCurrentRoute('reset-password')
     } else {
       setCurrentRoute('landing')
     }
@@ -37,6 +40,8 @@ const AppRouter = () => {
         setCurrentRoute('admin')
       } else if (path === '/admin-login') {
         setCurrentRoute('admin-login')
+      } else if (path === '/reset-password') {
+        setCurrentRoute('reset-password')
       } else {
         setCurrentRoute('landing')
       }
@@ -70,6 +75,9 @@ const AppRouter = () => {
     } else if (route === 'admin-login') {
       window.history.pushState({}, '', '/admin-login')
       setCurrentRoute('admin-login')
+    } else if (route === 'reset-password') {
+      window.history.pushState({}, '', '/reset-password')
+      setCurrentRoute('reset-password')
     } else {
       window.history.pushState({}, '', '/')
       setCurrentRoute('landing')
@@ -100,6 +108,14 @@ const AppRouter = () => {
 
   if (currentRoute === 'admin-login') {
     return <AdminLogin onNavigate={navigateTo} />
+  }
+
+  if (currentRoute === 'reset-password') {
+    return (
+      <AuthProvider>
+        <ResetPassword onNavigate={navigateTo} />
+      </AuthProvider>
+    )
   }
 
   return (
