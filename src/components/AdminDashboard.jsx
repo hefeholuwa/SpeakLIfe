@@ -4,6 +4,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import { Badge } from './ui/badge'
+import NotificationCenterPanel from './admin/NotificationCenterPanel'
 import {
   Database,
   Settings,
@@ -23,15 +24,23 @@ import {
   Shield,
   Menu,
   Home,
-  LayoutDashboard
+  LayoutDashboard,
+  AlertTriangle,
+  Activity,
+  Bell
 } from 'lucide-react'
 
 // Import the optimized panels
 import OverviewPanel from './admin/OverviewPanel'
+import UserManagementPanel from './admin/UserManagementPanel'
 import ContentManagementPanel from './admin/ContentManagementPanel'
 import ReadingPlansPanel from './admin/ReadingPlansPanel'
+import CommunityModerationPanel from './admin/CommunityModerationPanel'
+import AnalyticsPanel from './admin/AnalyticsPanel'
 import AITest from './AITest'
 import adminService from '../services/adminService'
+import { supabase } from '../supabaseClient'
+
 import { useAuth } from '../contexts/AuthContext'
 
 const AdminDashboard = ({ onNavigate }) => {
@@ -74,6 +83,24 @@ const AdminDashboard = ({ onNavigate }) => {
   })
   const [editingContent, setEditingContent] = useState(null)
 
+  const loadSystemData = async () => {
+    try {
+      setError(null)
+      // Get real system stats from adminService
+      const stats = await adminService.getSystemStats()
+      setSystemStats(stats)
+
+      // Get logs from adminService
+      const systemLogs = adminService.getLogs()
+      setLogs(systemLogs)
+    } catch (error) {
+      console.error('Error loading system data:', error)
+    } finally {
+      setLoadingStates(prev => ({ ...prev, systemData: false }))
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
     // Auth Check
     if (!authLoading) {
@@ -86,38 +113,28 @@ const AdminDashboard = ({ onNavigate }) => {
 
   useEffect(() => {
     if (user && userProfile?.is_admin) {
-      // Simplified initialization - no async calls that could hang
       setIsLoading(false)
       loadSystemData() // Load initial data
     }
   }, [user, userProfile])
 
+  useEffect(() => {
+    // Real-time subscriptions for system stats
+    const channels = [
+      supabase.channel('public:profiles').on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadSystemData()),
+      supabase.channel('public:daily_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'daily_verses' }, () => loadSystemData()),
+      supabase.channel('public:topic_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_verses' }, () => loadSystemData()),
+      supabase.channel('public:topic_confessions').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_confessions' }, () => loadSystemData()),
+      supabase.channel('public:bible_bookmarks').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_bookmarks' }, () => loadSystemData()),
+      supabase.channel('public:bible_highlights').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_highlights' }, () => loadSystemData())
+    ]
 
+    channels.forEach(channel => channel.subscribe())
 
-  const loadSystemData = async () => {
-    try {
-      setLoadingStates(prev => ({ ...prev, systemData: true }))
-      setError(null)
-      adminService.addLog('Loading system data...', 'info')
-
-      // Get real system stats from adminService
-      const stats = await adminService.getSystemStats()
-      setSystemStats(stats)
-
-      // Get logs from adminService
-      const systemLogs = adminService.getLogs()
-      setLogs(systemLogs)
-
-      adminService.addLog('System data loaded successfully', 'success')
-    } catch (error) {
-      console.error('Error loading system data:', error)
-      setError(`Failed to load system data: ${error.message}`)
-      adminService.addLog(`Error loading system data: ${error.message}`, 'error')
-    } finally {
-      setLoadingStates(prev => ({ ...prev, systemData: false }))
-      setIsLoading(false)
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel))
     }
-  }
+  }, [])
 
   const loadTopics = async () => {
     try {
@@ -335,6 +352,14 @@ const AdminDashboard = ({ onNavigate }) => {
               <LayoutDashboard size={20} />
               <span className="font-medium">Overview</span>
             </button>
+            <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'users' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <Users size={20} />
+              <span className="font-medium">Users</span>
+            </button>
+            <button onClick={() => setActiveTab('moderation')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'moderation' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <AlertTriangle size={20} />
+              <span className="font-medium">Moderation</span>
+            </button>
             <button onClick={() => { setActiveTab('content'); loadDailyContent(); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'content' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
               <FileText size={20} />
               <span className="font-medium">Content</span>
@@ -342,6 +367,14 @@ const AdminDashboard = ({ onNavigate }) => {
             <button onClick={() => setActiveTab('plans')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'plans' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
               <BookOpen size={20} />
               <span className="font-medium">Reading Plans</span>
+            </button>
+            <button onClick={() => setActiveTab('analytics')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'analytics' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <Activity size={20} />
+              <span className="font-medium">Analytics</span>
+            </button>
+            <button onClick={() => setActiveTab('notifications')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'notifications' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+              <Bell size={20} />
+              <span className="font-medium">Notifications</span>
             </button>
             <button onClick={() => setActiveTab('ai-test')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'ai-test' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
               <Brain size={20} />
@@ -387,13 +420,24 @@ const AdminDashboard = ({ onNavigate }) => {
               <button onClick={() => { setActiveTab('overview'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                 <LayoutDashboard size={24} /> Overview
               </button>
+              <button onClick={() => { setActiveTab('users'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
+                <Users size={24} /> Users
+              </button>
+              <button onClick={() => { setActiveTab('moderation'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
+                <AlertTriangle size={24} /> Moderation
+              </button>
               <button onClick={() => { setActiveTab('content'); loadDailyContent(); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                 <FileText size={24} /> Content
               </button>
               <button onClick={() => { setActiveTab('plans'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                 <BookOpen size={24} /> Reading Plans
               </button>
-
+              <button onClick={() => { setActiveTab('analytics'); setShowMobileMenu(false); }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
+                <Activity size={24} /> Analytics
+              </button>
+              <button onClick={() => { setActiveTab('notifications'); setShowMobileMenu(false); }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
+                <Bell size={24} /> Notifications
+              </button>
               <button onClick={() => { setActiveTab('ai-test'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                 <Brain size={24} /> AI Test
               </button>
@@ -413,8 +457,12 @@ const AdminDashboard = ({ onNavigate }) => {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-black text-gray-900">
               {activeTab === 'overview' && 'System Overview'}
+              {activeTab === 'users' && 'User Management'}
+              {activeTab === 'moderation' && 'Community Moderation'}
               {activeTab === 'content' && 'Content Management'}
               {activeTab === 'plans' && 'Reading Plans Management'}
+              {activeTab === 'analytics' && 'Analytics'}
+              {activeTab === 'notifications' && 'Notification Center'}
               {activeTab === 'ai-test' && 'AI Capabilities'}
               {activeTab === 'settings' && 'Settings'}
             </h1>
@@ -478,6 +526,14 @@ const AdminDashboard = ({ onNavigate }) => {
               />
             )}
 
+            {activeTab === 'users' && (
+              <UserManagementPanel />
+            )}
+
+            {activeTab === 'moderation' && (
+              <CommunityModerationPanel />
+            )}
+
             {activeTab === 'content' && (
               <ContentManagementPanel
                 dailyContent={dailyContent}
@@ -499,6 +555,14 @@ const AdminDashboard = ({ onNavigate }) => {
 
             {activeTab === 'plans' && (
               <ReadingPlansPanel />
+            )}
+
+            {activeTab === 'analytics' && (
+              <AnalyticsPanel />
+            )}
+
+            {activeTab === 'notifications' && (
+              <NotificationCenterPanel />
             )}
 
             {activeTab === 'ai-test' && (

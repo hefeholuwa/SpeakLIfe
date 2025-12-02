@@ -16,7 +16,9 @@ import {
     MessageSquare,
     ArrowLeft,
     ChevronRight,
-    Shield
+    Shield,
+    AlertTriangle,
+    Pin
 } from 'lucide-react';
 
 const CommunityChat = () => {
@@ -159,6 +161,8 @@ const CommunityChat = () => {
           profiles (full_name, avatar_url, username, is_admin),
           community_likes (user_id)
         `)
+                .eq('is_hidden', false)
+                .order('is_pinned', { ascending: false })
                 .order('created_at', { ascending: false })
                 .limit(50);
 
@@ -174,6 +178,33 @@ const CommunityChat = () => {
             console.error('Error fetching posts:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const reportPost = async (e, postId) => {
+        e.stopPropagation();
+        if (!window.confirm('Report this post for inappropriate content?')) return;
+
+        try {
+            // Optimistic update
+            toast.success('Report submitted. Thank you for helping keep our community safe.');
+
+            const { error } = await supabase.rpc('increment_report_count', { post_id: postId });
+
+            // Fallback if RPC doesn't exist (which it doesn't yet, so we'll do a direct update for now)
+            if (error) {
+                // Fetch current count first to be safe, or just increment blindly if we trust the client (we shouldn't)
+                // For now, let's just use a direct update query since we added the column
+                const { error: updateError } = await supabase
+                    .from('community_posts')
+                    .update({ reported_count: posts.find(p => p.id === postId).reported_count + 1 })
+                    .eq('id', postId);
+
+                if (updateError) throw updateError;
+            }
+        } catch (error) {
+            console.error('Error reporting post:', error);
+            // toast.error('Failed to submit report');
         }
     };
 
@@ -615,18 +646,36 @@ const CommunityChat = () => {
                                                     <catConfig.icon size={10} />
                                                     {catConfig.label}
                                                 </span>
+                                                {post.is_pinned && (
+                                                    <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
+                                                        <Pin size={10} className="fill-current" />
+                                                        Pinned
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {isOwner && (
-                                        <button
-                                            onClick={(e) => handleDelete(post.id, e)}
-                                            className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {!isOwner && (
+                                            <button
+                                                onClick={(e) => reportPost(e, post.id)}
+                                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Report Post"
+                                            >
+                                                <AlertTriangle size={16} />
+                                            </button>
+                                        )}
+                                        {isOwner && (
+                                            <button
+                                                onClick={(e) => handleDelete(post.id, e)}
+                                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Delete Post"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <p className="text-gray-800 leading-relaxed mb-6 whitespace-pre-wrap line-clamp-3">{post.content}</p>

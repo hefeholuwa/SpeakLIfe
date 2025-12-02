@@ -1,3 +1,5 @@
+import { supabase } from '../supabaseClient';
+
 // Push Notification Service
 // Handles browser notifications, service worker registration, and notification management
 
@@ -7,6 +9,80 @@ class NotificationService {
     this.permission = this.isSupported ? Notification.permission : 'denied';
     this.registration = null;
   }
+
+  // ... existing push notification methods ...
+
+  // --- In-App Notifications (Database) ---
+
+  async getUserNotifications(userId) {
+    try {
+      // 1. Fetch all relevant notifications (global or targeted to user)
+      const { data: notifications, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .or(`is_global.eq.true,user_id.eq.${userId}`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // 2. Fetch read receipts for this user
+      const { data: reads, error: readError } = await supabase
+        .from('notification_reads')
+        .select('notification_id')
+        .eq('user_id', userId);
+
+      if (readError) throw readError;
+
+      const readIds = new Set(reads.map(r => r.notification_id));
+
+      // 3. Merge read status
+      return notifications.map(n => ({
+        ...n,
+        is_read: readIds.has(n.id)
+      }));
+    } catch (error) {
+      console.error('Error fetching user notifications:', error);
+      return [];
+    }
+  }
+
+  async markAsRead(userId, notificationId) {
+    try {
+      const { error } = await supabase
+        .from('notification_reads')
+        .insert([{ user_id: userId, notification_id: notificationId }])
+        .onConflict('user_id, notification_id')
+        .ignore(); // If already exists, do nothing
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return false;
+    }
+  }
+
+  async markAllAsRead(userId, notificationIds) {
+    try {
+      const reads = notificationIds.map(id => ({
+        user_id: userId,
+        notification_id: id
+      }));
+
+      const { error } = await supabase
+        .from('notification_reads')
+        .upsert(reads, { onConflict: 'user_id, notification_id', ignoreDuplicates: true });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      return false;
+    }
+  }
+
+  // ... existing methods ...
 
   // Request notification permission
   async requestPermission() {
@@ -85,7 +161,7 @@ class NotificationService {
 
     try {
       const delay = scheduledTime.getTime() - Date.now();
-      
+
       if (delay <= 0) {
         return await this.sendNotification(title, options);
       }
@@ -192,7 +268,7 @@ class NotificationService {
       // Schedule daily verse at 7 AM
       const dailyVerseTime = new Date();
       dailyVerseTime.setHours(7, 0, 0, 0);
-      
+
       if (dailyVerseTime.getTime() <= Date.now()) {
         dailyVerseTime.setDate(dailyVerseTime.getDate() + 1);
       }
@@ -200,7 +276,7 @@ class NotificationService {
       // Schedule confession reminder at 8 PM
       const confessionTime = new Date();
       confessionTime.setHours(20, 0, 0, 0);
-      
+
       if (confessionTime.getTime() <= Date.now()) {
         confessionTime.setDate(confessionTime.getDate() + 1);
       }

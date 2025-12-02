@@ -11,6 +11,8 @@ import {
 } from './ui/dropdown-menu'
 import { Avatar, AvatarFallback } from './ui/avatar'
 
+import NotificationInbox from './NotificationInbox'
+
 const DashboardHeader = ({ onShowProfile }) => {
   const { user, signOut } = useAuth()
 
@@ -34,7 +36,10 @@ const DashboardHeader = ({ onShowProfile }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Notification Inbox */}
+          <NotificationInbox />
+
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -60,19 +65,19 @@ const DashboardHeader = ({ onShowProfile }) => {
                   </div>
                 </div>
               </div>
-              
+
               <DropdownMenuItem className="cursor-pointer p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-purple-50 transition-all duration-300" onClick={() => onShowProfile?.(true)}>
                 <span className="mr-2 sm:mr-3 text-base sm:text-lg">👤</span>
                 <span className="font-medium text-sm sm:text-base">Profile</span>
               </DropdownMenuItem>
-              
+
               <DropdownMenuItem className="cursor-pointer p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-purple-50 transition-all duration-300">
                 <span className="mr-2 sm:mr-3 text-base sm:text-lg">⚙️</span>
                 <span className="font-medium text-sm sm:text-base">Settings</span>
               </DropdownMenuItem>
-              
+
               <div className="border-t border-gray-100 my-1 sm:my-2"></div>
-              
+
               <DropdownMenuItem className="cursor-pointer p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-red-50 text-red-600 transition-all duration-300" onClick={handleSignOut}>
                 <span className="mr-2 sm:mr-3 text-base sm:text-lg">🚪</span>
                 <span className="font-medium text-sm sm:text-base">Log out</span>

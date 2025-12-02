@@ -209,7 +209,7 @@ class AdminService {
       if (date) {
         query = query.eq('date', date)
       } else {
-        query = query.order('date', { ascending: false }).limit(10)
+        query = query.order('date', { ascending: false }).limit(50) // Increased limit
       }
 
       const { data, error } = await query
@@ -220,6 +220,91 @@ class AdminService {
       return data
     } catch (error) {
       this.addLog(`Error loading daily content: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async getDailyContentByRange(startDate, endDate) {
+    try {
+      this.addLog(`Loading content from ${startDate} to ${endDate}...`, 'info')
+
+      const { data, error } = await supabase
+        .from('daily_verses')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+
+      if (error) throw error
+
+      this.addLog(`Loaded ${data.length} entries for range`, 'success')
+      return data
+    } catch (error) {
+      this.addLog(`Error loading content range: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  // Series Management
+  async getContentSeries() {
+    try {
+      const { data, error } = await supabase
+        .from('content_series')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      this.addLog(`Error fetching series: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async createContentSeries(series) {
+    try {
+      const { data, error } = await supabase
+        .from('content_series')
+        .insert([series])
+        .select()
+
+      if (error) throw error
+      this.addLog(`Series created successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error creating series: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async updateContentSeries(id, updates) {
+    try {
+      const { data, error } = await supabase
+        .from('content_series')
+        .update(updates)
+        .eq('id', id)
+        .select()
+
+      if (error) throw error
+      this.addLog(`Series updated successfully`, 'success')
+      return data[0]
+    } catch (error) {
+      this.addLog(`Error updating series: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async deleteContentSeries(id) {
+    try {
+      const { error } = await supabase
+        .from('content_series')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      this.addLog(`Series deleted successfully`, 'success')
+    } catch (error) {
+      this.addLog(`Error deleting series: ${error.message}`, 'error')
       throw error
     }
   }
@@ -839,24 +924,121 @@ class AdminService {
     }
   }
 
-  // --- AI Content Generation ---
-  async generateDailyContentPreview() {
+  // --- Deep Analytics ---
+  async getSignupGrowth(days = 30) {
     try {
-      this.addLog('🤖 Generating daily content preview with AI...', 'info')
-
-      const aiContent = await aiGenerationService.generateDailyContent()
-
-      this.addLog(`✅ AI generated daily content preview: ${aiContent.verse.reference}`, 'success')
-      return aiContent
+      const { data, error } = await supabase.rpc('get_signup_growth', { days_lookback: days })
+      if (error) throw error
+      // Convert BigInt/strings to numbers for charts
+      return data.map(item => ({
+        ...item,
+        count: Number(item.count)
+      }))
     } catch (error) {
-      this.addLog(`❌ AI generation failed: ${error.message}`, 'error')
+      this.addLog(`Error fetching signup growth: ${error.message}`, 'error')
+      throw error
+    }
+  }
 
-      // Fallback to default content
-      this.addLog('🔄 Using fallback content...', 'warning')
-      const fallbackContent = aiGenerationService.getFallbackContent()
+  async getUserRetention() {
+    try {
+      const { data, error } = await supabase.rpc('get_user_retention')
+      if (error) throw error
 
-      this.addLog('✅ Fallback content preview created', 'success')
-      return fallbackContent
+      const retention = {
+        dau: Number(data.find(d => d.metric === 'DAU')?.value || 0),
+        mau: Number(data.find(d => d.metric === 'MAU')?.value || 0)
+      }
+      return retention
+    } catch (error) {
+      this.addLog(`Error fetching retention stats: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async getPopularPlans(limit = 5) {
+    try {
+      const { data, error } = await supabase.rpc('get_popular_plans', { limit_count: limit })
+      if (error) throw error
+      return data.map(item => ({
+        ...item,
+        active_users: Number(item.active_users)
+      }))
+    } catch (error) {
+      this.addLog(`Error fetching popular plans: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async getPopularDailyContent(limit = 5) {
+    try {
+      const { data, error } = await supabase.rpc('get_popular_daily_content', { limit_count: limit })
+      if (error) throw error
+      return data.map(item => ({
+        ...item,
+        likes_count: Number(item.likes_count)
+      }))
+    } catch (error) {
+      this.addLog(`Error fetching popular content: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  // --- Notifications ---
+  async sendBroadcastNotification(title, message, type = 'info') {
+    try {
+      this.addLog(`Sending broadcast: ${title}`, 'info')
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert([{
+          title,
+          message,
+          type,
+          is_global: true,
+          user_id: null
+        }])
+        .select()
+
+      if (error) throw error
+      this.addLog('Broadcast sent successfully', 'success')
+      return data
+    } catch (error) {
+      this.addLog(`Error sending broadcast: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async sendTargetedNotification(title, message, daysInactive = 3) {
+    try {
+      this.addLog(`Sending targeted notification to users inactive for ${daysInactive} days...`, 'info')
+      const { data, error } = await supabase.rpc('send_inactive_user_notifications', {
+        msg_title: title,
+        msg_body: message,
+        days_inactive: daysInactive
+      })
+
+      if (error) throw error
+      this.addLog(`Targeted notification sent to ${data} users`, 'success')
+      return data
+    } catch (error) {
+      this.addLog(`Error sending targeted notification: ${error.message}`, 'error')
+      throw error
+    }
+  }
+
+  async getNotificationHistory() {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      this.addLog(`Error fetching notification history: ${error.message}`, 'error')
+      throw error
     }
   }
 

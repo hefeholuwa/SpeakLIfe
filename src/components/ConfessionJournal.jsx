@@ -247,9 +247,16 @@ const ConfessionJournal = ({ initialData }) => {
     <div className="space-y-8 animate-fade-in">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Spiritual Journal</h1>
-          <p className="text-gray-500">Your sacred space to speak, pray, and reflect.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-black text-gray-900">Confession Journal</h1>
+            <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100 flex items-center gap-1">
+              <Lock size={12} />
+              Private & Secure
+            </span>
+          </div>
+          <p className="text-gray-500">Write your thoughts, prayers, and confessions. Only you can see this.</p>
         </div>
         {!showForm && (
           <button

@@ -107,7 +107,44 @@ export const AuthProvider = ({ children }) => {
     )
 
     return () => subscription.unsubscribe()
+    return () => subscription.unsubscribe()
   }, [])
+
+  // Update last_seen_at periodically
+  useEffect(() => {
+    if (!user) return
+
+    const updateLastSeen = async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', user.id)
+      } catch (error) {
+        console.error('Error updating last_seen_at:', error)
+      }
+    }
+
+    // Update immediately
+    updateLastSeen()
+
+    // Update every 2 minutes
+    const interval = setInterval(updateLastSeen, 2 * 60 * 1000)
+
+    // Update on visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateLastSeen()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [user])
 
   // Sign up with email and password
   const signUp = async (email, password, fullName) => {

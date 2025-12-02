@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { Home, BookOpen, PenTool, User, LogOut, Settings, Bell, Search, Menu, X, ChevronRight, Heart, Share2, Calendar, ArrowRight, Users, Sparkles } from 'lucide-react'
+import { Home, BookOpen, PenTool, User, LogOut, Settings, Bell, Search, Menu, X, ChevronRight, Heart, Share2, Calendar, ArrowRight, Users, Sparkles, Mic, Play } from 'lucide-react'
 import BibleReader from './BibleReader'
 import BiblePlans from './BiblePlans'
 import ConfessionJournal from './ConfessionJournal'
 import CommunityChat from './CommunityChat'
 import UserProfile from './UserProfile'
+import NotificationInbox from './NotificationInbox'
+
 
 
 import adminService from '../services/adminService.js'
@@ -21,7 +23,8 @@ const UserDashboard = ({ onNavigate }) => {
   const [dailyVerse, setDailyVerse] = useState(null)
   const [loadingVerse, setLoadingVerse] = useState(true)
   const [currentPlan, setCurrentPlan] = useState(null)
-  const [journalConfig, setJournalConfig] = useState(null) // Added journalConfig state
+  const [journalConfig, setJournalConfig] = useState(null)
+
   const [isLiked, setIsLiked] = useState(false)
   const [selectedMood, setSelectedMood] = useState(null)
   const [showAllActivity, setShowAllActivity] = useState(false)
@@ -54,13 +57,18 @@ const UserDashboard = ({ onNavigate }) => {
 
     try {
       // 1. Find the most recently active plan
-      const { data: latestProgress } = await supabase
+      const { data: latestProgress, error: progressError } = await supabase
         .from('user_plan_progress')
         .select('plan_id')
         .eq('user_id', user.id)
         .order('completed_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
+
+      if (progressError) {
+        console.error('Error fetching plan progress:', progressError)
+        return
+      }
 
       if (latestProgress) {
         // 2. Get plan details
@@ -276,9 +284,15 @@ const UserDashboard = ({ onNavigate }) => {
         <div className="fixed inset-0 z-50 bg-white animate-fade-in">
           <div className="p-6">
             <div className="flex items-center justify-between mb-8">
-              <span className="font-bold text-xl">Menu</span>
-              <button onClick={() => setShowMobileMenu(false)} className="p-2 -mr-2 bg-gray-100 rounded-full">
-                <X size={20} />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-lg">SL</div>
+                <span className="font-bold text-lg text-gray-900">SpeakLife</span>
+              </div>
+              <button
+                onClick={() => setShowMobileMenu(false)}
+                className="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-xl"
+              >
+                <X size={24} />
               </button>
             </div>
             <nav className="space-y-4">
@@ -321,9 +335,7 @@ const UserDashboard = ({ onNavigate }) => {
                   <button className="p-3 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-gray-900 hover:border-gray-300 transition-all">
                     <Search size={20} />
                   </button>
-                  <button className="p-3 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-gray-900 hover:border-gray-300 transition-all">
-                    <Bell size={20} />
-                  </button>
+                  <NotificationInbox />
                 </div>
               </div>
 
@@ -716,6 +728,10 @@ const UserDashboard = ({ onNavigate }) => {
             </div>
           )}
 
+
+
+
+
         </div>
       </main >
 
@@ -740,9 +756,7 @@ const UserDashboard = ({ onNavigate }) => {
             onClick={() => setActiveTab('journal')}
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'journal' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
           >
-            <div className={`p-2 rounded-xl transition-all ${activeTab === 'journal' ? 'bg-gradient-to-tr from-purple-500 to-blue-500 shadow-lg shadow-purple-500/30' : 'bg-white/5'}`}>
-              <PenTool size={24} strokeWidth={2} className="text-white" />
-            </div>
+            <PenTool size={24} strokeWidth={activeTab === 'journal' ? 2.5 : 2} className={activeTab === 'journal' ? 'fill-white/10' : ''} />
           </button>
 
           <button
@@ -761,6 +775,8 @@ const UserDashboard = ({ onNavigate }) => {
         </div>
       </div >
 
+
+
       <style jsx="true">{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -770,10 +786,8 @@ const UserDashboard = ({ onNavigate }) => {
           animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
       `}</style>
-    </div >
+    </div>
   )
 }
-
-
 
 export default UserDashboard
