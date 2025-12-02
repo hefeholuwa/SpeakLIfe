@@ -45,13 +45,21 @@ const Register = ({ onClose, onSuccess, onSwitchToLogin }) => {
     if (result.success) {
       if (result.requiresVerification) {
         setRegistrationSuccess(true)
-        setTimeout(() => {
-          setUserEmail(formData.email)
-          setShowVerification(true)
-        }, 1500)
+        setUserEmail(formData.email)
+        setShowVerification(true)
       } else {
         onSuccess?.()
         onClose()
+      }
+    } else {
+      // Handle specific errors gracefully
+      if (result.error && (
+        result.error.toLowerCase().includes('email not confirmed') ||
+        result.error.toLowerCase().includes('user already registered')
+      )) {
+        // If user exists or is unconfirmed, guide them to verification
+        setUserEmail(formData.email)
+        setShowVerification(true)
       }
     }
   }
