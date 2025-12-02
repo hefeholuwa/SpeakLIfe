@@ -141,32 +141,4 @@ async function syncOfflineData() {
 }
 
 // Push notifications
-self.addEventListener('push', (event) => {
-    console.log('[Service Worker] Push received:', event);
 
-    const options = {
-        body: event.data ? event.data.text() : 'New update available!',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
-        vibrate: [100, 50, 100],
-        data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
-        }
-    };
-
-    event.waitUntil(
-        self.registration.showNotification('SpeakLife', options)
-    );
-});
-
-// Notification click
-self.addEventListener('notificationclick', (event) => {
-    console.log('[Service Worker] Notification click:', event);
-
-    event.notification.close();
-
-    event.waitUntil(
-        clients.openWindow('/')
-    );
-});

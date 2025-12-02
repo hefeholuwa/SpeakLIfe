@@ -97,7 +97,7 @@ export function isAppInstalled() {
 }
 
 // VAPID Public Key
-const VAPID_PUBLIC_KEY = 'BI2P8Xe2ybnaqVQIcXdxltkv0RZ6I9_0JGIlQbngRzHuj7bVRjUxYazTB6qLnkjJ1qKPf6MXvowqAsVFh3YOERo';
+const VAPID_PUBLIC_KEY = 'BHUarl8psRYk5RQ5RxGlM1Yi8v7gcuT3hup7uzmVlcyLtjIh2vGpLxxAudFPHCf7Kt8cxZpjp4tbe56kvRyOhqM';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -138,44 +138,40 @@ export async function subscribeToPushNotifications(userId, supabase) {
         const registration = await Promise.race([swReadyPromise, timeoutPromise]);
         console.log('✅ Service Worker is ready:', registration.scope);
 
-        // 2. Check existing subscription
-        const existingSubscription = await registration.pushManager.getSubscription();
-        if (existingSubscription) {
-            console.log('✅ Already subscribed:', existingSubscription.endpoint);
-            // Ensure it's in the DB (optional, but good for sync)
-            return true;
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+            console.log('✅ Already subscribed in browser:', subscription.endpoint);
+        } else {
+            // 3. Subscribe if not exists
+            console.log('🔑 Converting VAPID key...');
+            const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+            console.log('📡 Requesting push subscription...');
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+            console.log('✅ Got new subscription endpoint:', subscription.endpoint);
         }
 
-        // 3. Subscribe
-        console.log('🔑 Converting VAPID key...');
-        const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-
-        console.log('📡 Requesting push subscription...');
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: convertedVapidKey
-        });
-
-        console.log('✅ Got subscription endpoint:', subscription.endpoint);
-
-        // 4. Save to database
+        // 4. Save to database (ALWAYS)
         console.log('💾 Saving to database...');
         const { keys } = subscription.toJSON();
 
         const { error } = await supabase
             .from('push_subscriptions')
-            .insert({
+            .upsert({
                 user_id: userId,
                 endpoint: subscription.endpoint,
                 p256dh: keys.p256dh,
                 auth: keys.auth,
                 user_agent: navigator.userAgent
-            });
+            }, { onConflict: 'endpoint' });
 
         if (error) {
             console.error('❌ Database Error:', error.message);
-            // Don't fail the whole process if DB save fails, just warn
-            // return false; 
+            return `Database Error: ${error.message}`;
         }
 
         console.log('✅ Successfully subscribed!');
@@ -186,9 +182,10 @@ export async function subscribeToPushNotifications(userId, supabase) {
 
         if (error.message === 'Service Worker ready timeout') {
             console.error('💡 Tip: Try reloading the page. The Service Worker might not be active yet.');
+            return 'Service Worker timeout. Reload page.';
         }
 
-        return false;
+        return `Error: ${error.message}`;
     }
 }
 

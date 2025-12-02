@@ -24,7 +24,6 @@ const NotificationCenterPanel = () => {
         message: '',
         type: 'info'
     })
-    const [sendPush, setSendPush] = useState(false)
     const [isSending, setIsSending] = useState(false)
     const [history, setHistory] = useState([])
     const [loadingHistory, setLoadingHistory] = useState(false)
@@ -35,19 +34,12 @@ const NotificationCenterPanel = () => {
         try {
             if (audience === 'all') {
                 await adminService.sendBroadcastNotification(formData.title, formData.message, formData.type)
-                if (sendPush) {
-                    await adminService.sendPushNotification(formData.title, formData.message)
-                }
                 toast.success('Broadcast sent to all users!')
             } else {
                 const count = await adminService.sendTargetedNotification(formData.title, formData.message, 3)
-                if (sendPush) {
-                    await adminService.sendPushNotification(formData.title, formData.message)
-                }
                 toast.success(`Targeted message sent to ${count} inactive users!`)
             }
             setFormData({ title: '', message: '', type: 'info' })
-            setSendPush(false)
             fetchHistory()
         } catch (error) {
             console.error('Error sending notification:', error)
@@ -155,20 +147,6 @@ const NotificationCenterPanel = () => {
                                         rows={4}
                                         required
                                     />
-                                </div>
-
-                                <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                    <input
-                                        type="checkbox"
-                                        id="sendPush"
-                                        checked={sendPush}
-                                        onChange={(e) => setSendPush(e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="sendPush" className="text-sm font-medium text-gray-700 select-none cursor-pointer flex items-center">
-                                        <Bell className="h-4 w-4 mr-2 text-gray-500" />
-                                        Also send as Push Notification
-                                    </label>
                                 </div>
 
                                 <div className="pt-4 flex items-center justify-end">
