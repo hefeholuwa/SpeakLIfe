@@ -43,14 +43,9 @@ const Register = ({ onClose, onSuccess, onSwitchToLogin }) => {
     const result = await signUp(formData.email, formData.password, formData.fullName)
 
     if (result.success) {
-      if (result.requiresVerification) {
-        setRegistrationSuccess(true)
-        setUserEmail(formData.email)
-        setShowVerification(true)
-      } else {
-        onSuccess?.()
-        onClose()
-      }
+      setRegistrationSuccess(true)
+      setUserEmail(formData.email)
+      setShowVerification(true)
     } else {
       // Handle specific errors gracefully
       if (result.error && (
