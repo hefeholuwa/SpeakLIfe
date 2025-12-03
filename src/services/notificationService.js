@@ -51,9 +51,10 @@ class NotificationService {
     try {
       const { error } = await supabase
         .from('notification_reads')
-        .insert([{ user_id: userId, notification_id: notificationId }])
-        .onConflict('user_id, notification_id')
-        .ignore(); // If already exists, do nothing
+        .upsert(
+          [{ user_id: userId, notification_id: notificationId }],
+          { onConflict: 'user_id, notification_id', ignoreDuplicates: true }
+        )
 
       if (error) throw error;
       return true;

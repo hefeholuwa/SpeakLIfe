@@ -41,7 +41,9 @@ const BibleSection = () => {
       <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="w-full">
           {/* Mobile-Responsive Bible Reader Container */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+          <div
+            className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+          >
             <BibleReader />
           </div>
         </div>

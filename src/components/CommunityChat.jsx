@@ -20,8 +20,9 @@ import {
     AlertTriangle,
     Pin
 } from 'lucide-react';
+import LikesListDropdown from './LikesListDropdown';
 
-const CommunityChat = () => {
+const CommunityChat = ({ onViewProfile }) => {
     const { user } = useAuth();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ const CommunityChat = () => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
+    const [viewingLikesPostId, setViewingLikesPostId] = useState(null);
 
     useEffect(() => {
         fetchPosts();
@@ -102,7 +104,7 @@ const CommunityChat = () => {
             .from('community_posts')
             .select(`
         *,
-        profiles (full_name, avatar_url, username, is_admin),
+        profiles (id, full_name, avatar_url, username, is_admin),
         community_likes (user_id)
       `)
             .eq('id', id)
@@ -122,7 +124,7 @@ const CommunityChat = () => {
             .from('community_comments')
             .select(`
                 *,
-                profiles (full_name, avatar_url, username, is_admin)
+                profiles (id, full_name, avatar_url, username, is_admin)
             `)
             .eq('id', id)
             .single();
@@ -136,7 +138,7 @@ const CommunityChat = () => {
                 .from('community_comments')
                 .select(`
                     *,
-                    profiles (full_name, avatar_url, username, is_admin)
+                    profiles (id, full_name, avatar_url, username, is_admin)
                 `)
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
@@ -158,7 +160,7 @@ const CommunityChat = () => {
                 .from('community_posts')
                 .select(`
           *,
-          profiles (full_name, avatar_url, username, is_admin),
+          profiles (id, full_name, avatar_url, username, is_admin),
           community_likes (user_id)
         `)
                 .eq('is_hidden', false)
@@ -401,7 +403,14 @@ const CommunityChat = () => {
                 {/* Original Post */}
                 <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm mb-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden">
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const targetId = selectedPost.user_id || selectedPost.profiles?.id;
+                                if (targetId) onViewProfile(targetId);
+                            }}
+                            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-200 transition-all"
+                        >
                             {selectedPost.profiles?.avatar_url ? (
                                 <img src={selectedPost.profiles.avatar_url} alt={selectedPost.profiles.username || 'User'} className="w-full h-full object-cover" />
                             ) : (
@@ -434,13 +443,33 @@ const CommunityChat = () => {
                     </p>
 
                     <div className="flex items-center gap-6 text-gray-500 font-medium border-t border-gray-50 pt-6">
-                        <button
-                            onClick={(e) => handleLike(selectedPost.id, selectedPost.isLiked, e)}
-                            className={`flex items-center gap-2 transition-colors ${selectedPost.isLiked ? 'text-red-500' : 'hover:text-gray-900'}`}
-                        >
-                            <Heart size={20} className={selectedPost.isLiked ? 'fill-current' : ''} />
-                            {selectedPost.likes_count || 0} Likes
-                        </button>
+                        <div className="flex items-center gap-1 relative">
+                            {viewingLikesPostId === selectedPost.id && (
+                                <LikesListDropdown
+                                    postId={selectedPost.id}
+                                    onClose={() => setViewingLikesPostId(null)}
+                                    onProfileClick={(uid) => {
+                                        setViewingLikesPostId(null);
+                                        onViewProfile(uid);
+                                    }}
+                                />
+                            )}
+                            <button
+                                onClick={(e) => handleLike(selectedPost.id, selectedPost.isLiked, e)}
+                                className={`p-2 rounded-full hover:bg-gray-50 transition-colors ${selectedPost.isLiked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                <Heart size={20} className={selectedPost.isLiked ? 'fill-current' : ''} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingLikesPostId(selectedPost.id);
+                                }}
+                                className="text-sm font-bold text-gray-500 hover:text-gray-900 hover:underline px-1"
+                            >
+                                {selectedPost.likes_count || 0} Likes
+                            </button>
+                        </div>
                         <span className="flex items-center gap-2">
                             <Eye size={20} />
                             {selectedPost.views || 0} Views
@@ -465,7 +494,14 @@ const CommunityChat = () => {
                         ) : comments.length > 0 ? (
                             comments.map(comment => (
                                 <div key={comment.id} className="flex gap-4 group">
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 overflow-hidden">
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const targetId = comment.user_id || comment.profiles?.id;
+                                            if (targetId) onViewProfile(targetId);
+                                        }}
+                                        className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-200 transition-all"
+                                    >
                                         {comment.profiles?.avatar_url ? (
                                             <img src={comment.profiles.avatar_url} alt={comment.profiles.username || 'User'} className="w-full h-full object-cover" />
                                         ) : (
@@ -613,97 +649,163 @@ const CommunityChat = () => {
                         <p className="text-gray-500 text-sm">Be the first to share something!</p>
                     </div>
                 ) : (
-                    filteredPosts.map(post => {
-                        const catConfig = categories.find(c => c.id === post.category) || categories[0];
-                        const isOwner = user?.id === post.user_id;
-
-                        return (
-                            <div
-                                key={post.id}
-                                onClick={() => openPostDetails(post)}
-                                className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all animate-fade-in cursor-pointer group"
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden">
-                                            {post.profiles?.avatar_url ? (
-                                                <img src={post.profiles.avatar_url} alt={post.profiles.username || 'User'} className="w-full h-full object-cover" />
-                                            ) : (
-                                                post.profiles?.full_name?.[0] || 'U'
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1">
-                                                {post.profiles?.username || post.profiles?.full_name || 'Anonymous'}
-                                                {post.profiles?.is_admin && (
-                                                    <Shield size={12} className="text-gray-900 fill-current" />
-                                                )}
-                                            </h4>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                                                <span>•</span>
-                                                <span className={`flex items-center gap-1 ${catConfig.color}`}>
-                                                    <catConfig.icon size={10} />
-                                                    {catConfig.label}
-                                                </span>
-                                                {post.is_pinned && (
-                                                    <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
-                                                        <Pin size={10} className="fill-current" />
-                                                        Pinned
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        {!isOwner && (
-                                            <button
-                                                onClick={(e) => reportPost(e, post.id)}
-                                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Report Post"
-                                            >
-                                                <AlertTriangle size={16} />
-                                            </button>
-                                        )}
-                                        {isOwner && (
-                                            <button
-                                                onClick={(e) => handleDelete(post.id, e)}
-                                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Delete Post"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <p className="text-gray-800 leading-relaxed mb-6 whitespace-pre-wrap line-clamp-3">{post.content}</p>
-
-                                <div className="flex items-center gap-6 border-t border-gray-50 pt-4">
-                                    <button
-                                        onClick={(e) => handleLike(post.id, post.isLiked, e)}
-                                        className={`flex items-center gap-2 text-sm font-bold transition-colors ${post.isLiked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'
-                                            }`}
-                                    >
-                                        <Heart size={18} className={post.isLiked ? 'fill-current' : ''} />
-                                        {post.likes_count || 0}
-                                    </button>
-
-                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-400">
-                                        <MessageSquare size={18} />
-                                        {post.comments_count || 0}
-                                    </div>
-
-                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-400 ml-auto">
-                                        <Eye size={18} />
-                                        {post.views || 0}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
+                    filteredPosts.map(post => (
+                        <PostCard
+                            key={post.id}
+                            post={post}
+                            user={user}
+                            categories={categories}
+                            onView={() => handlePostView(post.id)}
+                            onClick={() => openPostDetails(post)}
+                            onLike={handleLike}
+                            onReport={reportPost}
+                            onDelete={handleDelete}
+                            onProfileClick={(uid) => {
+                                onViewProfile(uid);
+                            }}
+                            onLikesClick={(pid) => setViewingLikesPostId(pid)}
+                            showLikes={viewingLikesPostId === post.id}
+                            onCloseLikes={() => setViewingLikesPostId(null)}
+                        />
+                    ))
                 )}
+            </div>
+        </div>
+    );
+};
+
+// Extracted PostCard for IntersectionObserver
+const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, onDelete, onProfileClick, onLikesClick, showLikes, onCloseLikes }) => {
+    const cardRef = React.useRef(null);
+    const catConfig = categories.find(c => c.id === post.category) || categories[0];
+    const isOwner = user?.id === post.user_id;
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    onView();
+                    observer.disconnect(); // Only count once per session
+                }
+            },
+            { threshold: 0.5 } // 50% visible
+        );
+
+        if (cardRef.current) {
+            observer.observe(cardRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div
+            ref={cardRef}
+            onClick={onClick}
+            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all animate-fade-in cursor-pointer group"
+        >
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const targetId = post.user_id || post.profiles?.id;
+                            if (targetId) onProfileClick(targetId);
+                        }}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-200 transition-all"
+                    >
+                        {post.profiles?.avatar_url ? (
+                            <img src={post.profiles.avatar_url} alt={post.profiles.username || 'User'} className="w-full h-full object-cover" />
+                        ) : (
+                            post.profiles?.full_name?.[0] || 'U'
+                        )}
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1">
+                            {post.profiles?.username || post.profiles?.full_name || 'Anonymous'}
+                            {post.profiles?.is_admin && (
+                                <Shield size={12} className="text-gray-900 fill-current" />
+                            )}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span className={`flex items-center gap-1 ${catConfig.color}`}>
+                                <catConfig.icon size={10} />
+                                {catConfig.label}
+                            </span>
+                            {post.is_pinned && (
+                                <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
+                                    <Pin size={10} className="fill-current" />
+                                    Pinned
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    {!isOwner && (
+                        <button
+                            onClick={(e) => onReport(e, post.id)}
+                            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                            title="Report Post"
+                        >
+                            <AlertTriangle size={16} />
+                        </button>
+                    )}
+                    {isOwner && (
+                        <button
+                            onClick={(e) => onDelete(post.id, e)}
+                            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                            title="Delete Post"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <p className="text-gray-800 leading-relaxed mb-6 whitespace-pre-wrap line-clamp-3">{post.content}</p>
+
+            <div className="flex items-center gap-6 border-t border-gray-50 pt-4">
+                <div className="flex items-center gap-1 relative">
+                    {showLikes && (
+                        <LikesListDropdown
+                            postId={post.id}
+                            onClose={onCloseLikes}
+                            onProfileClick={(uid) => {
+                                onCloseLikes();
+                                onProfileClick(uid);
+                            }}
+                        />
+                    )}
+                    <button
+                        onClick={(e) => onLike(post.id, post.isLiked, e)}
+                        className={`p-2 rounded-full hover:bg-gray-50 transition-colors ${post.isLiked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                        <Heart size={20} className={post.isLiked ? 'fill-current' : ''} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onLikesClick(post.id);
+                        }}
+                        className="text-sm font-bold text-gray-500 hover:text-gray-900 hover:underline px-1"
+                    >
+                        {post.likes_count || 0}
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-400">
+                    <MessageSquare size={18} />
+                    {post.comments_count || 0}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-400 ml-auto">
+                    <Eye size={18} />
+                    {post.views || 0}
+                </div>
             </div>
         </div>
     );

@@ -713,6 +713,95 @@ RANDOMIZATION INSTRUCTIONS:
     }
   }
 
+  // Generate complete challenge content
+  async generateChallengeContent(topic, duration = 7, difficulty = 'Beginner') {
+    try {
+      console.log(`🎯 Generating ${duration}-day challenge on "${topic}"...`)
+
+      const prompt = `
+      Create a complete ${duration}-day spiritual challenge/bootcamp on the topic: "${topic}".
+      
+      TARGET AUDIENCE:
+      - Difficulty Level: ${difficulty}
+      - Users seeking spiritual growth, discipline, and transformation.
+      
+      STRUCTURE:
+      - Design a progressive journey where each day builds on the previous one.
+      - Day 1 should be foundational.
+      - Middle days should deepen understanding and challenge the user.
+      - Final days should focus on long-term application and transformation.
+      
+      Return ONLY a valid JSON object with this exact structure:
+      {
+        "title": "A catchy, inspiring title for the challenge",
+        "description": "A compelling description (2 sentences)",
+        "duration_days": ${duration},
+        "category": "Spiritual Growth",
+        "days": [
+          {
+            "day_number": 1,
+            "topic": "Specific theme for Day 1",
+            "content": {
+              "text": "## Scripture\n[Reference]\n\n## Insight\n[100 words of teaching]\n\n## Challenge\n[A specific, practical, real-world action step. NOT just 'think about' or 'meditate'. Give them something to DO, WRITE, or SAY.]\n\n## Prayer\n[Short prayer]"
+            }
+          }
+          // ... Ensure ${duration} UNIQUE days
+        ]
+      }
+      
+      Rules:
+      1. Content.text must be formatted with Markdown headers.
+      2. Keep insights concise (max 100 words).
+      3. MAKE THE CHALLENGE HIGHLY PRACTICAL. Examples: "Send a text to...", "Journal 3 things...", "Fast from...", "Take a 10-minute walk...".
+      4. ENSURE EACH DAY IS UNIQUE.
+      5. Return ONLY valid JSON.
+      `
+
+      const response = await this.callOpenRouter(prompt)
+
+      // Parse the response
+      let result
+      try {
+        const cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim()
+        result = JSON.parse(cleanJson)
+      } catch (e) {
+        console.warn('⚠️ JSON parse failed, attempting to repair truncated JSON...')
+
+        // Attempt to repair truncated JSON
+        let cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim()
+
+        // If it looks like it was cut off inside the days array
+        if (cleanJson.includes('"days": [') && !cleanJson.endsWith('}')) {
+          // Find the last closing brace of a day object
+          const lastDayEnd = cleanJson.lastIndexOf('}')
+          if (lastDayEnd > cleanJson.indexOf('"days": [')) {
+            // Cut off everything after the last complete object
+            cleanJson = cleanJson.substring(0, lastDayEnd + 1)
+            // Close the array and object
+            cleanJson += ']}'
+          }
+        }
+
+        try {
+          result = JSON.parse(cleanJson)
+          console.log('✅ JSON repaired successfully')
+        } catch (repairError) {
+          console.error('❌ Failed to repair JSON:', repairError)
+          // Fallback to original cleaning method as a last resort
+          const cleanedResponse = this.cleanJsonResponse(response)
+          result = JSON.parse(cleanedResponse)
+        }
+      }
+
+      return result
+    } catch (error) {
+      console.error('❌ Error generating challenge content:', error)
+      throw error
+    }
+  }
+
+
+
   // Get a random free model for better reliability
   getRandomFreeModel() {
     const randomIndex = Math.floor(Math.random() * this.freeModels.length)

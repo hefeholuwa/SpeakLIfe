@@ -340,8 +340,8 @@ const DeclarationCard = ({ declaration, onEdit, onDelete, onToggleFavorite }) =>
     return (
         <div
             className={`group p-6 bg-white rounded-2xl border-2 transition-all cursor-pointer ${showRecording
-                    ? 'border-purple-400 shadow-lg'
-                    : 'border-gray-100 hover:border-purple-300 hover:shadow-lg'
+                ? 'border-purple-400 shadow-lg'
+                : 'border-gray-100 hover:border-purple-300 hover:shadow-lg'
                 }`}
             onClick={handleCardClick}
         >
