@@ -470,10 +470,7 @@ const CommunityChat = ({ onViewProfile }) => {
                                 {selectedPost.likes_count || 0} Likes
                             </button>
                         </div>
-                        <span className="flex items-center gap-2">
-                            <Eye size={20} />
-                            {selectedPost.views || 0} Views
-                        </span>
+
                     </div>
                 </div>
 
@@ -802,10 +799,7 @@ const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, o
                     {post.comments_count || 0}
                 </div>
 
-                <div className="flex items-center gap-2 text-sm font-bold text-gray-400 ml-auto">
-                    <Eye size={18} />
-                    {post.views || 0}
-                </div>
+
             </div>
         </div>
     );

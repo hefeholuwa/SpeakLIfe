@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS daily_declaration_goal INTEGER DEFAULT NULL;

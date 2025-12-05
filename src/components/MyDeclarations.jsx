@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import DeclarationBuilder from './DeclarationBuilder'
 
 const MyDeclarations = ({ onStartPractice }) => {
-    const { user } = useAuth()
+    const { user, userProfile, refreshProfile } = useAuth() // Added userProfile and refreshProfile
     const [declarations, setDeclarations] = useState([])
     const [lifeAreas, setLifeAreas] = useState([])
     const [loading, setLoading] = useState(true)
@@ -15,13 +15,52 @@ const MyDeclarations = ({ onStartPractice }) => {
     const [selectedArea, setSelectedArea] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [completedIds, setCompletedIds] = useState(new Set())
-    const [todayProgress, setTodayProgress] = useState({ count: 0, total: 0 })
+
+    // Daily Goal State
+    const [showGoalInput, setShowGoalInput] = useState(false)
+    const [goalInput, setGoalInput] = useState('')
+
+    // Get the effective target goal
+    const targetGoal = userProfile?.daily_declaration_goal || (declarations.length > 0 ? declarations.length : 1)
+
+    // Calculate progress percentage
+    const progressPercentage = Math.min((completedIds.size / targetGoal) * 100, 100)
+
+    useEffect(() => {
+        if (showGoalInput) {
+            setGoalInput(targetGoal.toString())
+        }
+    }, [showGoalInput, targetGoal])
 
     useEffect(() => {
         if (user) {
             fetchData()
         }
     }, [user])
+
+    const handleUpdateGoal = async (newGoal) => {
+        try {
+            const goal = parseInt(newGoal)
+            if (isNaN(goal) || goal < 1) {
+                toast.error('Please enter a valid number')
+                return
+            }
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({ daily_declaration_goal: goal })
+                .eq('id', user.id)
+
+            if (error) throw error
+
+            await refreshProfile()
+            toast.success('Daily goal updated')
+            setShowGoalInput(false)
+        } catch (error) {
+            console.error('Error updating goal:', error)
+            toast.error('Failed to update goal')
+        }
+    }
 
     const fetchData = async () => {
         setLoading(true)
@@ -112,7 +151,7 @@ const MyDeclarations = ({ onStartPractice }) => {
         try {
             const { error } = await supabase
                 .from('user_declarations')
-                .update({ is_active: false })
+                .delete()
                 .eq('id', declaration.id)
                 .eq('user_id', user.id)
 
@@ -182,15 +221,49 @@ const MyDeclarations = ({ onStartPractice }) => {
                                 fill="none"
                                 stroke="#10B981"
                                 strokeWidth="4"
-                                strokeDasharray={`${declarations.length > 0 ? (completedIds.size / declarations.length) * 100 : 0}, 100`}
+                                strokeDasharray={`${progressPercentage}, 100`}
                                 className="transition-all duration-1000 ease-out"
                             />
                         </svg>
-                        <span className="absolute text-xs font-bold">{Math.round(declarations.length > 0 ? (completedIds.size / declarations.length) * 100 : 0)}%</span>
+                        <span className="absolute text-xs font-bold">{Math.round(progressPercentage)}%</span>
                     </div>
-                    <div>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Daily Goal</p>
-                        <p className="font-bold text-lg leading-none mt-1">{completedIds.size} / {declarations.length}</p>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setShowGoalInput(true)}>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Daily Goal</p>
+                            <Edit2 size={12} className="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+
+                        {showGoalInput ? (
+                            <div className="flex items-center gap-1 mt-1">
+                                <span className="font-bold text-lg leading-none">{completedIds.size} / </span>
+                                <input
+                                    type="number"
+                                    className="w-16 bg-gray-700 rounded px-1 py-0.5 text-white text-lg font-bold border border-gray-600 focus:outline-none focus:border-purple-500"
+                                    value={goalInput}
+                                    onChange={(e) => setGoalInput(e.target.value)}
+                                    onBlur={() => {
+                                        if (goalInput !== targetGoal.toString()) {
+                                            handleUpdateGoal(goalInput)
+                                        } else {
+                                            setShowGoalInput(false)
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleUpdateGoal(goalInput)
+                                        if (e.key === 'Escape') setShowGoalInput(false)
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
+                        ) : (
+                            <p
+                                className="font-bold text-lg leading-none mt-1 cursor-pointer hover:text-purple-300 transition-colors"
+                                onClick={() => setShowGoalInput(true)}
+                                title="Click to set daily goal"
+                            >
+                                {completedIds.size} / {targetGoal}
+                            </p>
+                        )}
                     </div>
                 </div>
 
