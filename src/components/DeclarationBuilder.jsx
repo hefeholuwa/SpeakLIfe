@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { X, Sparkles, Plus, Check, ArrowRight, ArrowLeft } from 'lucide-react'
+import { X, Sparkles, Plus, Check, ArrowRight, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 
 const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => {
     const { user } = useAuth()
-    const [step, setStep] = useState(1)
     const [lifeAreas, setLifeAreas] = useState([])
     const [loading, setLoading] = useState(false)
+    const [showBibleSection, setShowBibleSection] = useState(!!editDeclaration?.bible_reference)
 
     // Form state
     const [formData, setFormData] = useState({
@@ -33,6 +33,11 @@ const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => 
 
             if (error) throw error
             setLifeAreas(data || [])
+
+            // Smart Default: If creating new and no area selected, default to first one (usually 'Faith' or 'General')
+            if (!editDeclaration && data && data.length > 0) {
+                setFormData(prev => ({ ...prev, life_area_id: data[0].id }))
+            }
         } catch (error) {
             console.error('Error fetching life areas:', error)
             toast.error('Failed to load life areas')
@@ -40,19 +45,27 @@ const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => 
     }
 
     const handleSave = async () => {
-        if (!formData.life_area_id || !formData.title || !formData.declaration_text) {
-            toast.error('Please fill in all required fields')
+        if (!formData.title || !formData.declaration_text) {
+            toast.error('Please add a title and declaration text')
             return
         }
 
+        // Fallback if somehow no area is selected
+        const finalAreaId = formData.life_area_id || (lifeAreas.length > 0 ? lifeAreas[0].id : null)
+
         setLoading(true)
         try {
+            const payload = {
+                ...formData,
+                life_area_id: finalAreaId,
+                user_id: user.id
+            }
+
             if (editDeclaration) {
-                // Update existing declaration
                 const { error } = await supabase
                     .from('user_declarations')
                     .update({
-                        ...formData,
+                        ...payload,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', editDeclaration.id)
@@ -61,13 +74,9 @@ const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => 
                 if (error) throw error
                 toast.success('Declaration updated!')
             } else {
-                // Create new declaration
                 const { error } = await supabase
                     .from('user_declarations')
-                    .insert([{
-                        user_id: user.id,
-                        ...formData
-                    }])
+                    .insert([payload])
 
                 if (error) throw error
                 toast.success('Declaration created!')
@@ -83,231 +92,137 @@ const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => 
         }
     }
 
-    const selectedArea = lifeAreas.find(area => area.id === formData.life_area_id)
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="w-full max-w-3xl mx-auto animate-fade-in pb-10">
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50">
-                    <div>
-                        <h2 className="text-2xl font-black text-gray-900">
-                            {editDeclaration ? 'Edit Declaration' : 'Create New Declaration'}
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Step {step} of 3 • {step === 1 ? 'Choose Area' : step === 2 ? 'Write Declaration' : 'Add Scripture'}
-                        </p>
-                    </div>
+                <div className="p-6 border-b border-gray-100 flex items-center gap-4 bg-white">
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/50 rounded-xl transition-colors"
+                        className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors group"
                     >
-                        <X size={24} className="text-gray-600" />
+                        <ArrowLeft size={24} className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                     </button>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="h-1 bg-gray-100">
-                    <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                        style={{ width: `${(step / 3) * 100}%` }}
-                    />
+                    <div>
+                        <h2 className="text-2xl font-black text-gray-900">
+                            {editDeclaration ? 'Edit Declaration' : 'New Declaration'}
+                        </h2>
+                        <p className="text-sm text-gray-500 font-medium">
+                            {editDeclaration ? 'Update your declaration details' : 'Speak something new into existence'}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    {/* Step 1: Choose Life Area */}
-                    {step === 1 && (
-                        <div className="space-y-4 animate-fade-in-up">
-                            <div className="text-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    Which area of life is this declaration for?
-                                </h3>
-                                <p className="text-gray-600">
-                                    Select the category that best fits your declaration
-                                </p>
-                            </div>
+                <div className="p-6 md:p-8 space-y-8">
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {lifeAreas.map((area) => (
-                                    <button
-                                        key={area.id}
-                                        onClick={() => setFormData({ ...formData, life_area_id: area.id })}
-                                        className={`p-4 rounded-2xl border-2 transition-all text-left ${formData.life_area_id === area.id
-                                                ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
-                                                : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <span className="text-3xl">{area.icon}</span>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-gray-900">{area.name}</h4>
-                                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                                    {area.description}
-                                                </p>
-                                            </div>
-                                            {formData.life_area_id === area.id && (
-                                                <Check size={20} className="text-purple-600 flex-shrink-0" />
-                                            )}
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                    {/* 1. Title Input */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                            Title
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            placeholder="e.g., I Am Confident"
+                            className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-purple-500 focus:outline-none transition-all font-bold text-xl text-gray-900 placeholder:font-normal placeholder:text-gray-400"
+                            autoFocus
+                        />
+                    </div>
+
+                    {/* 2. Declaration Text Area */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                            Declaration
+                        </label>
+                        <textarea
+                            value={formData.declaration_text}
+                            onChange={(e) => setFormData({ ...formData, declaration_text: e.target.value })}
+                            placeholder="Speak it into existence..."
+                            rows={6}
+                            className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-purple-500 focus:outline-none transition-all resize-none text-lg leading-relaxed text-gray-800 placeholder:text-gray-400"
+                        />
+                    </div>
+
+                    {/* 3. Category Selection (Pills) */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                            Category
+                        </label>
+                        <div className="flex flex-wrap gap-3">
+                            {lifeAreas.map((area) => (
+                                <button
+                                    key={area.id}
+                                    onClick={() => setFormData({ ...formData, life_area_id: area.id })}
+                                    className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2 ${formData.life_area_id === area.id
+                                            ? 'bg-gray-900 text-white border-gray-900 shadow-lg transform scale-105'
+                                            : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <span className="text-lg">{area.icon}</span>
+                                    {area.name}
+                                </button>
+                            ))}
                         </div>
-                    )}
+                    </div>
 
-                    {/* Step 2: Write Declaration */}
-                    {step === 2 && (
-                        <div className="space-y-6 animate-fade-in-up">
-                            <div className="text-center mb-6">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full mb-4">
-                                    <span className="text-2xl">{selectedArea?.icon}</span>
-                                    <span className="font-bold text-purple-900">{selectedArea?.name}</span>
+                    {/* 4. Optional Bible Section (Collapsible) */}
+                    <div className="border-t border-gray-100 pt-6">
+                        <button
+                            onClick={() => setShowBibleSection(!showBibleSection)}
+                            className="flex items-center gap-2 text-sm font-bold text-purple-600 hover:text-purple-700 transition-colors w-full group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                <Sparkles size={16} />
+                            </div>
+                            {showBibleSection ? 'Hide Scripture' : 'Add Scripture Reference (Optional)'}
+                            {showBibleSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {showBibleSection && (
+                            <div className="mt-6 space-y-4 animate-fade-in pl-2 border-l-2 border-purple-100 ml-4">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <input
+                                        type="text"
+                                        value={formData.bible_reference}
+                                        onChange={(e) => setFormData({ ...formData, bible_reference: e.target.value })}
+                                        placeholder="Reference (e.g. Phil 4:13)"
+                                        className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-100 focus:border-purple-300 focus:outline-none text-sm font-medium"
+                                    />
+                                    <textarea
+                                        value={formData.bible_verse_text}
+                                        onChange={(e) => setFormData({ ...formData, bible_verse_text: e.target.value })}
+                                        placeholder="Verse text..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-100 focus:border-purple-300 focus:outline-none text-sm resize-none"
+                                    />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    Write your declaration
-                                </h3>
-                                <p className="text-gray-600">
-                                    Speak it in present tense, as if it's already true
-                                </p>
                             </div>
-
-                            {/* Title */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Title <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="e.g., I Am Financially Blessed"
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
-                                />
-                            </div>
-
-                            {/* Declaration Text */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Declaration <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    value={formData.declaration_text}
-                                    onChange={(e) => setFormData({ ...formData, declaration_text: e.target.value })}
-                                    placeholder="I am blessed and highly favored. God provides for all my needs according to His riches in glory. I walk in abundance and overflow in every area of my life."
-                                    rows={6}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors resize-none"
-                                />
-                                <p className="text-xs text-gray-500 mt-2">
-                                    💡 Tip: Use "I am" statements and present tense for maximum impact
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 3: Add Scripture (Optional) */}
-                    {step === 3 && (
-                        <div className="space-y-6 animate-fade-in-up">
-                            <div className="text-center mb-6">
-                                <Sparkles size={48} className="mx-auto text-purple-500 mb-4" />
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    Add a Bible verse (optional)
-                                </h3>
-                                <p className="text-gray-600">
-                                    Ground your declaration in Scripture
-                                </p>
-                            </div>
-
-                            {/* Bible Reference */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Bible Reference
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.bible_reference}
-                                    onChange={(e) => setFormData({ ...formData, bible_reference: e.target.value })}
-                                    placeholder="e.g., Philippians 4:19"
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
-                                />
-                            </div>
-
-                            {/* Bible Verse Text */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Verse Text
-                                </label>
-                                <textarea
-                                    value={formData.bible_verse_text}
-                                    onChange={(e) => setFormData({ ...formData, bible_verse_text: e.target.value })}
-                                    placeholder="And my God will meet all your needs according to the riches of his glory in Christ Jesus."
-                                    rows={4}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors resize-none"
-                                />
-                            </div>
-
-                            {/* Preview */}
-                            <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
-                                <p className="text-sm font-bold text-purple-900 mb-2">Preview</p>
-                                <p className="text-gray-800 font-medium mb-2">{formData.title || 'Your Title'}</p>
-                                <p className="text-gray-700 text-sm italic">"{formData.declaration_text || 'Your declaration...'}"</p>
-                                {formData.bible_reference && (
-                                    <p className="text-xs text-purple-700 mt-3 font-medium">
-                                        — {formData.bible_reference}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+                <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                     <button
-                        onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                        className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                        onClick={onClose}
+                        className="px-6 py-3 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition-colors"
                     >
-                        <ArrowLeft size={20} />
-                        {step === 1 ? 'Cancel' : 'Back'}
+                        Cancel
                     </button>
-
-                    {step < 3 ? (
-                        <button
-                            onClick={() => {
-                                if (step === 1 && !formData.life_area_id) {
-                                    toast.error('Please select a life area')
-                                    return
-                                }
-                                if (step === 2 && (!formData.title || !formData.declaration_text)) {
-                                    toast.error('Please fill in title and declaration')
-                                    return
-                                }
-                                setStep(step + 1)
-                            }}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
-                        >
-                            Next
-                            <ArrowRight size={20} />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSave}
-                            disabled={loading}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Saving...
-                                </>
-                            ) : (
-                                <>
-                                    <Check size={20} />
-                                    {editDeclaration ? 'Update' : 'Create'} Declaration
-                                </>
-                            )}
-                        </button>
-                    )}
+                    <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-xl shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        {loading ? 'Saving...' : (
+                            <>
+                                <Check size={20} />
+                                Save Declaration
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
 
@@ -317,14 +232,14 @@ const DeclarationBuilder = ({ onClose, onComplete, editDeclaration = null }) => 
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-up {
-          animation: fadeInUp 0.4s ease-out;
+          animation: fadeInUp 0.3s ease-out;
         }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
         .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.2s ease-out;
         }
       `}</style>
         </div>

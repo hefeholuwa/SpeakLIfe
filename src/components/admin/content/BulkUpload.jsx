@@ -15,8 +15,11 @@ const BulkUpload = ({ onComplete }) => {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0]
         if (selectedFile) {
-            if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
-                setError('Please upload a valid CSV file.')
+            const isCsv = selectedFile.type === 'text/csv' || selectedFile.name.endsWith('.csv')
+            const isJson = selectedFile.type === 'application/json' || selectedFile.name.endsWith('.json')
+
+            if (!isCsv && !isJson) {
+                setError('Please upload a valid CSV or JSON file.')
                 return
             }
             setFile(selectedFile)
@@ -29,19 +32,35 @@ const BulkUpload = ({ onComplete }) => {
         reader.onload = (e) => {
             try {
                 const text = e.target.result
-                const data = parseCSV(text)
+                let data = []
+
+                if (file.name.endsWith('.json')) {
+                    data = parseJSON(text)
+                } else {
+                    data = parseCSV(text)
+                }
+
                 if (data.length === 0) {
-                    setError('No data found in CSV.')
+                    setError('No data found in file.')
                     return
                 }
                 setPreviewData(data)
                 setError(null)
             } catch (err) {
-                setError('Error parsing CSV file.')
+                setError('Error parsing file.')
                 console.error(err)
             }
         }
         reader.readAsText(file)
+    }
+
+    const parseJSON = (text) => {
+        try {
+            const data = JSON.parse(text)
+            return Array.isArray(data) ? data : [data]
+        } catch (e) {
+            throw new Error('Invalid JSON format')
+        }
     }
 
     const parseCSV = (text) => {
@@ -135,16 +154,16 @@ const BulkUpload = ({ onComplete }) => {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept=".csv"
+                    accept=".csv,.json"
                     className="hidden"
                 />
                 <div className="flex flex-col items-center justify-center">
                     <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
                         <Upload size={32} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Click to upload CSV</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Click to upload CSV or JSON</h3>
                     <p className="text-gray-500 max-w-md mx-auto">
-                        Upload a CSV file with columns: date, verse_text, reference, confession_text, translation, theme
+                        Upload a file with fields: date, verse_text, reference, confession_text, translation, theme
                     </p>
                 </div>
             </Card>

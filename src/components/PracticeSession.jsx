@@ -55,22 +55,17 @@ const PracticeSession = ({ declarations = [], onComplete, onClose }) => {
     }, [user, declarations])
 
     useEffect(() => {
-        if (isPlaying) {
-            timerRef.current = setInterval(() => {
-                setElapsedSeconds(prev => prev + 1)
-            }, 1000)
-        } else {
-            if (timerRef.current) {
-                clearInterval(timerRef.current)
-            }
-        }
+        // Auto-start timer when session begins
+        timerRef.current = setInterval(() => {
+            setElapsedSeconds(prev => prev + 1)
+        }, 1000)
 
         return () => {
             if (timerRef.current) {
                 clearInterval(timerRef.current)
             }
         }
-    }, [isPlaying])
+    }, [])
 
     // Update audioUrl when changing declarations if a saved recording exists
     useEffect(() => {
@@ -192,55 +187,58 @@ const PracticeSession = ({ declarations = [], onComplete, onClose }) => {
     const handleFinishSession = async () => {
         try {
             const durationSeconds = Math.floor((Date.now() - sessionStartTime) / 1000)
+            const today = new Date().toISOString().split('T')[0]
+            let sessionId = null
 
-            // Create practice session
-            const { data: sessionData, error: sessionError } = await supabase
+            // 1. Check for existing session first to avoid error-based logic
+            const { data: existingSession } = await supabase
                 .from('practice_sessions')
-                .insert([{
-                    user_id: user.id,
-                    session_date: new Date().toISOString().split('T')[0],
-                    duration_seconds: durationSeconds,
-                    declarations_count: completedDeclarations.size
-                }])
-                .select()
+                .select('id, duration_seconds, declarations_count')
+                .eq('user_id', user.id)
+                .eq('session_date', today)
                 .single()
 
-            if (sessionError) {
-                // If session already exists for today, update it
-                if (sessionError.code === '23505') {
-                    const { data: existingSession } = await supabase
-                        .from('practice_sessions')
-                        .select('*')
-                        .eq('user_id', user.id)
-                        .eq('session_date', new Date().toISOString().split('T')[0])
-                        .single()
+            if (existingSession) {
+                sessionId = existingSession.id
+                // Update existing session
+                await supabase
+                    .from('practice_sessions')
+                    .update({
+                        duration_seconds: existingSession.duration_seconds + durationSeconds,
+                        declarations_count: existingSession.declarations_count + completedDeclarations.size
+                    })
+                    .eq('id', sessionId)
+            } else {
+                // Create new session
+                const { data: newSession, error } = await supabase
+                    .from('practice_sessions')
+                    .insert([{
+                        user_id: user.id,
+                        session_date: today,
+                        duration_seconds: durationSeconds,
+                        declarations_count: completedDeclarations.size
+                    }])
+                    .select()
+                    .single()
 
-                    if (existingSession) {
-                        await supabase
-                            .from('practice_sessions')
-                            .update({
-                                duration_seconds: existingSession.duration_seconds + durationSeconds,
-                                declarations_count: existingSession.declarations_count + completedDeclarations.size
-                            })
-                            .eq('id', existingSession.id)
-                    }
-                } else {
-                    throw sessionError
-                }
+                if (error) throw error
+                sessionId = newSession.id
             }
 
-            // Record which declarations were practiced WITH recording URLs
-            if (sessionData) {
+            // 2. Record which declarations were practiced WITH recording URLs
+            if (sessionId && completedDeclarations.size > 0) {
                 const sessionDeclarations = Array.from(completedDeclarations).map(declarationId => ({
-                    session_id: sessionData.id,
+                    session_id: sessionId,
                     declaration_id: declarationId,
                     was_spoken: true,
                     recording_url: recordingUrls[declarationId] || null
                 }))
 
-                await supabase
+                const { error: declError } = await supabase
                     .from('session_declarations')
                     .insert(sessionDeclarations)
+
+                if (declError) throw declError
             }
 
             toast.success('🎉 Practice session completed!', {
@@ -268,180 +266,182 @@ const PracticeSession = ({ declarations = [], onComplete, onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
-            {/* Simple Header */}
-            <div className="bg-purple-600 text-white p-4 sm:p-6">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 bg-purple-700 px-3 py-2 rounded-lg">
-                            <Timer size={18} />
-                            <span className="font-bold text-sm">{formatTime(elapsedSeconds)}</span>
-                        </div>
-                        <span className="text-sm">
-                            {currentIndex + 1} of {declarations.length}
-                        </span>
-                    </div>
+        <div className="fixed inset-0 z-[100] bg-divine-gradient flex flex-col text-white animate-fade-in">
+            {/* Header */}
+            <div className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-purple-700 rounded-lg transition-colors"
+                        className="p-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-all group"
                     >
-                        <X size={24} />
+                        <X size={24} className="text-white/80 group-hover:text-white" />
                     </button>
+                    <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+                        <Timer size={16} className="text-yellow-400" />
+                        <span className="font-bold text-sm font-mono tracking-wider">{formatTime(elapsedSeconds)}</span>
+                    </div>
+                </div>
+                <div className="text-sm font-bold text-white/60 tracking-widest uppercase">
+                    Declaration {currentIndex + 1} / {declarations.length}
                 </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="bg-gray-200 h-2">
-                <div
-                    className="bg-purple-600 h-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                />
+            <div className="px-6">
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-gradient-to-r from-yellow-400 to-yellow-200 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-8">
-                <div className="max-w-2xl mx-auto space-y-6">
-                    {/* Life Area Badge */}
-                    {currentDeclaration.life_areas && (
-                        <div className="inline-flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full">
-                            <span className="text-xl">{currentDeclaration.life_areas.icon}</span>
-                            <span className="text-purple-800 font-semibold text-sm">
-                                {currentDeclaration.life_areas.name}
-                            </span>
-                        </div>
-                    )}
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 relative z-10 scrollbar-hide">
+                <div className="min-h-full flex flex-col items-center justify-center py-4 md:py-8">
+                    {/* Background Decor */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-[100px] pointer-events-none animate-pulse-slow -z-10" />
 
-                    {/* Title */}
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        {currentDeclaration.title}
-                    </h1>
+                    <div className="w-full max-w-2xl relative">
+                        {/* Card Container */}
+                        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 md:p-10 shadow-divine text-center relative overflow-hidden group">
+                            {/* Shine Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                    {/* Declaration Text */}
-                    <div className="bg-white border-2 border-purple-300 rounded-xl p-6">
-                        <p className="text-lg sm:text-xl text-gray-800 leading-relaxed">
-                            "{currentDeclaration.declaration_text}"
-                        </p>
-                    </div>
-
-                    {/* Bible Reference */}
-                    {currentDeclaration.bible_reference && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <p className="text-sm font-semibold text-yellow-800 mb-1 flex items-center gap-2">
-                                <BookOpen size={16} />
-                                {currentDeclaration.bible_reference}
-                            </p>
-                            {currentDeclaration.bible_verse_text && (
-                                <p className="text-sm text-gray-700 italic">
-                                    "{currentDeclaration.bible_verse_text}"
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Recording Section */}
-                    <div className="bg-white border-2 border-gray-300 rounded-xl p-6 space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Record Your Voice</h3>
-
-                        {/* Recording Button */}
-                        <div className="flex flex-col items-center gap-3">
-                            {!isRecording ? (
-                                <button
-                                    onClick={startRecording}
-                                    className="flex items-center gap-3 bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-md"
-                                >
-                                    <Mic size={24} />
-                                    Start Recording
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={stopRecording}
-                                    className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-md animate-pulse"
-                                >
-                                    <div className="w-6 h-6 bg-white rounded" />
-                                    Stop Recording
-                                </button>
+                            {/* Life Area Icon */}
+                            {currentDeclaration.life_areas && (
+                                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 mb-6 border border-white/10 shadow-glow animate-float-slow">
+                                    <span className="text-2xl filter drop-shadow-lg">{currentDeclaration.life_areas.icon}</span>
+                                </div>
                             )}
 
-                            <p className="text-sm text-gray-600">
-                                {isRecording ? "Recording in progress..." : audioUrl ? "✓ Recording saved" : "Click to record yourself speaking"}
-                            </p>
+                            {/* Declaration Text */}
+                            <h2 className="text-xl md:text-3xl font-black leading-snug mb-6 drop-shadow-sm">
+                                "{(() => {
+                                    const name = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Friend';
+                                    let text = currentDeclaration.declaration_text;
+                                    if (name) {
+                                        text = text.replace(/\bI am\b/gi, `I, ${name}, am`);
+                                        text = text.replace(/\bI declare\b/gi, `I, ${name}, declare`);
+                                        text = text.replace(/\bI decree\b/gi, `I, ${name}, decree`);
+                                        text = text.replace(/\bI believe\b/gi, `I, ${name}, believe`);
+                                    }
+                                    return text;
+                                })()}"
+                            </h2>
+
+                            {/* Scripture */}
+                            {currentDeclaration.bible_reference && (
+                                <div className="inline-block relative">
+                                    <div className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full" />
+                                    <div className="relative bg-black/20 hover:bg-black/30 transition-colors border border-white/10 rounded-xl px-5 py-2.5 backdrop-blur-sm">
+                                        <p className="text-yellow-300 font-bold text-xs md:text-sm flex items-center justify-center gap-2 mb-1">
+                                            <BookOpen size={14} />
+                                            {currentDeclaration.bible_reference}
+                                        </p>
+                                        {currentDeclaration.bible_verse_text && (
+                                            <p className="text-white/80 text-xs md:text-sm italic font-serif">
+                                                "{currentDeclaration.bible_verse_text}"
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Audio Player */}
-                        {audioUrl && !isRecording && (
-                            <div className="bg-gray-100 rounded-lg p-4 space-y-2">
-                                <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                    <Volume2 size={16} />
-                                    Your Recording:
-                                </p>
-                                <audio
-                                    src={audioUrl}
-                                    controls
-                                    className="w-full"
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="flex justify-center pt-4">
-                        {!completedDeclarations.has(currentDeclaration.id) ? (
-                            <button
-                                onClick={handleMarkComplete}
-                                disabled={isUploading}
-                                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-10 py-4 rounded-lg font-bold text-lg transition-colors shadow-lg disabled:cursor-not-allowed flex items-center gap-3"
-                            >
-                                {isUploading ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check size={24} />
-                                        Mark as Complete
-                                    </>
-                                )}
-                            </button>
-                        ) : (
-                            <div className="bg-green-100 border-2 border-green-500 text-green-700 px-10 py-4 rounded-lg font-bold text-lg flex items-center gap-3">
-                                <Check size={24} />
-                                Completed ✓
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Navigation */}
-            <div className="bg-white border-t border-gray-300 p-4 sm:p-6">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <button
-                        onClick={handlePrevious}
-                        disabled={currentIndex === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-800 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
-                    >
-                        <ArrowLeft size={20} />
-                        Previous
-                    </button>
+            {/* Footer Controls */}
+            <div className="bg-black/20 backdrop-blur-lg border-t border-white/10 p-6 pb-8">
+                <div className="max-w-4xl mx-auto flex flex-col gap-6">
 
-                    {allCompleted && (
+                    {/* Recording Status / Player */}
+                    <div className="flex justify-center h-12">
+                        {isRecording ? (
+                            <div className="flex items-center gap-3 text-red-400 animate-pulse font-bold bg-red-500/10 px-6 py-2 rounded-full border border-red-500/20">
+                                <div className="w-3 h-3 bg-red-500 rounded-full" />
+                                Recording...
+                            </div>
+                        ) : audioUrl ? (
+                            <div className="flex items-center gap-4 bg-white/10 px-6 py-2 rounded-full border border-white/10">
+                                <span className="text-white/60 text-sm font-medium">Recorded</span>
+                                <audio src={audioUrl} controls className="h-8 w-48 opacity-80 hover:opacity-100 transition-opacity" />
+                            </div>
+                        ) : (
+                            <div className="text-white/40 text-sm font-medium flex items-center gap-2">
+                                <Mic size={14} />
+                                Tap microphone to record
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Main Controls Row */}
+                    <div className="flex items-center justify-between gap-4">
+                        {/* Previous */}
                         <button
-                            onClick={handleFinishSession}
-                            className="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold text-lg transition-colors shadow-lg"
+                            onClick={handlePrevious}
+                            disabled={currentIndex === 0}
+                            className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5 text-white"
                         >
-                            🎉 Finish Session
+                            <ArrowLeft size={24} />
                         </button>
-                    )}
 
-                    <button
-                        onClick={handleNext}
-                        disabled={currentIndex === declarations.length - 1}
-                        className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-800 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
-                    >
-                        Next
-                        <ArrowRight size={20} />
-                    </button>
+                        {/* Center Action Group */}
+                        <div className="flex items-center gap-4 flex-1 justify-center max-w-md">
+                            {/* Record Button */}
+                            <button
+                                onClick={isRecording ? stopRecording : startRecording}
+                                className={`p-5 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105 ${isRecording
+                                    ? 'bg-red-500 text-white shadow-red-500/40'
+                                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                                    }`}
+                            >
+                                {isRecording ? <Pause size={28} className="fill-current" /> : <Mic size={28} />}
+                            </button>
+
+                            {/* Complete / Next Button */}
+                            {!completedDeclarations.has(currentDeclaration.id) ? (
+                                <button
+                                    onClick={handleMarkComplete}
+                                    disabled={isUploading}
+                                    className="flex-1 bg-white text-purple-900 h-[68px] rounded-2xl font-black text-lg hover:bg-gray-100 transition-all shadow-lg shadow-white/10 flex items-center justify-center gap-2 active:scale-95"
+                                >
+                                    {isUploading ? (
+                                        <div className="w-6 h-6 border-2 border-purple-900/30 border-t-purple-900 rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Check size={24} strokeWidth={3} />
+                                            Complete
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={allCompleted ? handleFinishSession : handleNext}
+                                    className="flex-1 bg-green-500 text-white h-[68px] rounded-2xl font-black text-lg hover:bg-green-400 transition-all shadow-lg shadow-green-500/30 flex items-center justify-center gap-2 active:scale-95"
+                                >
+                                    {allCompleted ? (
+                                        <>🎉 Finish Session</>
+                                    ) : (
+                                        <>
+                                            Next Declaration
+                                            <ArrowRight size={24} strokeWidth={3} />
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Next (Secondary) */}
+                        <button
+                            onClick={handleNext}
+                            disabled={currentIndex === declarations.length - 1}
+                            className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5 text-white"
+                        >
+                            <ArrowRight size={24} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

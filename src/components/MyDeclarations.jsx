@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Star, Play, BookOpen, Filter, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, Star, Play, BookOpen, Filter, Search, Sparkles, Quote, Volume2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
@@ -14,6 +14,8 @@ const MyDeclarations = ({ onStartPractice }) => {
     const [editingDeclaration, setEditingDeclaration] = useState(null)
     const [selectedArea, setSelectedArea] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
+    const [completedIds, setCompletedIds] = useState(new Set())
+    const [todayProgress, setTodayProgress] = useState({ count: 0, total: 0 })
 
     useEffect(() => {
         if (user) {
@@ -51,6 +53,30 @@ const MyDeclarations = ({ onStartPractice }) => {
 
             if (error) throw error
             setDeclarations(declData || [])
+
+            // Fetch today's completions
+            const today = new Date().toISOString().split('T')[0]
+            const { data: sessionData } = await supabase
+                .from('practice_sessions')
+                .select(`
+                    id,
+                    session_declarations (
+                        declaration_id
+                    )
+                `)
+                .eq('user_id', user.id)
+                .eq('session_date', today)
+
+            const completed = new Set()
+            if (sessionData) {
+                sessionData.forEach(session => {
+                    session.session_declarations?.forEach(sd => {
+                        completed.add(sd.declaration_id)
+                    })
+                })
+            }
+            setCompletedIds(completed)
+
         } catch (error) {
             console.error('Error fetching declarations:', error)
             toast.error('Failed to load declarations')
@@ -111,73 +137,129 @@ const MyDeclarations = ({ onStartPractice }) => {
     const favoriteDeclarations = filteredDeclarations.filter(d => d.is_favorite)
     const regularDeclarations = filteredDeclarations.filter(d => !d.is_favorite)
 
+    if (showBuilder) {
+        return (
+            <DeclarationBuilder
+                editDeclaration={editingDeclaration}
+                onClose={() => {
+                    setShowBuilder(false)
+                    setEditingDeclaration(null)
+                }}
+                onComplete={() => {
+                    fetchData()
+                }}
+            />
+        )
+    }
+
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-8 animate-fade-in">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900">My Declarations</h1>
-                    <p className="text-gray-600 mt-1">
-                        {declarations.length} declaration{declarations.length !== 1 ? 's' : ''} created
-                    </p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900">My Declarations</h1>
+                        <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-bold border border-purple-100 flex items-center gap-1">
+                            <Sparkles size={12} />
+                            {declarations.length} Active
+                        </span>
+                    </div>
+                    <p className="text-gray-500">Speak life over your future, health, and family.</p>
                 </div>
+
+                {/* Today's Progress Card */}
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4 rounded-2xl shadow-lg flex items-center gap-4 min-w-[200px]">
+                    <div className="relative w-12 h-12 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="#4B5563"
+                                strokeWidth="4"
+                            />
+                            <path
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="#10B981"
+                                strokeWidth="4"
+                                strokeDasharray={`${declarations.length > 0 ? (completedIds.size / declarations.length) * 100 : 0}, 100`}
+                                className="transition-all duration-1000 ease-out"
+                            />
+                        </svg>
+                        <span className="absolute text-xs font-bold">{Math.round(declarations.length > 0 ? (completedIds.size / declarations.length) * 100 : 0)}%</span>
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Daily Goal</p>
+                        <p className="font-bold text-lg leading-none mt-1">{completedIds.size} / {declarations.length}</p>
+                    </div>
+                </div>
+
                 <button
                     onClick={() => {
                         setEditingDeclaration(null)
                         setShowBuilder(true)
                     }}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
+                    className="bg-white border-2 border-gray-100 text-gray-900 px-4 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center gap-2 active:scale-95 whitespace-nowrap"
                 >
                     <Plus size={20} />
-                    New Declaration
+                    New
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                {/* Search */}
-                <div className="flex-1 relative">
-                    <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            {/* Filters & Search */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
                         type="text"
+                        placeholder="Search your declarations..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search declarations..."
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border-transparent focus:bg-white focus:border-gray-200 rounded-xl transition-all outline-none text-sm"
                     />
                 </div>
-
-                {/* Life Area Filter */}
-                <select
-                    value={selectedArea}
-                    onChange={(e) => setSelectedArea(e.target.value)}
-                    className="px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors bg-white"
-                >
-                    <option value="all">All Areas</option>
+                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                    <button
+                        onClick={() => setSelectedArea('all')}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${selectedArea === 'all'
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        All Areas
+                    </button>
                     {lifeAreas.map(area => (
-                        <option key={area.id} value={area.id}>
-                            {area.icon} {area.name}
-                        </option>
+                        <button
+                            key={area.id}
+                            onClick={() => setSelectedArea(area.id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${selectedArea === area.id
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            <span>{area.icon}</span>
+                            {area.name}
+                        </button>
                     ))}
-                </select>
+                </div>
             </div>
 
             {/* Quick Actions */}
             {declarations.length > 0 && (
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <button
                         onClick={() => onStartPractice?.(declarations)}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors"
+                        className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg hover:scale-[1.02] transition-all"
                     >
-                        <Play size={18} />
+                        <Play size={18} className="fill-white" />
                         Practice All ({declarations.length})
                     </button>
                     {favoriteDeclarations.length > 0 && (
                         <button
                             onClick={() => onStartPractice?.(favoriteDeclarations)}
-                            className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-xl font-bold hover:bg-yellow-200 transition-colors"
+                            className="flex items-center gap-2 px-5 py-3 bg-white border border-yellow-200 text-yellow-700 rounded-xl font-bold hover:bg-yellow-50 transition-all shadow-sm"
                         >
-                            <Star size={18} className="fill-yellow-600" />
+                            <Star size={18} className="fill-yellow-500 text-yellow-500" />
                             Practice Favorites ({favoriteDeclarations.length})
                         </button>
                     )}
@@ -186,79 +268,82 @@ const MyDeclarations = ({ onStartPractice }) => {
 
             {/* Loading State */}
             {loading && (
-                <div className="text-center py-12">
-                    <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Loading declarations...</p>
+                <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                 </div>
             )}
 
             {/* Empty State */}
             {!loading && declarations.length === 0 && (
-                <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl border-2 border-dashed border-purple-200">
-                    <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Plus size={32} className="text-purple-600" />
+                <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 border-dashed">
+                    <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Sparkles className="text-purple-500" size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">No declarations yet</h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                        Create your first declaration to start your transformation journey. Speak life over your health, finances, relationships, and more!
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Start Speaking Life</h3>
+                    <p className="text-gray-500 max-w-md mx-auto mb-8 leading-relaxed">
+                        Your words have power. Create your first declaration to align your heart with God's truth for your life.
                     </p>
                     <button
                         onClick={() => {
                             setEditingDeclaration(null)
                             setShowBuilder(true)
                         }}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20"
                     >
                         <Plus size={20} />
-                        Create Your First Declaration
+                        Create Declaration
                     </button>
                 </div>
             )}
 
-            {/* Declarations List */}
+            {/* Declarations Grid */}
             {!loading && filteredDeclarations.length > 0 && (
-                <div className="space-y-6">
-                    {/* Favorites */}
+                <div className="space-y-8">
+                    {/* Favorites Section */}
                     {favoriteDeclarations.length > 0 && (
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <div className="space-y-4">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Star size={20} className="text-yellow-500 fill-yellow-500" />
                                 Favorites
                             </h2>
-                            <div className="grid gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {favoriteDeclarations.map(declaration => (
                                     <DeclarationCard
                                         key={declaration.id}
                                         declaration={declaration}
+                                        isCompleted={completedIds.has(declaration.id)}
                                         onEdit={() => {
                                             setEditingDeclaration(declaration)
                                             setShowBuilder(true)
                                         }}
                                         onDelete={() => handleDelete(declaration)}
                                         onToggleFavorite={() => handleToggleFavorite(declaration)}
+                                        onQuickComplete={() => handleQuickComplete(declaration)}
                                     />
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* Regular Declarations */}
+                    {/* All Declarations Section */}
                     {regularDeclarations.length > 0 && (
-                        <div>
+                        <div className="space-y-4">
                             {favoriteDeclarations.length > 0 && (
-                                <h2 className="text-lg font-bold text-gray-900 mb-3">All Declarations</h2>
+                                <h2 className="text-lg font-bold text-gray-900">All Declarations</h2>
                             )}
-                            <div className="grid gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {regularDeclarations.map(declaration => (
                                     <DeclarationCard
                                         key={declaration.id}
                                         declaration={declaration}
+                                        isCompleted={completedIds.has(declaration.id)}
                                         onEdit={() => {
                                             setEditingDeclaration(declaration)
                                             setShowBuilder(true)
                                         }}
                                         onDelete={() => handleDelete(declaration)}
                                         onToggleFavorite={() => handleToggleFavorite(declaration)}
+                                        onQuickComplete={() => handleQuickComplete(declaration)}
                                     />
                                 ))}
                             </div>
@@ -269,43 +354,32 @@ const MyDeclarations = ({ onStartPractice }) => {
 
             {/* No Results */}
             {!loading && declarations.length > 0 && filteredDeclarations.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-gray-600">No declarations match your filters</p>
+                <div className="text-center py-12 bg-gray-50 rounded-3xl">
+                    <p className="text-gray-600 font-medium">No declarations match your filters</p>
+                    <button
+                        onClick={() => { setSearchQuery(''); setSelectedArea('all') }}
+                        className="text-purple-600 font-bold text-sm mt-2 hover:underline"
+                    >
+                        Clear filters
+                    </button>
                 </div>
-            )}
-
-            {/* Declaration Builder Modal */}
-            {showBuilder && (
-                <DeclarationBuilder
-                    editDeclaration={editingDeclaration}
-                    onClose={() => {
-                        setShowBuilder(false)
-                        setEditingDeclaration(null)
-                    }}
-                    onComplete={() => {
-                        fetchData()
-                    }}
-                />
             )}
         </div>
     )
 }
 
 // Declaration Card Component
-const DeclarationCard = ({ declaration, onEdit, onDelete, onToggleFavorite }) => {
-    const { user } = useAuth()
+const DeclarationCard = ({ declaration, isCompleted, onEdit, onDelete, onToggleFavorite, onQuickComplete }) => {
     const area = declaration.life_areas
     const [recordingUrl, setRecordingUrl] = useState(null)
-    const [loadingRecording, setLoadingRecording] = useState(false)
     const [showRecording, setShowRecording] = useState(false)
 
     useEffect(() => {
         fetchLatestRecording()
-    }, [declaration.id])
+    }, [declaration, isCompleted])
 
     const fetchLatestRecording = async () => {
         try {
-            setLoadingRecording(true)
             const { data, error } = await supabase
                 .from('session_declarations')
                 .select('recording_url')
@@ -315,146 +389,118 @@ const DeclarationCard = ({ declaration, onEdit, onDelete, onToggleFavorite }) =>
                 .limit(1)
                 .single()
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-                throw error
-            }
-
             if (data?.recording_url) {
                 setRecordingUrl(data.recording_url)
             }
         } catch (error) {
             console.error('Error fetching recording:', error)
-        } finally {
-            setLoadingRecording(false)
-        }
-    }
-
-    const handleCardClick = (e) => {
-        // Don't expand if clicking on action buttons
-        if (e.target.closest('button')) return
-        if (recordingUrl) {
-            setShowRecording(!showRecording)
         }
     }
 
     return (
         <div
-            className={`group p-6 bg-white rounded-2xl border-2 transition-all cursor-pointer ${showRecording
-                ? 'border-purple-400 shadow-lg'
-                : 'border-gray-100 hover:border-purple-300 hover:shadow-lg'
+            className={`group p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden cursor-pointer ${isCompleted
+                ? 'bg-green-50/50 border-green-200 shadow-sm'
+                : 'bg-white border-gray-100 shadow-sm hover:shadow-md'
                 }`}
-            onClick={handleCardClick}
+            onClick={(e) => {
+                if (!e.target.closest('button') && !e.target.closest('audio')) {
+                    if (recordingUrl) setShowRecording(!showRecording)
+                }
+            }}
         >
-            <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                    {/* Life Area Badge */}
-                    <div className="flex items-center gap-2 mb-3">
-                        {area && (
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-                                <span className="text-sm">{area.icon}</span>
-                                <span className="text-xs font-bold text-gray-700">{area.name}</span>
-                            </div>
-                        )}
+            {/* Decorative Background Blur */}
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none transition-opacity duration-300 ${area ? 'opacity-20' : 'opacity-0'
+                }`} style={{ backgroundColor: area?.color || '#E9D5FF' }} />
 
-                        {/* Recording Indicator */}
-                        {recordingUrl && (
-                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 rounded-full">
-                                <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-xs font-bold text-red-700">Recording</span>
-                            </div>
-                        )}
+            <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        {/* Quick Complete Checkbox */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onQuickComplete()
+                            }}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted
+                                ? 'bg-green-500 text-white shadow-lg shadow-green-500/30 scale-110'
+                                : 'bg-gray-100 text-gray-300 hover:bg-gray-200'
+                                }`}
+                            title={isCompleted ? "Completed today!" : "Mark as spoken today"}
+                        >
+                            <Sparkles size={14} className={isCompleted ? "fill-white" : ""} />
+                        </button>
+
+                        <div>
+                            <h3 className={`font-bold leading-tight line-clamp-1 ${isCompleted ? 'text-green-900' : 'text-gray-900'}`}>
+                                {declaration.title}
+                            </h3>
+                            {area && <p className="text-xs text-gray-500 font-medium">{area.name}</p>}
+                        </div>
                     </div>
 
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{declaration.title}</h3>
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1">
+                        {recordingUrl && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowRecording(!showRecording) }}
+                                className={`p-2 rounded-lg transition-colors ${showRecording ? 'bg-purple-100 text-purple-600' : 'bg-purple-50 text-purple-600 hover:bg-purple-100'}`}
+                                title="Play Recording"
+                            >
+                                <Play size={16} className="fill-purple-600" />
+                            </button>
+                        )}
 
-                    {/* Declaration Text */}
-                    <p className="text-gray-700 leading-relaxed mb-3 italic">
-                        "{declaration.declaration_text}"
-                    </p>
-
-                    {/* Bible Reference */}
-                    {declaration.bible_reference && (
-                        <div className="flex items-start gap-2 p-3 bg-purple-50 rounded-xl border border-purple-100">
-                            <BookOpen size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-purple-900 mb-1">{declaration.bible_reference}</p>
-                                {declaration.bible_verse_text && (
-                                    <p className="text-xs text-purple-700 leading-relaxed">
-                                        {declaration.bible_verse_text}
-                                    </p>
-                                )}
-                            </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onToggleFavorite() }}
+                                className="p-2 hover:bg-yellow-50 rounded-lg text-gray-400 hover:text-yellow-500 transition-colors"
+                            >
+                                <Star size={16} className={declaration.is_favorite ? 'fill-yellow-500 text-yellow-500' : ''} />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onEdit() }}
+                                className="p-2 hover:bg-blue-50 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                            >
+                                <Edit2 size={16} />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete() }}
+                                className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+                            >
+                                <Trash2 size={16} />
+                            </button>
                         </div>
-                    )}
+                    </div>
+                </div>
 
-                    {/* Recording Player - Expandable */}
-                    {showRecording && recordingUrl && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border-2 border-purple-200 space-y-2">
-                            <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                                <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-                                </svg>
-                                Your Recording
-                            </p>
-                            <audio
-                                src={recordingUrl}
-                                controls
-                                className="w-full"
-                                onClick={(e) => e.stopPropagation()} // Prevent card collapse when interacting with player
-                            />
-                            <p className="text-xs text-gray-500">
-                                💡 Click anywhere on the card to {showRecording ? 'hide' : 'show'} the recording
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Click hint */}
-                    {recordingUrl && !showRecording && (
-                        <p className="text-xs text-purple-600 mt-2">
-                            💡 Click to listen to your recording
+                <div className="mb-4">
+                    <div className="flex gap-2 mb-2">
+                        <Quote size={14} className="text-purple-300 flex-shrink-0" />
+                        <p className="text-gray-600 leading-relaxed text-sm line-clamp-3 italic">
+                            {declaration.declaration_text}
                         </p>
+                    </div>
+
+                    {declaration.bible_reference && (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 rounded-lg border border-purple-100 mt-2">
+                            <BookOpen size={12} className="text-purple-600" />
+                            <span className="text-xs font-bold text-purple-700">{declaration.bible_reference}</span>
+                        </div>
                     )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            onToggleFavorite()
-                        }}
-                        className="p-2 hover:bg-yellow-50 rounded-lg transition-colors"
-                        title={declaration.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-                    >
-                        <Star
-                            size={18}
-                            className={declaration.is_favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}
-                        />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            onEdit()
-                        }}
-                        className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                    >
-                        <Edit2 size={18} className="text-blue-600" />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            onDelete()
-                        }}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                    >
-                        <Trash2 size={18} className="text-red-600" />
-                    </button>
-                </div>
+                {/* Recording Section */}
+                {recordingUrl && (
+                    <div className={`mt-4 pt-4 border-t border-gray-50 transition-all duration-300 ${showRecording ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+                        <div className="bg-purple-50 rounded-xl p-2 flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                <Volume2 size={14} className="text-purple-600" />
+                            </div>
+                            <audio src={recordingUrl} controls className="w-full h-8" />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

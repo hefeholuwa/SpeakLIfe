@@ -85,17 +85,26 @@ const CommunityModerationPanel = () => {
         try {
             setActionLoading(id)
             const table = activeView === 'posts' ? 'community_posts' : 'community_comments'
-            const { error } = await supabase
+
+            // Use select() to confirm deletion
+            const { data, error } = await supabase
                 .from(table)
                 .delete()
                 .eq('id', id)
+                .select()
 
             if (error) throw error
+
+            // Check if anything was actually deleted
+            if (!data || data.length === 0) {
+                throw new Error('Item could not be deleted. Check permissions.')
+            }
 
             setItems(items.filter(item => item.id !== id))
             toast.success('Deleted successfully')
         } catch (error) {
-            toast.error('Failed to delete')
+            console.error('Delete error:', error)
+            toast.error(error.message || 'Failed to delete')
         } finally {
             setActionLoading(null)
         }

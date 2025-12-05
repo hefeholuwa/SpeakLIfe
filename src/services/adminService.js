@@ -185,12 +185,17 @@ class AdminService {
     try {
       this.addLog(`Deleting daily content ${id}...`, 'info')
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('daily_verses')
         .delete()
         .eq('id', id)
+        .select()
 
       if (error) throw error
+
+      if (!data || data.length === 0) {
+        throw new Error('Item could not be deleted. Check permissions.')
+      }
 
       this.addLog(`Daily content deleted successfully`, 'success')
       return true

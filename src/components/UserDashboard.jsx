@@ -10,6 +10,8 @@ import UserProfile from './UserProfile'
 import NotificationInbox from './NotificationInbox'
 import ChallengeList from './ChallengeList'
 import ChallengePlayer from './ChallengePlayer'
+import MyDeclarations from './MyDeclarations'
+import PracticeSession from './PracticeSession'
 
 
 
@@ -33,6 +35,15 @@ const UserDashboard = ({ onNavigate }) => {
     const [isLiked, setIsLiked] = useState(false)
     const [selectedMood, setSelectedMood] = useState(null)
     const [showAllActivity, setShowAllActivity] = useState(false)
+
+    // Practice Session State
+    const [showPracticeSession, setShowPracticeSession] = useState(false)
+    const [practiceDeclarations, setPracticeDeclarations] = useState([])
+
+    const handleStartPractice = (declarationsToPractice) => {
+        setPracticeDeclarations(declarationsToPractice)
+        setShowPracticeSession(true)
+    }
 
     // Moved fetchDailyVerse and fetchCurrentPlan outside useEffect for better structure
     const fetchDailyVerse = async () => {
@@ -234,6 +245,17 @@ const UserDashboard = ({ onNavigate }) => {
 
     return (
         <div className="min-h-screen bg-[#FDFCF8] text-gray-900 font-sans pb-24 md:pb-0">
+            {/* Practice Session Overlay */}
+            {showPracticeSession && (
+                <PracticeSession
+                    declarations={practiceDeclarations}
+                    onClose={() => setShowPracticeSession(false)}
+                    onComplete={() => {
+                        updateAndFetchStreak()
+                        fetchRecentActivity()
+                    }}
+                />
+            )}
 
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 border-r border-gray-100 bg-white/50 backdrop-blur-xl z-30">
@@ -251,6 +273,10 @@ const UserDashboard = ({ onNavigate }) => {
                         <button onClick={() => { setActiveTab('bible'); setBibleReaderConfig(null) }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'bible' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
                             <BookOpen size={20} />
                             <span className="font-medium">Bible</span>
+                        </button>
+                        <button onClick={() => setActiveTab('declarations')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'declarations' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
+                            <Sparkles size={20} />
+                            <span className="font-medium">Declarations</span>
                         </button>
                         <button onClick={() => setActiveTab('journal')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'journal' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/10' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}>
                             <PenTool size={20} />
@@ -324,6 +350,9 @@ const UserDashboard = ({ onNavigate }) => {
                             </button>
                             <button onClick={() => { setActiveTab('bible'); setShowMobileMenu(false); setBibleReaderConfig(null) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                                 <BookOpen size={24} /> Bible
+                            </button>
+                            <button onClick={() => { setActiveTab('declarations'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
+                                <Sparkles size={24} /> Declarations
                             </button>
                             <button onClick={() => { setActiveTab('journal'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                                 <PenTool size={24} /> Journal
@@ -733,6 +762,12 @@ const UserDashboard = ({ onNavigate }) => {
                                 }}
                                 onBack={() => setActiveTab('home')}
                             />
+                        </div>
+                    )}
+
+                    {activeTab === 'declarations' && (
+                        <div className="animate-fade-in-up">
+                            <MyDeclarations onStartPractice={handleStartPractice} />
                         </div>
                     )}
 
