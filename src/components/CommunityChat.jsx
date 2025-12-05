@@ -71,12 +71,10 @@ const CommunityChat = ({ onViewProfile }) => {
                     });
                 } else if (payload.eventType === 'DELETE') {
                     setPosts(prev => prev.filter(p => p.id !== payload.old.id));
-                    if (selectedPost?.id === payload.old.id) setSelectedPost(null);
+                    setSelectedPost(prev => (prev?.id === payload.old.id ? null : prev));
                 } else if (payload.eventType === 'UPDATE') {
                     setPosts(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
-                    if (selectedPost?.id === payload.new.id) {
-                        setSelectedPost(prev => ({ ...prev, ...payload.new }));
-                    }
+                    setSelectedPost(prev => (prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev));
                 }
             })
             .subscribe();
@@ -84,7 +82,7 @@ const CommunityChat = ({ onViewProfile }) => {
         return () => {
             postSubscription.unsubscribe();
         };
-    }, [selectedPost]);
+    }, []);
 
     // Real-time subscription for comments when a post is selected
     useEffect(() => {
