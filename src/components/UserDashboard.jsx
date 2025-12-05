@@ -767,7 +767,14 @@ const UserDashboard = ({ onNavigate }) => {
 
                     {activeTab === 'declarations' && (
                         <div className="animate-fade-in-up">
-                            <MyDeclarations onStartPractice={handleStartPractice} />
+                            <MyDeclarations
+                                onStartPractice={handleStartPractice}
+                                onShare={(text) => {
+                                    // Use history state to pass data to CommunityChat
+                                    window.history.replaceState({ ...window.history.state, sharedContent: text }, '');
+                                    setActiveTab('community');
+                                }}
+                            />
                         </div>
                     )}
 

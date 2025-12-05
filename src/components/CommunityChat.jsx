@@ -18,7 +18,10 @@ import {
     ChevronRight,
     Shield,
     AlertTriangle,
-    Pin
+    Pin,
+    Ghost,
+    Hand,
+    ThumbsUp
 } from 'lucide-react';
 import LikesListDropdown from './LikesListDropdown';
 
@@ -30,6 +33,7 @@ const CommunityChat = ({ onViewProfile }) => {
     const [category, setCategory] = useState('general');
     const [filter, setFilter] = useState('all');
     const [submitting, setSubmitting] = useState(false);
+    const [isAnonymous, setIsAnonymous] = useState(false);
 
     // Comments & Details State
     const [selectedPost, setSelectedPost] = useState(null);
@@ -39,6 +43,14 @@ const CommunityChat = ({ onViewProfile }) => {
     const [viewingLikesPostId, setViewingLikesPostId] = useState(null);
 
     useEffect(() => {
+        // Check for shared content from other pages
+        const state = window.history.state;
+        if (state?.sharedContent) {
+            setNewPost(state.sharedContent);
+            // Optional: clear state so it doesn't persist on refresh
+            // window.history.replaceState({}, document.title);
+        }
+
         fetchPosts();
 
         // Set up real-time subscription for posts
@@ -191,22 +203,16 @@ const CommunityChat = ({ onViewProfile }) => {
             // Optimistic update
             toast.success('Report submitted. Thank you for helping keep our community safe.');
 
-            const { error } = await supabase.rpc('increment_report_count', { post_id: postId });
+            // Increment logic remains...
+            const { error: updateError } = await supabase
+                .from('community_posts')
+                .update({ reported_count: posts.find(p => p.id === postId).reported_count + 1 })
+                .eq('id', postId);
 
-            // Fallback if RPC doesn't exist (which it doesn't yet, so we'll do a direct update for now)
-            if (error) {
-                // Fetch current count first to be safe, or just increment blindly if we trust the client (we shouldn't)
-                // For now, let's just use a direct update query since we added the column
-                const { error: updateError } = await supabase
-                    .from('community_posts')
-                    .update({ reported_count: posts.find(p => p.id === postId).reported_count + 1 })
-                    .eq('id', postId);
+            if (updateError) throw updateError;
 
-                if (updateError) throw updateError;
-            }
         } catch (error) {
             console.error('Error reporting post:', error);
-            // toast.error('Failed to submit report');
         }
     };
 
@@ -319,12 +325,14 @@ const CommunityChat = ({ onViewProfile }) => {
                 .insert({
                     user_id: user.id,
                     content: newPost.trim(),
-                    category: category
+                    category: category,
+                    is_anonymous: isAnonymous
                 });
 
             if (error) throw error;
 
             setNewPost('');
+            setIsAnonymous(false);
             toast.success('Message posted!');
         } catch (error) {
             console.error('Error posting:', error);
@@ -353,13 +361,6 @@ const CommunityChat = ({ onViewProfile }) => {
         window.history.pushState({ view: 'postDetails', postId: post.id }, '');
         setSelectedPost(post);
         fetchComments(post.id);
-
-        // Record unique view
-        try {
-            await supabase.rpc('record_post_view', { post_id_param: post.id });
-        } catch (error) {
-            console.error('Error recording view:', error);
-        }
     };
 
     // Handle browser back button
@@ -379,11 +380,29 @@ const CommunityChat = ({ onViewProfile }) => {
         : posts.filter(p => p.category === filter);
 
     const categories = [
-        { id: 'general', label: 'General', icon: MessageCircle, color: 'text-gray-500', bg: 'bg-gray-100' },
-        { id: 'gratitude', label: 'Gratitude', icon: Sparkles, color: 'text-amber-500', bg: 'bg-amber-50' },
-        { id: 'testimony', label: 'Testimony', icon: Heart, color: 'text-purple-500', bg: 'bg-purple-50' },
-        { id: 'prayer', label: 'Prayer', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
+        { id: 'general', label: 'General', icon: MessageCircle, color: 'text-gray-500', bg: 'bg-gray-100', action: 'Like' },
+        { id: 'gratitude', label: 'Gratitude', icon: Sparkles, color: 'text-amber-500', bg: 'bg-amber-50', action: 'Amen' },
+        { id: 'testimony', label: 'Testimony', icon: Heart, color: 'text-purple-500', bg: 'bg-purple-50', action: 'Amen' },
+        { id: 'prayer', label: 'Prayer', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50', action: 'Pray' },
     ];
+
+    const getActionIcon = (category) => {
+        switch (category) {
+            case 'prayer': return Hand;
+            case 'testimony':
+            case 'gratitude': return Sparkles;
+            default: return Heart;
+        }
+    };
+
+    const getActionLabel = (category) => {
+        switch (category) {
+            case 'prayer': return 'Praying';
+            case 'testimony':
+            case 'gratitude': return 'Amen';
+            default: return 'Like';
+        }
+    };
 
     // Detail View
     if (selectedPost) {
@@ -406,12 +425,15 @@ const CommunityChat = ({ onViewProfile }) => {
                         <div
                             onClick={(e) => {
                                 e.stopPropagation();
+                                if (selectedPost.is_anonymous) return;
                                 const targetId = selectedPost.user_id || selectedPost.profiles?.id;
                                 if (targetId) onViewProfile(targetId);
                             }}
-                            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-200 transition-all"
+                            className={`w-12 h-12 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden transition-all ${selectedPost.is_anonymous ? 'bg-gray-100' : 'bg-gradient-to-br from-purple-100 to-blue-100 cursor-pointer hover:ring-2 hover:ring-purple-200'}`}
                         >
-                            {selectedPost.profiles?.avatar_url ? (
+                            {selectedPost.is_anonymous ? (
+                                <Ghost size={24} className="text-gray-400" />
+                            ) : selectedPost.profiles?.avatar_url ? (
                                 <img src={selectedPost.profiles.avatar_url} alt={selectedPost.profiles.username || 'User'} className="w-full h-full object-cover" />
                             ) : (
                                 selectedPost.profiles?.full_name?.[0] || 'U'
@@ -419,8 +441,8 @@ const CommunityChat = ({ onViewProfile }) => {
                         </div>
                         <div>
                             <h4 className="font-bold text-gray-900 text-lg flex items-center gap-1">
-                                {selectedPost.profiles?.username || selectedPost.profiles?.full_name || 'Anonymous'}
-                                {selectedPost.profiles?.is_admin && (
+                                {selectedPost.is_anonymous ? 'Anonymous Member' : (selectedPost.profiles?.username || selectedPost.profiles?.full_name || 'Anonymous')}
+                                {!selectedPost.is_anonymous && selectedPost.profiles?.is_admin && (
                                     <Shield size={16} className="text-gray-900 fill-current" />
                                 )}
                             </h4>
@@ -456,9 +478,15 @@ const CommunityChat = ({ onViewProfile }) => {
                             )}
                             <button
                                 onClick={(e) => handleLike(selectedPost.id, selectedPost.isLiked, e)}
-                                className={`p-2 rounded-full hover:bg-gray-50 transition-colors ${selectedPost.isLiked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${selectedPost.isLiked
+                                    ? selectedPost.category === 'prayer' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-500'
+                                    : 'hover:bg-gray-50 text-gray-500'}`}
                             >
-                                <Heart size={20} className={selectedPost.isLiked ? 'fill-current' : ''} />
+                                {(() => {
+                                    const Icon = getActionIcon(selectedPost.category);
+                                    return <Icon size={20} className={selectedPost.isLiked ? 'fill-current' : ''} />;
+                                })()}
+                                <span className="font-bold">{getActionLabel(selectedPost.category)}</span>
                             </button>
                             <button
                                 onClick={(e) => {
@@ -467,7 +495,7 @@ const CommunityChat = ({ onViewProfile }) => {
                                 }}
                                 className="text-sm font-bold text-gray-500 hover:text-gray-900 hover:underline px-1"
                             >
-                                {selectedPost.likes_count || 0} Likes
+                                {selectedPost.likes_count || 0}
                             </button>
                         </div>
 
@@ -581,31 +609,46 @@ const CommunityChat = ({ onViewProfile }) => {
                     />
 
                     <div className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    type="button"
-                                    onClick={() => setCategory(cat.id)}
-                                    className={`flex items-center justify-center md:justify-start gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${category === cat.id
-                                        ? `${cat.bg} ${cat.color} ring-2 ring-offset-1 ring-${cat.color.split('-')[1]}-200 shadow-sm`
-                                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-transparent'
-                                        }`}
-                                >
-                                    <cat.icon size={18} />
-                                    {cat.label}
-                                </button>
-                            ))}
+                        <div className="flex items-center justify-between">
+                            <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => setCategory(cat.id)}
+                                        className={`flex items-center justify-center md:justify-start gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${category === cat.id
+                                            ? `${cat.bg} ${cat.color} ring-2 ring-offset-1 ring-${cat.color.split('-')[1]}-200 shadow-sm`
+                                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-transparent'
+                                            }`}
+                                    >
+                                        <cat.icon size={16} />
+                                        {cat.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        <div className="flex justify-end mt-2">
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAnonymous ? 'bg-gray-900 border-gray-900' : 'border-gray-300 bg-white'}`}>
+                                    {isAnonymous && <Ghost size={12} className="text-white" />}
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={isAnonymous}
+                                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                                />
+                                <span className={`text-sm font-medium transition-colors ${isAnonymous ? 'text-gray-900' : 'text-gray-500'}`}>Post Anonymously</span>
+                            </label>
+
                             <button
                                 type="submit"
                                 disabled={!newPost.trim() || submitting}
-                                className="w-full md:w-auto bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-900/20 active:scale-95"
+                                className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-gray-900/20 active:scale-95"
                             >
                                 <Send size={18} />
-                                Post Message
+                                Post
                             </button>
                         </div>
                     </div>
@@ -652,7 +695,9 @@ const CommunityChat = ({ onViewProfile }) => {
                             post={post}
                             user={user}
                             categories={categories}
-                            onView={() => handlePostView(post.id)}
+                            getActionIcon={getActionIcon}
+                            getActionLabel={getActionLabel}
+                            onView={() => { }} // Disabled generic view counting
                             onClick={() => openPostDetails(post)}
                             onLike={handleLike}
                             onReport={reportPost}
@@ -672,10 +717,13 @@ const CommunityChat = ({ onViewProfile }) => {
 };
 
 // Extracted PostCard for IntersectionObserver
-const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, onDelete, onProfileClick, onLikesClick, showLikes, onCloseLikes }) => {
+const PostCard = ({ post, user, categories, getActionIcon, getActionLabel, onView, onClick, onLike, onReport, onDelete, onProfileClick, onLikesClick, showLikes, onCloseLikes }) => {
     const cardRef = React.useRef(null);
     const catConfig = categories.find(c => c.id === post.category) || categories[0];
     const isOwner = user?.id === post.user_id;
+
+    const ActionIcon = getActionIcon(post.category);
+    const ActionLabel = getActionLabel(post.category);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -706,12 +754,15 @@ const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, o
                     <div
                         onClick={(e) => {
                             e.stopPropagation();
+                            if (post.is_anonymous) return;
                             const targetId = post.user_id || post.profiles?.id;
                             if (targetId) onProfileClick(targetId);
                         }}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-200 transition-all"
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden transition-all ${post.is_anonymous ? 'bg-gray-100' : 'bg-gradient-to-br from-purple-100 to-blue-100 cursor-pointer hover:ring-2 hover:ring-purple-200'}`}
                     >
-                        {post.profiles?.avatar_url ? (
+                        {post.is_anonymous ? (
+                            <Ghost size={20} className="text-gray-400" />
+                        ) : post.profiles?.avatar_url ? (
                             <img src={post.profiles.avatar_url} alt={post.profiles.username || 'User'} className="w-full h-full object-cover" />
                         ) : (
                             post.profiles?.full_name?.[0] || 'U'
@@ -719,8 +770,8 @@ const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, o
                     </div>
                     <div>
                         <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1">
-                            {post.profiles?.username || post.profiles?.full_name || 'Anonymous'}
-                            {post.profiles?.is_admin && (
+                            {post.is_anonymous ? 'Anonymous Member' : (post.profiles?.username || post.profiles?.full_name || 'Anonymous')}
+                            {!post.is_anonymous && post.profiles?.is_admin && (
                                 <Shield size={12} className="text-gray-900 fill-current" />
                             )}
                         </h4>
@@ -779,9 +830,13 @@ const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, o
                     )}
                     <button
                         onClick={(e) => onLike(post.id, post.isLiked, e)}
-                        className={`p-2 rounded-full hover:bg-gray-50 transition-colors ${post.isLiked ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${post.isLiked
+                            ? post.category === 'prayer' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-500'
+                            : 'hover:bg-gray-50 text-gray-400 hover:text-gray-600'}`}
+                        title={ActionLabel}
                     >
-                        <Heart size={20} className={post.isLiked ? 'fill-current' : ''} />
+                        <ActionIcon size={18} className={`transition-transform active:scale-125 ${post.isLiked ? 'fill-current' : ''}`} />
+                        <span className={`text-xs font-bold ${post.isLiked ? '' : 'hidden group-hover:block'}`}>{ActionLabel}</span>
                     </button>
                     <button
                         onClick={(e) => {
@@ -798,7 +853,6 @@ const PostCard = ({ post, user, categories, onView, onClick, onLike, onReport, o
                     <MessageSquare size={18} />
                     {post.comments_count || 0}
                 </div>
-
 
             </div>
         </div>

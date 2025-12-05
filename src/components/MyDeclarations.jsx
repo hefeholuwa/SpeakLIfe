@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Star, Play, BookOpen, Filter, Search, Sparkles, Quote, Volume2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Star, Play, BookOpen, Filter, Search, Sparkles, Quote, Volume2, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import DeclarationBuilder from './DeclarationBuilder'
 
-const MyDeclarations = ({ onStartPractice }) => {
+const MyDeclarations = ({ onStartPractice, onShare }) => {
     const { user, userProfile, refreshProfile } = useAuth() // Added userProfile and refreshProfile
     const [declarations, setDeclarations] = useState([])
     const [lifeAreas, setLifeAreas] = useState([])
@@ -37,6 +37,56 @@ const MyDeclarations = ({ onStartPractice }) => {
             fetchData()
         }
     }, [user])
+
+    const handleQuickComplete = async (declaration) => {
+        if (completedIds.has(declaration.id)) {
+            toast.success('Already completed today!')
+            return
+        }
+
+        try {
+            const today = new Date().toISOString().split('T')[0]
+
+            // 1. Create a "Quick Session"
+            const { data: session, error: sessionError } = await supabase
+                .from('practice_sessions')
+                .insert({
+                    user_id: user.id,
+                    session_date: today,
+                    duration_seconds: 5,
+                    completed_count: 1
+                })
+                .select()
+                .single()
+
+            if (sessionError) throw sessionError
+
+            // 2. Add declaration to session
+            const { error: declError } = await supabase
+                .from('session_declarations')
+                .insert({
+                    session_id: session.id,
+                    declaration_id: declaration.id,
+                    is_completed: true
+                })
+
+            if (declError) throw declError
+
+            // 3. Update local state
+            setCompletedIds(prev => {
+                const newSet = new Set(prev)
+                newSet.add(declaration.id)
+                return newSet
+            })
+
+            toast.success('Marked as spoken!')
+            await refreshProfile()
+
+        } catch (error) {
+            console.error('Error quick completing:', error)
+            toast.error('Failed to update progress')
+        }
+    }
 
     const handleUpdateGoal = async (newGoal) => {
         try {
@@ -391,7 +441,8 @@ const MyDeclarations = ({ onStartPractice }) => {
                                         }}
                                         onDelete={() => handleDelete(declaration)}
                                         onToggleFavorite={() => handleToggleFavorite(declaration)}
-                                        onQuickComplete={() => handleQuickComplete(declaration)}
+                                        onQuickComplete={() => handleQuickComplete(declaration)} // Fixed missing handler reference if any
+                                        onShare={onShare}
                                     />
                                 ))}
                             </div>
@@ -416,7 +467,8 @@ const MyDeclarations = ({ onStartPractice }) => {
                                         }}
                                         onDelete={() => handleDelete(declaration)}
                                         onToggleFavorite={() => handleToggleFavorite(declaration)}
-                                        onQuickComplete={() => handleQuickComplete(declaration)}
+                                        onQuickComplete={() => handleQuickComplete(declaration)} // Fixed missing handler reference if any
+                                        onShare={onShare}
                                     />
                                 ))}
                             </div>
@@ -442,7 +494,7 @@ const MyDeclarations = ({ onStartPractice }) => {
 }
 
 // Declaration Card Component
-const DeclarationCard = ({ declaration, isCompleted, onEdit, onDelete, onToggleFavorite, onQuickComplete }) => {
+const DeclarationCard = ({ declaration, isCompleted, onEdit, onDelete, onToggleFavorite, onQuickComplete, onShare }) => {
     const area = declaration.life_areas
     const [recordingUrl, setRecordingUrl] = useState(null)
     const [showRecording, setShowRecording] = useState(false)
@@ -514,6 +566,14 @@ const DeclarationCard = ({ declaration, isCompleted, onEdit, onDelete, onToggleF
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-1">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onShare(declaration.declaration_text) }}
+                            className="p-2 hover:bg-purple-50 rounded-lg text-gray-400 hover:text-purple-600 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Share to Community"
+                        >
+                            <Share2 size={16} />
+                        </button>
+
                         {recordingUrl && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowRecording(!showRecording) }}
