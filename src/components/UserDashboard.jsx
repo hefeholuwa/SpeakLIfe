@@ -12,6 +12,7 @@ import ChallengeList from './ChallengeList'
 import ChallengePlayer from './ChallengePlayer'
 import MyDeclarations from './MyDeclarations'
 import PracticeSession from './PracticeSession'
+import PushNotificationModal from './PushNotificationModal'
 
 
 
