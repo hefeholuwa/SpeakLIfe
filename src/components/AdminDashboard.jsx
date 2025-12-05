@@ -102,9 +102,22 @@ const AdminDashboard = ({ onNavigate }) => {
   }
 
   useEffect(() => {
-    // Auth Check
+    // Auth Check - Secure Implementation
     if (!authLoading) {
-      if (!user || !userProfile?.is_admin) {
+      // First check: Must be logged in
+      if (!user) {
+        onNavigate('admin-login')
+        return
+      }
+
+      // Second check: Wait for profile to load, then verify admin status
+      if (userProfile === null) {
+        // Profile is still loading, don't redirect yet
+        return
+      }
+
+      // Third check: Verify admin status
+      if (!userProfile?.is_admin) {
         onNavigate('admin-login')
         return
       }
@@ -118,23 +131,53 @@ const AdminDashboard = ({ onNavigate }) => {
     }
   }, [user, userProfile])
 
+  // TEMPORARILY DISABLED: Realtime subscriptions causing WebSocket errors
+  // Admin dashboard has manual refresh button, so realtime is not critical
+  // TODO: Re-enable with proper WebSocket connection handling
+  /* 
   useEffect(() => {
     // Real-time subscriptions for system stats
-    const channels = [
-      supabase.channel('public:profiles').on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadSystemData()),
-      supabase.channel('public:daily_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'daily_verses' }, () => loadSystemData()),
-      supabase.channel('public:topic_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_verses' }, () => loadSystemData()),
-      supabase.channel('public:topic_confessions').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_confessions' }, () => loadSystemData()),
-      supabase.channel('public:bible_bookmarks').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_bookmarks' }, () => loadSystemData()),
-      supabase.channel('public:bible_highlights').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_highlights' }, () => loadSystemData())
-    ]
+    let isSubscribed = true
+    const subscribedChannels = []
 
-    channels.forEach(channel => channel.subscribe())
+    const setupChannels = async () => {
+      if (!isSubscribed) return
+
+      try {
+        const channels = [
+          supabase.channel('public:profiles').on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadSystemData()),
+          supabase.channel('public:daily_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'daily_verses' }, () => loadSystemData()),
+          supabase.channel('public:topic_verses').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_verses' }, () => loadSystemData()),
+          supabase.channel('public:topic_confessions').on('postgres_changes', { event: '*', schema: 'public', table: 'topic_confessions' }, () => loadSystemData()),
+          supabase.channel('public:bible_bookmarks').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_bookmarks' }, () => loadSystemData()),
+          supabase.channel('public:bible_highlights').on('postgres_changes', { event: '*', schema: 'public', table: 'bible_highlights' }, () => loadSystemData())
+        ]
+
+        // Subscribe to each channel and track successfully subscribed ones
+        for (const channel of channels) {
+          if (isSubscribed) {
+            await channel.subscribe()
+            subscribedChannels.push(channel)
+          }
+        }
+      } catch (error) {
+        console.error('Error setting up realtime channels:', error)
+      }
+    }
+
+    setupChannels()
 
     return () => {
-      channels.forEach(channel => supabase.removeChannel(channel))
+      isSubscribed = false
+      // Only remove channels that were successfully subscribed
+      subscribedChannels.forEach(channel => {
+        supabase.removeChannel(channel).catch(err => {
+          // Silently handle cleanup errors to avoid console spam
+        })
+      })
     }
   }, [])
+  */
 
   const loadTopics = async () => {
     try {
@@ -336,6 +379,21 @@ const AdminDashboard = ({ onNavigate }) => {
     }
   }
 
+  // Show loading screen while verifying admin access
+  if (authLoading || (user && userProfile === null)) {
+    return (
+      <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl mx-auto mb-4 animate-pulse">
+            <Shield size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Verifying Admin Access</h2>
+          <p className="text-gray-500">Please wait...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#FDFCF8] text-gray-900 font-sans pb-24 md:pb-0">
 
@@ -388,9 +446,17 @@ const AdminDashboard = ({ onNavigate }) => {
         </div>
 
         <div className="mt-auto p-8 border-t border-gray-100">
-          <button onClick={() => onNavigate('landing')} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-purple-600 transition-colors">
-            <Home size={18} />
-            Back to App
+          <button
+            onClick={async () => {
+              const { signOut } = await import('../contexts/AuthContext.jsx')
+              await supabase.auth.signOut()
+              console.log('🚪 Admin signed out')
+              onNavigate('landing')
+            }}
+            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors w-full"
+          >
+            <LogOut size={18} />
+            Sign Out
           </button>
         </div>
       </aside>
@@ -441,8 +507,15 @@ const AdminDashboard = ({ onNavigate }) => {
               <button onClick={() => { setActiveTab('ai-test'); setShowMobileMenu(false) }} className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-2xl font-bold text-gray-900">
                 <Brain size={24} /> AI Test
               </button>
-              <button onClick={() => onNavigate('landing')} className="w-full flex items-center gap-4 p-4 bg-red-50 text-red-600 rounded-2xl font-bold mt-8">
-                <LogOut size={24} /> Back to App
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  console.log('🚪 Admin signed out (mobile)')
+                  onNavigate('landing')
+                }}
+                className="w-full flex items-center gap-4 p-4 bg-red-50 text-red-600 rounded-2xl font-bold mt-8"
+              >
+                <LogOut size={24} /> Sign Out
               </button>
             </nav>
           </div>
