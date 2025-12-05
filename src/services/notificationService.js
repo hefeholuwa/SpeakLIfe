@@ -56,13 +56,19 @@ class NotificationService {
       // 2. Wait for Service Worker
       const registration = await navigator.serviceWorker.ready;
 
-      // 3. Subscribe
+      // 3. Unsubscribe existing if any (vital if VAPID key changed)
+      const existingSub = await registration.pushManager.getSubscription();
+      if (existingSub) {
+        await existingSub.unsubscribe();
+      }
+
+      // 4. Subscribe fresh
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
 
-      // 4. Save to Database
+      // 5. Save to Database
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
