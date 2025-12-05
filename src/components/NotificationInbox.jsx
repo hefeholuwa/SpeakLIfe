@@ -54,8 +54,18 @@ const NotificationInbox = ({ onNotificationClick }) => {
                 }, payload => {
                     setNotifications(prev => [payload.new, ...prev]);
                     setUnreadCount(prev => prev + 1);
+
+                    // Also try to show a local system notification if the tab is visible but unfocused?
+                    // Note: The Service Worker handles this if the tab is closed. 
+                    // If the tab is open, the SW 'push' event still fires!
                 })
                 .subscribe();
+
+            // Sync Push Subscription (auto-heal)
+            if (Notification.permission === 'granted') {
+                notificationService.subscribeToPush(user.id).catch(console.error);
+                setPushEnabled(true);
+            }
 
             return () => {
                 subscription.unsubscribe();
