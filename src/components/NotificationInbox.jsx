@@ -14,6 +14,16 @@ const NotificationInbox = ({ onNotificationClick }) => {
     const [loading, setLoading] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
     const [isOpen, setIsOpen] = useState(false)
+    const [pushEnabled, setPushEnabled] = useState(Notification.permission === 'granted')
+
+    const handleEnablePush = async () => {
+        const success = await notificationService.subscribeToPush(user.id);
+        if (success) {
+            setPushEnabled(true);
+            // toast.success('Push notifications enabled!'); 
+        }
+    };
+
 
     const fetchNotifications = async () => {
         if (!user) return
@@ -179,6 +189,19 @@ const NotificationInbox = ({ onNotificationClick }) => {
                         </div>
                     )}
                 </ScrollArea>
+
+                {!pushEnabled && (
+                    <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                        <Button
+                            variant="outline"
+                            className="w-full text-xs h-8 gap-2 bg-white hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-all shadow-sm"
+                            onClick={handleEnablePush}
+                        >
+                            <Bell className="h-3 w-3" />
+                            Enable Push Notifications
+                        </Button>
+                    </div>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     )

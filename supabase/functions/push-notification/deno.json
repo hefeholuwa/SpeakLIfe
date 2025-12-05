@@ -1,0 +1,11 @@
+{
+    "name": "push-notification",
+    "version": "1.0.0",
+    "tasks": {
+        "start": "deno run --allow-net --allow-env index.ts"
+    },
+    "imports": {
+        "web-push": "https://esm.sh/web-push@3.6.7",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.7"
+    }
+}

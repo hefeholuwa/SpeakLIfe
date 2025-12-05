@@ -146,4 +146,48 @@ async function syncOfflineData() {
 }
 
 // Push notifications
+self.addEventListener('push', (event) => {
+    if (event.data) {
+        const data = event.data.json();
+        const options = {
+            body: data.message || data.body,
+            icon: '/sl-icon.ico',
+            badge: '/sl-icon.ico',
+            data: {
+                url: data.action_url || data.url || '/',
+                ...data.metadata
+            },
+            // Actions like "Reply" can be added here
+        };
 
+        event.waitUntil(
+            self.registration.showNotification(data.title || 'SpeakLife', options)
+        );
+    }
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const targetUrl = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then((windowClients) => {
+                // Check if there is already a window open with this URL
+                for (let client of windowClients) {
+                    // Check base URL match
+                    const clientUrl = new URL(client.url);
+                    if (clientUrl.pathname === targetUrl || (targetUrl === '/community' && clientUrl.pathname.includes('community'))) {
+                        return client.focus().then(c => {
+                            // Send message to client to navigate within SPA
+                            c.postMessage({ type: 'NAVIGATE', url: targetUrl, metadata: event.notification.data });
+                            return c;
+                        });
+                    }
+                }
+                // If no window is open, open a new one
+                return clients.openWindow(targetUrl);
+            })
+    );
+});
