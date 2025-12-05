@@ -108,12 +108,20 @@ const UserDashboard = ({ onNavigate }) => {
         else if (hour < 18) setGreeting('Good Afternoon')
         else setGreeting('Good Evening')
 
+        // Defer data fetching to allow UI to render first
         if (user) {
-            updateAndFetchStreak()
-            fetchRecentActivity()
-            fetchCurrentPlan()
+            // Use setTimeout to defer these calls and prevent blocking
+            setTimeout(() => {
+                updateAndFetchStreak()
+                fetchRecentActivity()
+                fetchCurrentPlan()
+            }, 100) // Small delay to allow UI to render
         }
-        fetchDailyVerse()
+
+        // Fetch daily verse with a slight delay for better perceived performance
+        setTimeout(() => {
+            fetchDailyVerse()
+        }, 50)
     }, [user])
 
     const handleSignOut = async () => {

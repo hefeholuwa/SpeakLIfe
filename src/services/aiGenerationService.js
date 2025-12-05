@@ -5,11 +5,11 @@ class AIGenerationService {
     // Use import.meta.env for Vite or fallback to process.env for Vercel
     this.apiKey = import.meta.env?.VITE_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || ''
     this.baseURL = 'https://openrouter.ai/api/v1'
-    this.model = 'x-ai/grok-4.1-fast:free' // Grok 4.1 Fast Free
+    this.model = 'meta-llama/llama-3.3-70b-instruct:free' // Meta Llama 3.3 70B (Primary)
     this.freeModels = [
-      'x-ai/grok-4.1-fast:free',
-      'deepseek/deepseek-r1-distill-llama-70b:free', // Fallback
-      'meta-llama/llama-3.3-70b-instruct:free' // Fallback
+      'meta-llama/llama-3.3-70b-instruct:free', // Meta Llama 3.3 70B - High quality, reliable
+      'deepseek/deepseek-r1-distill-llama-70b:free', // DeepSeek R1 - Strong reasoning
+      'qwen/qwen-2.5-72b-instruct:free' // Qwen 2.5 72B - Good alternative
     ]
 
     // Enhanced randomization and duplicate checking

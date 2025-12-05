@@ -51,15 +51,18 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(session?.user || null)
 
-          // Load user profile if user exists
+          // Load user profile if user exists (non-blocking for faster initial load)
           if (session?.user) {
-            await loadUserProfile(session.user)
+            loadUserProfile(session.user).catch(err => {
+              console.error('Background profile load failed:', err)
+            })
           }
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         setError(error.message)
       } finally {
+        // Set loading to false immediately for faster initial render
         setLoading(false)
       }
     }
@@ -74,8 +77,8 @@ export const AuthProvider = ({ children }) => {
 
         // Load user profile on auth changes
         if (session?.user) {
-          // Create a promise that resolves after 3 seconds to prevent hanging
-          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+          // Reduced timeout from 3s to 1.5s for better responsiveness
+          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
 
           // Race the profile load against the timeout
           await Promise.race([
@@ -106,7 +109,6 @@ export const AuthProvider = ({ children }) => {
       }
     )
 
-    return () => subscription.unsubscribe()
     return () => subscription.unsubscribe()
   }, [])
 

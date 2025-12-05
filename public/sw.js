@@ -1,6 +1,6 @@
-const CACHE_NAME = 'speaklife-v2';
-const STATIC_CACHE = 'speaklife-static-v1';
-const DYNAMIC_CACHE = 'speaklife-dynamic-v1';
+const CACHE_NAME = 'speaklife-v3';
+const STATIC_CACHE = 'speaklife-static-v2';
+const DYNAMIC_CACHE = 'speaklife-dynamic-v2';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -58,10 +58,15 @@ self.addEventListener('fetch', (event) => {
         return; // Let browser handle it (no caching)
     }
 
-    // 2. Handle Navigation requests (HTML) - Network First, then Cache (index.html), then Offline
+    // 2. Handle Navigation requests (HTML) - Network First with timeout, then Cache, then Offline
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
+            Promise.race([
+                fetch(request),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Network timeout')), 2000)
+                )
+            ])
                 .catch(() => {
                     return caches.match('/index.html')
                         .then((response) => {
