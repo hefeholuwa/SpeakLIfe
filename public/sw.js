@@ -151,13 +151,21 @@ self.addEventListener('push', (event) => {
         const data = event.data.json();
         const options = {
             body: data.message || data.body,
-            icon: '/sl-icon.ico',
-            badge: '/sl-icon.ico',
+            icon: '/icons/icon-192x192.png', // Use larger icon for Android
+            badge: '/icons/icon-72x72.png',  // Small monochrome icon for status bar
+            vibrate: [200, 100, 200], // Vibration pattern
+            tag: 'speaklife-notification', // Group notifications
+            renotify: true, // Vibrate/Sound even if replacing old notification
             data: {
                 url: data.action_url || data.url || '/',
                 ...data.metadata
             },
-            // Actions like "Reply" can be added here
+            actions: [
+                {
+                    action: 'open',
+                    title: 'Open App',
+                }
+            ]
         };
 
         event.waitUntil(

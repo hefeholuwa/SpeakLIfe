@@ -52,23 +52,63 @@ class NotificationService {
       if (!granted) return false;
     }
 
+    // Prevent concurrent attempts
+    if (this._isSubscribing) {
+      console.log('Subscription already in progress, skipping...');
+      return false;
+    }
+    this._isSubscribing = true;
+
     try {
-      // 2. Wait for Service Worker
+      console.log('Starting push subscription process...');
       const registration = await navigator.serviceWorker.ready;
 
-      // 3. Unsubscribe existing if any (vital if VAPID key changed)
-      const existingSub = await registration.pushManager.getSubscription();
-      if (existingSub) {
-        await existingSub.unsubscribe();
+      let subscription = await registration.pushManager.getSubscription();
+      const targetKey = this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+      // Check if existing subscription is valid
+      if (subscription) {
+        const existingKey = subscription.options.applicationServerKey;
+
+        // Compare keys (simple byte comparison)
+        const isSameKey = existingKey &&
+          new Uint8Array(existingKey).toString() === targetKey.toString();
+
+        if (isSameKey) {
+          console.log('Existing subscription is valid and uses correct VAPID key. Skipping re-subscribe.');
+        } else {
+          console.log('Existing subscription uses old key. Unsubscribing...');
+          await subscription.unsubscribe();
+          subscription = null;
+          // Give the browser a moment to clean up
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
 
-      // 4. Subscribe fresh
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
+      // Subscribe if needed
+      if (!subscription) {
+        console.log('Creating new subscription...');
+        if (targetKey.length === 0) throw new Error('VAPID key conversion failed (empty key)');
 
-      // 5. Save to Database
+        try {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: targetKey
+          });
+          console.log('New subscription created.');
+        } catch (subscribeError) {
+          // Specific handling for AbortError (common in Brave or offline)
+          if (subscribeError.name === 'AbortError') {
+            console.error('Push Service Aborted. If using Brave/Arc, enable Google Services for Push. If offline, check connection.');
+            alert('Push notifications failed to start. If you are using Brave/Arc browser, please enable "Google Services for Push Messaging" in settings, or check your internet connection.');
+            return false;
+          }
+          throw subscribeError;
+        }
+      }
+
+      // 5. Save to Database (Always ensure DB is in sync)
+      console.log('Syncing subscription to database...');
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
@@ -80,13 +120,15 @@ class NotificationService {
         }, { onConflict: 'endpoint' });
 
       if (error) throw error;
+      console.log('Database sync successful.');
 
-      console.log('Push subscription saved successfully');
       return true;
 
     } catch (error) {
-      console.error('Push subscription failed:', error);
+      console.error('Subscription failed:', error);
       return false;
+    } finally {
+      this._isSubscribing = false;
     }
   }
 
