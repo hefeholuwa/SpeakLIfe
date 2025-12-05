@@ -47,8 +47,16 @@ const CommunityChat = ({ onViewProfile }) => {
         const state = window.history.state;
         if (state?.sharedContent) {
             setNewPost(state.sharedContent);
-            // Optional: clear state so it doesn't persist on refresh
-            // window.history.replaceState({}, document.title);
+        }
+
+        // Check for deep link to specific post (e.g. from notifications)
+        if (state?.view === 'postDetails' && state?.postId) {
+            fetchSinglePost(state.postId).then(post => {
+                if (post) {
+                    setSelectedPost(post);
+                    fetchComments(post.id);
+                }
+            });
         }
 
         fetchPosts();

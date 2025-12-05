@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, Check, CheckCheck, Clock, Info, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Bell, Check, CheckCheck, Clock, Info, AlertTriangle, CheckCircle, MessageCircle, Heart } from 'lucide-react'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 import notificationService from '../services/notificationService'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
+import { supabase } from '../supabaseClient'
 
-const NotificationInbox = () => {
+const NotificationInbox = ({ onNotificationClick }) => {
     const { user } = useAuth()
     const [notifications, setNotifications] = useState([])
     const [loading, setLoading] = useState(false)
@@ -31,9 +32,24 @@ const NotificationInbox = () => {
     useEffect(() => {
         if (user) {
             fetchNotifications()
-            // Poll for new notifications every minute
-            const interval = setInterval(fetchNotifications, 60000)
-            return () => clearInterval(interval)
+
+            // Realtime subscription
+            const subscription = supabase
+                .channel(`notifications:${user.id}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                }, payload => {
+                    setNotifications(prev => [payload.new, ...prev]);
+                    setUnreadCount(prev => prev + 1);
+                })
+                .subscribe();
+
+            return () => {
+                subscription.unsubscribe();
+            };
         }
     }, [user])
 
@@ -62,13 +78,24 @@ const NotificationInbox = () => {
         await notificationService.markAllAsRead(user.id, unreadIds)
     }
 
-    const getIcon = (type) => {
+    const getIcon = (type, metadata) => {
+        if (metadata?.type === 'like') return <Heart className="h-4 w-4 text-red-500 fill-current" />
+        if (metadata?.type === 'comment') return <MessageCircle className="h-4 w-4 text-blue-500 fill-current" />
+
         switch (type) {
             case 'alert': return <AlertTriangle className="h-4 w-4 text-amber-500" />
             case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />
             default: return <Info className="h-4 w-4 text-blue-500" />
         }
     }
+
+    const handleItemClick = (notification) => {
+        if (!notification.is_read) {
+            handleMarkAsRead(notification.id);
+        }
+        setIsOpen(false);
+        onNotificationClick?.(notification);
+    };
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -111,12 +138,12 @@ const NotificationInbox = () => {
                             {notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`p-4 hover:bg-gray-50 transition-colors relative group ${!notification.is_read ? 'bg-blue-50/50' : ''}`}
-                                    onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                                    className={`p-4 hover:bg-gray-50 transition-colors relative group cursor-pointer ${!notification.is_read ? 'bg-blue-50/50' : ''}`}
+                                    onClick={() => handleItemClick(notification)}
                                 >
                                     <div className="flex gap-3">
                                         <div className={`mt-1 p-1.5 rounded-full flex-shrink-0 ${!notification.is_read ? 'bg-white shadow-sm' : 'bg-gray-100'}`}>
-                                            {getIcon(notification.type)}
+                                            {getIcon(notification.type, notification.metadata)}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-1">

@@ -390,7 +390,15 @@ const UserDashboard = ({ onNavigate }) => {
                                     <button className="p-3 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-gray-900 hover:border-gray-300 transition-all">
                                         <Search size={20} />
                                     </button>
-                                    <NotificationInbox />
+                                    <NotificationInbox onNotificationClick={(notification) => {
+                                        if (notification.metadata?.postId) {
+                                            window.history.pushState({
+                                                view: 'postDetails',
+                                                postId: notification.metadata.postId
+                                            }, '');
+                                            setActiveTab('community');
+                                        }
+                                    }} />
                                 </div>
                             </div>
 

@@ -105,8 +105,5 @@ CREATE TRIGGER update_notifications_updated_at_trigger
   EXECUTE FUNCTION update_notifications_updated_at();
 
 -- Insert some sample notifications for testing
-INSERT INTO notifications (title, message, type, is_global) VALUES
-  ('Welcome to SpeakLife! 🎉', 'Thank you for joining our spiritual community. Start your journey today!', 'success', true),
-  ('Daily Verse Available 📖', 'Your daily verse and confession are ready. Check them out now!', 'info', true),
-  ('New Reading Plan Available 📚', 'A new 7-day reading plan has been added. Start growing today!', 'info', true)
-ON CONFLICT DO NOTHING;
+-- Trigger is ready
+
