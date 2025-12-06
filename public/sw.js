@@ -165,7 +165,8 @@ self.addEventListener('push', (event) => {
                     action: 'open',
                     title: 'Open App',
                 }
-            ]
+            ],
+            requireInteraction: true, // Keeps notification on screen until user dismisses it
         };
 
         event.waitUntil(
