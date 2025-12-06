@@ -1,6 +1,6 @@
-const CACHE_NAME = 'speaklife-v3';
-const STATIC_CACHE = 'speaklife-static-v2';
-const DYNAMIC_CACHE = 'speaklife-dynamic-v2';
+const CACHE_NAME = 'speaklife-v4';
+const STATIC_CACHE = 'speaklife-static-v3';
+const DYNAMIC_CACHE = 'speaklife-dynamic-v3';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -79,21 +79,26 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 3. Handle Static Assets (JS, CSS, Images) - Stale-While-Revalidate
-    // This means serve from cache immediately, but update cache in background
     if (request.destination === 'script' ||
         request.destination === 'style' ||
         request.destination === 'image') {
         event.respondWith(
             caches.match(request).then((cachedResponse) => {
-                const fetchPromise = fetch(request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        const responseToCache = networkResponse.clone();
-                        caches.open(DYNAMIC_CACHE).then((cache) => {
-                            cache.put(request, responseToCache);
-                        });
-                    }
-                    return networkResponse;
-                });
+                const fetchPromise = fetch(request)
+                    .then((networkResponse) => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            const responseToCache = networkResponse.clone();
+                            caches.open(DYNAMIC_CACHE).then((cache) => {
+                                cache.put(request, responseToCache);
+                            });
+                        }
+                        return networkResponse;
+                    })
+                    .catch((err) => {
+                        console.warn('[Service Worker] Background fetch failed for:', request.url, err);
+                        // Return undefined to let cachedResponse take over or fail gracefully
+                    });
+
                 return cachedResponse || fetchPromise;
             })
         );
