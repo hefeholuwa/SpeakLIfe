@@ -604,27 +604,29 @@ const CommunityChat = ({ onViewProfile }) => {
             </div>
 
             {/* Post Input */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <form onSubmit={handlePost}>
                     <textarea
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                         placeholder="What are you grateful for today?"
-                        className="w-full p-4 bg-gray-50 rounded-2xl border-transparent focus:bg-white focus:border-gray-200 focus:ring-0 transition-all resize-none min-h-[100px] mb-4"
+                        className="w-full p-4 bg-gray-50 rounded-2xl border-transparent focus:bg-white focus:border-purple-200 focus:ring-4 focus:ring-purple-50 transition-all resize-none min-h-[120px] mb-4 text-gray-800 placeholder-gray-400 font-medium"
                         maxLength={500}
                     />
 
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+                    <div className="flex flex-col gap-6">
+                        {/* Category Chips */}
+                        <div className="space-y-2">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Select a topic</span>
+                            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                                 {categories.map(cat => (
                                     <button
                                         key={cat.id}
                                         type="button"
                                         onClick={() => setCategory(cat.id)}
-                                        className={`flex items-center justify-center md:justify-start gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${category === cat.id
-                                            ? `${cat.bg} ${cat.color} ring-2 ring-offset-1 ring-${cat.color.split('-')[1]}-200 shadow-sm`
-                                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-transparent'
+                                        className={`flex items-center justify-center sm:justify-start gap-2 px-3 py-3 sm:px-4 sm:py-2.5 rounded-xl text-sm font-bold transition-all border w-full sm:w-auto ${category === cat.id
+                                            ? `${cat.bg} ${cat.color} border-${cat.color.split('-')[1]}-200 shadow-sm transform scale-[1.02] sm:scale-105`
+                                            : 'bg-white text-gray-500 border-gray-100 hover:bg-gray-50 hover:border-gray-200'
                                             }`}
                                     >
                                         <cat.icon size={16} />
@@ -634,10 +636,15 @@ const CommunityChat = ({ onViewProfile }) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAnonymous ? 'bg-gray-900 border-gray-900' : 'border-gray-300 bg-white'}`}>
-                                    {isAnonymous && <Ghost size={12} className="text-white" />}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                            {/* Anonymous Toggle */}
+                            <label className="flex items-center gap-3 cursor-pointer group select-none">
+                                <div className={`w-10 h-6 rounded-full p-1 transition-colors ${isAnonymous ? 'bg-gray-900' : 'bg-gray-200'}`}>
+                                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform ${isAnonymous ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Ghost size={16} className={isAnonymous ? 'text-gray-900' : 'text-gray-400'} />
+                                    <span className={`text-sm font-medium transition-colors ${isAnonymous ? 'text-gray-900' : 'text-gray-500'}`}>Post Anonymously</span>
                                 </div>
                                 <input
                                     type="checkbox"
@@ -645,13 +652,13 @@ const CommunityChat = ({ onViewProfile }) => {
                                     checked={isAnonymous}
                                     onChange={(e) => setIsAnonymous(e.target.checked)}
                                 />
-                                <span className={`text-sm font-medium transition-colors ${isAnonymous ? 'text-gray-900' : 'text-gray-500'}`}>Post Anonymously</span>
                             </label>
 
+                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={!newPost.trim() || submitting}
-                                className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-gray-900/20 active:scale-95"
+                                className="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg shadow-gray-900/20 active:scale-95 hover:-translate-y-0.5"
                             >
                                 <Send size={18} />
                                 Post
