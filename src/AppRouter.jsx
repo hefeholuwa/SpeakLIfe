@@ -7,6 +7,8 @@ import AdminLogin from './pages/AdminLogin.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 
 import AdminDashboard from './components/AdminDashboard.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
+import TermsOfService from './pages/TermsOfService.jsx'
 
 
 const AppRouter = () => {
@@ -25,6 +27,10 @@ const AppRouter = () => {
       setCurrentRoute('admin-login')
     } else if (path === '/reset-password') {
       setCurrentRoute('reset-password')
+    } else if (path === '/privacy') {
+      setCurrentRoute('privacy')
+    } else if (path === '/terms') {
+      setCurrentRoute('terms')
     } else {
       setCurrentRoute('landing')
     }
@@ -42,6 +48,10 @@ const AppRouter = () => {
         setCurrentRoute('admin-login')
       } else if (path === '/reset-password') {
         setCurrentRoute('reset-password')
+      } else if (path === '/privacy') {
+        setCurrentRoute('privacy')
+      } else if (path === '/terms') {
+        setCurrentRoute('terms')
       } else {
         setCurrentRoute('landing')
       }
@@ -78,6 +88,12 @@ const AppRouter = () => {
     } else if (route === 'reset-password') {
       window.history.pushState({}, '', '/reset-password')
       setCurrentRoute('reset-password')
+    } else if (route === 'privacy') {
+      window.history.pushState({}, '', '/privacy')
+      setCurrentRoute('privacy')
+    } else if (route === 'terms') {
+      window.history.pushState({}, '', '/terms')
+      setCurrentRoute('terms')
     } else {
       window.history.pushState({}, '', '/')
       setCurrentRoute('landing')
@@ -116,6 +132,14 @@ const AppRouter = () => {
         <ResetPassword onNavigate={navigateTo} />
       </AuthProvider>
     )
+  }
+
+  if (currentRoute === 'privacy') {
+    return <PrivacyPolicy onNavigate={navigateTo} />
+  }
+
+  if (currentRoute === 'terms') {
+    return <TermsOfService onNavigate={navigateTo} />
   }
 
   return (

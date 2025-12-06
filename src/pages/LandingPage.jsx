@@ -219,6 +219,23 @@ const LandingPage = ({ onNavigate }) => {
 
       </main>
 
+      {/* Footer */}
+      <footer className="mt-20 py-12 border-t border-gray-100 bg-[#FDFCF8] relative z-10">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2 mb-4 md:mb-0">
+            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white font-bold text-xs">SL</div>
+            <span className="font-bold text-gray-900 sm:inline hidden">SpeakLife</span>
+            <span className="text-gray-400 text-sm ml-2">© {new Date().getFullYear()}</span>
+          </div>
+
+          <div className="flex gap-8 text-sm font-medium text-gray-500">
+            <button onClick={() => onNavigate('privacy')} className="hover:text-gray-900 transition-colors">Privacy Policy</button>
+            <button onClick={() => onNavigate('terms')} className="hover:text-gray-900 transition-colors">Terms of Service</button>
+            <button onClick={() => window.location.href = 'mailto:support@speaklife.app'} className="hover:text-gray-900 transition-colors">Contact</button>
+          </div>
+        </div>
+      </footer>
+
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-6 left-6 right-6 bg-gray-900/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-gray-900/20 z-50 border border-white/10">
         <div className="flex justify-around items-center p-2">
